@@ -17,6 +17,7 @@ import stat
 import subprocess
 import sys
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -1465,11 +1466,228 @@ def cmd_perf(ev: Evidence):
     ev.finish("performance baseline recorded (no tuning applied)")
 
 
+# ---------------------------------------------------------------- reflink
+
+
+def cmd_reflink(ev: Evidence):
+    """Low-cost host probe (round-02 §25): does the underlying fs support
+    `cp --reflink=always` for rootfs preparation? If yes: latency, real
+    allocated blocks vs apparent size, copy independence, cleanup. If no:
+    record UNSUPPORTED and stop. No filesystem is built by us either way."""
+    base = STATE / "bundles" / "a"
+    if not (base / "rootfs").is_dir():
+        raise SystemExit("run unpack first")
+    fs_type = run(["stat", "-f", "-c", "%T", str(base)])["stdout"].strip()
+    ev.step("filesystem type of spike state dir", {"fs": fs_type, "path": str(base)})
+
+    dst = STATE / "reflink-probe"
+    shutil.rmtree(dst, ignore_errors=True)
+    dst.mkdir(parents=True)
+    t0 = time.monotonic()
+    res = run(["/bin/cp", "--reflink=always", "-a", str(base) + "/.", str(dst)], timeout=900)
+    ms = int((time.monotonic() - t0) * 1000)
+    ev.step("cp --reflink=always of full sandbox bundle",
+            {"exit": res["exit"], "ms": ms, "stderr_tail": res["stderr"][-300:]})
+    if res["exit"] != 0:
+        shutil.rmtree(dst, ignore_errors=True)
+        ev.finish("REFLINK_COPY = UNSUPPORTED on this host fs "
+                  f"({fs_type}); FULL_COPY remains the only measured prepare mode")
+        return
+
+    apparent = int(run(["/usr/bin/du", "-sb", "--apparent-size", str(dst / "rootfs")])["stdout"].split()[0])
+    allocated = int(run(["/usr/bin/du", "-sB1", str(dst / "rootfs")])["stdout"].split()[0])
+    src_allocated = int(run(["/usr/bin/du", "-sB1", str(base / "rootfs")])["stdout"].split()[0])
+    # NOTE: st_blocks (what du reads) reports LOGICAL blocks even for
+    # reflink-shared files, so du cannot prove sharing. Real consumption is
+    # measured via df free-space delta across copy deletion: shared extents
+    # are refcounted, so deleting the copy frees ~0 if shared, ~apparent if
+    # it was a real full copy.
+    def df_avail():
+        out = run(["/bin/df", "-B1", "--output=avail", str(STATE)])["stdout"].strip().splitlines()
+        return int(out[-1].strip())
+
+    time.sleep(0.5)  # let delayed allocation settle
+    df_after_copy = df_avail()
+    marker = dst / "rootfs" / "reflink-independence-marker"
+    marker.write_text("written into the copy only\n")
+    independent = not (base / "rootfs" / "reflink-independence-marker").exists()
+    # a shared file must still read identically in both trees
+    shared_ok = (dst / "rootfs" / "etc" / "os-release").read_bytes() == \
+        (base / "rootfs" / "etc" / "os-release").read_bytes()
+    ev.step("reflink copy properties",
+            {"apparent_bytes": apparent, "du_blocks_copy": allocated,
+             "du_blocks_source": src_allocated,
+             "du_note": "st_blocks reports logical blocks; not a sharing metric",
+             "write_independence_ok": independent, "shared_content_identical": shared_ok,
+             "prepare_ms": ms})
+    t0 = time.monotonic()
+    run(["/bin/rm", "-rf", str(dst)], timeout=900)
+    rm_ms = int((time.monotonic() - t0) * 1000)
+    time.sleep(0.5)
+    freed = df_avail() - df_after_copy
+    shared_ratio = 1.0 - (freed / apparent) if apparent else 0.0
+    ev.step("cleanup reflink copy",
+            {"ms": rm_ms, "df_bytes_freed_by_rm": freed,
+             "shared_extent_ratio_from_df_delta": round(shared_ratio, 4),
+             "method": "df free-space delta across copy deletion"})
+    if shared_ratio > 0.9:
+        verdict = (f"REFLINK_COPY = SUPPORTED: FICLONE accepted, {ms}ms prepare, "
+                   f"~{shared_ratio * 100:.0f}% extent sharing measured via df delta, "
+                   "write isolation and identical content verified. NOTE: probe "
+                   "single host/fs only — capability admission needs HostReport binding")
+    else:
+        verdict = ("REFLINK_COPY = ACCEPTED_BUT_SHARING_UNPROVEN: cp --reflink=always "
+                   f"exit 0 and fast ({ms}ms) yet df delta indicates only "
+                   f"~{shared_ratio * 100:.0f}% shared; treat as unproven until "
+                   "FIEMAP-level confirmation")
+    ev.finish(verdict)
+
+
+# ---------------------------------------------------------------- proctree
+
+
+PROCTREE_TREE_SH = """#!/bin/bash
+# §31 process-tree shape: init forks a direct child, a child that forks a
+# grandchild and exits (orphan), and a double-fork daemon. All payloads are
+# `sleep 600` with a unique role token as argv[0].
+M="$1"
+/bin/bash -c "exec -a LSBXPT_child_$M  /bin/sleep 600" &
+/bin/bash -c "
+  /bin/bash -c 'exec -a LSBXPT_grand_$M /bin/sleep 600' &
+  exit 0
+"
+/bin/bash -c "
+  /bin/bash -c '
+    /bin/bash -c \\"exec -a LSBXPT_daemon_$M /bin/sleep 600\\" &
+    exit 0
+  ' &
+  exit 0
+"
+exec /bin/sleep 600
+"""
+
+# Scanner runs OUTSIDE the sandbox; exact argv[0] match per role so the
+# scanner's own cmdline (which mentions the token) never self-matches — the
+# P2 substring self-match lesson.
+PROCTREE_SCAN_PY = """import json, sys
+token = sys.argv[1]
+out = {}
+for pid in filter(str.isdigit, __import__("os").listdir("/proc")):
+    try:
+        raw = open(f"/proc/{pid}/cmdline", "rb").read().split(b"\\x00")
+    except OSError:
+        continue
+    if not raw or not raw[0]:
+        continue
+    argv0 = raw[0].decode("utf-8", "replace")
+    for role in ("child", "grand", "daemon"):
+        if argv0 == f"LSBXPT_{role}_{token}":
+            try:
+                ppid = int(open(f"/proc/{pid}/stat").read().rsplit(")", 1)[1].split()[1])
+            except OSError:
+                ppid = None
+            out.setdefault(role, []).append({"pid": int(pid), "ppid": ppid})
+print(json.dumps(out))
+"""
+
+
+def proctree_scan(uuid_hex):
+    scan = STATE / "proctree-scan.py"
+    scan.write_text(PROCTREE_SCAN_PY)
+    res = run(["/usr/bin/python3.12", str(scan), uuid_hex])
+    try:
+        return json.loads(res["stdout"])
+    except json.JSONDecodeError:
+        return {"scan_error": res["stdout"][-200:], "scan_stderr": res["stderr"][-200:]}
+
+
+def cmd_proctree(ev: Evidence):
+    """round-02 §31: rootless, cgroup-less delete must not leak processes.
+    PID-ns init + child + orphaned grandchild + double-fork daemon, then
+    (A) `runc delete --force` and (B) `runc kill --all KILL` + delete.
+    Count surviving marker processes on the HOST afterwards. `delete
+    succeeded` alone is NOT accepted as proof of cleanup."""
+    base = STATE / "bundles" / "a"
+    if not (base / "rootfs").is_dir():
+        raise SystemExit("run unpack first")
+    prepare_nobody_context()
+
+    runs = []
+    for variant in ("A-delete-force", "B-kill-all-then-delete"):
+        token = uuid.uuid4().hex[:12]
+        name = f"proctree-{token}"
+        bundle = STATE / f"proctree-bundle-{token}"
+        shutil.rmtree(bundle, ignore_errors=True)
+        os.makedirs(bundle)
+        run(["/bin/cp", "-a", str(base) + "/.", str(bundle)])
+        (bundle / "rootfs" / "tree.sh").write_text(PROCTREE_TREE_SH)
+        os.chmod(bundle / "rootfs" / "tree.sh", 0o755)
+        chown_tree(bundle, NOBODY_UID, NOBODY_GID)
+
+        pid, start_res = start_detached(ev, bundle, name, ["/bin/bash", "/tree.sh", token])
+        time.sleep(4)
+        pre = proctree_scan(token)
+        counts_pre = {r: len(v) for r, v in pre.items()}
+
+        if variant.startswith("A"):
+            kill_res = None
+            del_res = run_as(NOBODY_UID, NOBODY_GID, [RUNC, "delete", "--force", name], timeout=60)
+        else:
+            kill_res = run_as(NOBODY_UID, NOBODY_GID, [RUNC, "kill", "--all", name, "KILL"], timeout=60)
+            del_res = run_as(NOBODY_UID, NOBODY_GID, [RUNC, "delete", "--force", name], timeout=60)
+        time.sleep(2)
+        post = proctree_scan(token)
+        survivors = sum(len(v) for v in post.values() if isinstance(v, list))
+
+        # lab hygiene: we are root here — reap any leftovers ourselves and
+        # record the remediation; never leave marker processes on the host
+        remediated = []
+        for role, items in post.items():
+            if isinstance(items, list):
+                for it in items:
+                    try:
+                        os.kill(it["pid"], 9)
+                        remediated.append({"role": role, "pid": it["pid"]})
+                    except OSError:
+                        pass
+        runs.append({
+            "variant": variant, "init_host_pid": pid, "start_exit": start_res["exit"],
+            "pre_cleanup_roles": pre, "pre_counts": counts_pre,
+            "kill_exit": kill_res["exit"] if kill_res else None,
+            "kill_stderr": kill_res["stderr"][-200:] if kill_res else None,
+            "delete_exit": del_res["exit"], "delete_stderr": del_res["stderr"][-200:],
+            "post_cleanup_survivors": post, "survivor_count": survivors,
+            "lab_remediated": remediated,
+        })
+        shutil.rmtree(bundle, ignore_errors=True)
+        ev.step(f"variant {variant}", runs[-1])
+
+    leaked = [r["variant"] for r in runs if r["survivor_count"] > 0]
+    positive_controls_ok = all(
+        r["pre_counts"].get("child") == 1 and r["pre_counts"].get("grand") == 1
+        and r["pre_counts"].get("daemon") == 1 for r in runs)
+    if not positive_controls_ok:
+        verdict = ("INCONCLUSIVE: positive control failed (process tree did not "
+                   "fully materialise before delete); cleanup claim not testable")
+    elif leaked:
+        verdict = (f"CLEANUP LEAK on variants: {leaked} — rootless delete did NOT "
+                   "reap the full process tree; supervisor-level cleanup evidence "
+                   "becomes a hard T43 requirement")
+    else:
+        verdict = ("0 surviving processes on both delete paths on THIS host "
+                   "(single sample, rootless + no cgroup delegation); keep as "
+                   "regression evidence for T43 supervisor cleanup")
+    ev.step("outcome detail", {"runs": runs,
+                               "positive_controls_ok": positive_controls_ok})
+    ev.finish(verdict)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("experiment",
                         choices=("fixtures", "unpack", "firstrun", "p1", "p2", "uids",
-                                 "rootfs", "isolation", "p21", "seccomp", "perf"))
+                                 "rootfs", "isolation", "p21", "seccomp", "perf",
+                                 "reflink", "proctree"))
     args = parser.parse_args()
     STATE.mkdir(parents=True, exist_ok=True)
     ev = Evidence(args.experiment)
@@ -1477,7 +1695,9 @@ def main():
      "p1": cmd_p1, "p2": cmd_p2, "uids": cmd_uids,
      "rootfs": cmd_rootfs, "isolation": cmd_isolation, "p21": cmd_p21,
      "seccomp": cmd_seccomp,
-     "perf": cmd_perf}[args.experiment](ev)
+     "perf": cmd_perf,
+     "reflink": cmd_reflink,
+     "proctree": cmd_proctree}[args.experiment](ev)
 
 
 if __name__ == "__main__":

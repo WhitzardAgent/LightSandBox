@@ -1,0 +1,73 @@
+{
+  "experiment": "reflink",
+  "started_at": "2026-09-24T18:04:59.576188+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "filesystem type of spike state dir",
+      "note": "",
+      "result": {
+        "fs": "overlayfs",
+        "path": "/tmp/lsbx-spike/bundles/a"
+      }
+    },
+    {
+      "title": "cp --reflink=always of full sandbox bundle",
+      "note": "",
+      "result": {
+        "exit": 0,
+        "ms": 185,
+        "stderr_tail": ""
+      }
+    },
+    {
+      "title": "reflink copy properties",
+      "note": "",
+      "result": {
+        "apparent_bytes": 972221770,
+        "du_blocks_copy": 979570688,
+        "du_blocks_source": 979570688,
+        "du_note": "st_blocks reports logical blocks; not a sharing metric",
+        "write_independence_ok": true,
+        "shared_content_identical": true,
+        "prepare_ms": 185
+      }
+    },
+    {
+      "title": "cleanup reflink copy",
+      "note": "",
+      "result": {
+        "ms": 91,
+        "df_bytes_freed_by_rm": 1908736,
+        "shared_extent_ratio_from_df_delta": 0.998,
+        "method": "df free-space delta across copy deletion"
+      }
+    }
+  ],
+  "verdict": "REFLINK_COPY = SUPPORTED: FICLONE accepted, 185ms prepare, ~100% extent sharing measured via df delta, write isolation and identical content verified. NOTE: probe single host/fs only — capability admission needs HostReport binding"
+}

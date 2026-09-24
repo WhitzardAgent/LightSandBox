@@ -1,0 +1,240 @@
+{
+  "experiment": "proctree",
+  "started_at": "2026-09-24T18:13:50.007794+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "detached start proctree-9362efcc74dc",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "-d",
+          "--pid-file",
+          "/tmp/lsbx-runtime/proctree-9362efcc74dc.pid",
+          "--bundle",
+          "/tmp/lsbx-spike/proctree-bundle-9362efcc74dc",
+          "proctree-9362efcc74dc"
+        ],
+        "exit": 0,
+        "ms": 115,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "variant A-delete-force",
+      "note": "",
+      "result": {
+        "variant": "A-delete-force",
+        "init_host_pid": 1319777,
+        "start_exit": 0,
+        "pre_cleanup_roles": {
+          "child": [
+            {
+              "pid": 1319825,
+              "ppid": 1319777
+            }
+          ],
+          "grand": [
+            {
+              "pid": 1319828,
+              "ppid": 1319777
+            }
+          ],
+          "daemon": [
+            {
+              "pid": 1319833,
+              "ppid": 1319777
+            }
+          ]
+        },
+        "pre_counts": {
+          "child": 1,
+          "grand": 1,
+          "daemon": 1
+        },
+        "kill_exit": null,
+        "kill_stderr": null,
+        "delete_exit": 0,
+        "delete_stderr": "",
+        "post_cleanup_survivors": {},
+        "survivor_count": 0,
+        "lab_remediated": []
+      }
+    },
+    {
+      "title": "detached start proctree-cdc8ba001798",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "-d",
+          "--pid-file",
+          "/tmp/lsbx-runtime/proctree-cdc8ba001798.pid",
+          "--bundle",
+          "/tmp/lsbx-spike/proctree-bundle-cdc8ba001798",
+          "proctree-cdc8ba001798"
+        ],
+        "exit": 0,
+        "ms": 115,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "variant B-kill-all-then-delete",
+      "note": "",
+      "result": {
+        "variant": "B-kill-all-then-delete",
+        "init_host_pid": 1323620,
+        "start_exit": 0,
+        "pre_cleanup_roles": {
+          "child": [
+            {
+              "pid": 1323627,
+              "ppid": 1323620
+            }
+          ],
+          "grand": [
+            {
+              "pid": 1323629,
+              "ppid": 1323620
+            }
+          ],
+          "daemon": [
+            {
+              "pid": 1323632,
+              "ppid": 1323620
+            }
+          ]
+        },
+        "pre_counts": {
+          "child": 1,
+          "grand": 1,
+          "daemon": 1
+        },
+        "kill_exit": 0,
+        "kill_stderr": "",
+        "delete_exit": 0,
+        "delete_stderr": "",
+        "post_cleanup_survivors": {},
+        "survivor_count": 0,
+        "lab_remediated": []
+      }
+    },
+    {
+      "title": "outcome detail",
+      "note": "",
+      "result": {
+        "runs": [
+          {
+            "variant": "A-delete-force",
+            "init_host_pid": 1319777,
+            "start_exit": 0,
+            "pre_cleanup_roles": {
+              "child": [
+                {
+                  "pid": 1319825,
+                  "ppid": 1319777
+                }
+              ],
+              "grand": [
+                {
+                  "pid": 1319828,
+                  "ppid": 1319777
+                }
+              ],
+              "daemon": [
+                {
+                  "pid": 1319833,
+                  "ppid": 1319777
+                }
+              ]
+            },
+            "pre_counts": {
+              "child": 1,
+              "grand": 1,
+              "daemon": 1
+            },
+            "kill_exit": null,
+            "kill_stderr": null,
+            "delete_exit": 0,
+            "delete_stderr": "",
+            "post_cleanup_survivors": {},
+            "survivor_count": 0,
+            "lab_remediated": []
+          },
+          {
+            "variant": "B-kill-all-then-delete",
+            "init_host_pid": 1323620,
+            "start_exit": 0,
+            "pre_cleanup_roles": {
+              "child": [
+                {
+                  "pid": 1323627,
+                  "ppid": 1323620
+                }
+              ],
+              "grand": [
+                {
+                  "pid": 1323629,
+                  "ppid": 1323620
+                }
+              ],
+              "daemon": [
+                {
+                  "pid": 1323632,
+                  "ppid": 1323620
+                }
+              ]
+            },
+            "pre_counts": {
+              "child": 1,
+              "grand": 1,
+              "daemon": 1
+            },
+            "kill_exit": 0,
+            "kill_stderr": "",
+            "delete_exit": 0,
+            "delete_stderr": "",
+            "post_cleanup_survivors": {},
+            "survivor_count": 0,
+            "lab_remediated": []
+          }
+        ],
+        "positive_controls_ok": true
+      }
+    }
+  ],
+  "verdict": "0 surviving processes on both delete paths on THIS host (single sample, rootless + no cgroup delegation); keep as regression evidence for T43 supervisor cleanup"
+}

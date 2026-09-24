@@ -1,0 +1,238 @@
+{
+  "version": "v1",
+  "rules": "../../resolution-rules.json",
+  "host_schema": "../../host-capabilities.schema.json",
+  "spec_schema": "../../sandbox-requirements.schema.json",
+  "hosts": {
+    "portable_rootless_measured": {
+      "tier": "PORTABLE_ROOTLESS",
+      "identity": {
+        "user_namespace": "SUPPORTED",
+        "uid_mapping_mode": "SINGLE_ID",
+        "gid_mapping_mode": "SINGLE_ID",
+        "ownership_model": "FLATTENED",
+        "image_user_support": "ROOT_ONLY"
+      },
+      "process": {
+        "pid_namespace": "SUPPORTED",
+        "proc_policy": {"mode": "RBIND_RO_HOST_PROC", "confidentiality": "METADATA_AND_ARGV_VISIBLE"},
+        "seccomp": "AVAILABLE"
+      },
+      "resource": {
+        "cgroup_delegated": "UNSUPPORTED",
+        "hard_memory_limit": "UNSUPPORTED",
+        "hard_cpu_limit": "UNSUPPORTED",
+        "hard_pid_limit": "UNSUPPORTED",
+        "process_guardrails_note": "RLIMIT_* are process-level guardrails only; never sold as cgroup hard limits"
+      },
+      "filesystem": {
+        "rootfs_driver": "FULL_COPY",
+        "persistent_cow": "UNSUPPORTED",
+        "ephemeral_cow": "DEGRADED"
+      },
+      "network": {
+        "namespace": "SUPPORTED",
+        "outbound": "UNSUPPORTED",
+        "inbound": "UNSUPPORTED",
+        "raw_socket": "UNSUPPORTED",
+        "net_admin": "UNSUPPORTED"
+      },
+      "runtime": {
+        "runc": {"version": "1.5.0-rc.1+dev", "sha256": "c5ede65cfbcec11a8b4ed2137f5ed3d73b18bd65c5256d5df99bd828e6d6b625", "seccomp": true},
+        "supervisor": "ABSENT"
+      }
+    },
+    "portable_rootless_no_seccomp": {
+      "tier": "PORTABLE_ROOTLESS",
+      "identity": {
+        "user_namespace": "SUPPORTED",
+        "uid_mapping_mode": "SINGLE_ID",
+        "gid_mapping_mode": "SINGLE_ID",
+        "ownership_model": "FLATTENED",
+        "image_user_support": "ROOT_ONLY"
+      },
+      "process": {
+        "pid_namespace": "SUPPORTED",
+        "proc_policy": {"mode": "RBIND_RO_HOST_PROC", "confidentiality": "METADATA_AND_ARGV_VISIBLE"},
+        "seccomp": "UNAVAILABLE"
+      },
+      "resource": {
+        "cgroup_delegated": "UNSUPPORTED",
+        "hard_memory_limit": "UNSUPPORTED",
+        "hard_cpu_limit": "UNSUPPORTED",
+        "hard_pid_limit": "UNSUPPORTED"
+      },
+      "filesystem": {"rootfs_driver": "FULL_COPY", "persistent_cow": "UNSUPPORTED", "ephemeral_cow": "DEGRADED"},
+      "network": {
+        "namespace": "SUPPORTED",
+        "outbound": "UNSUPPORTED",
+        "inbound": "UNSUPPORTED",
+        "raw_socket": "UNSUPPORTED",
+        "net_admin": "UNSUPPORTED"
+      },
+      "runtime": {
+        "runc": {"version": "1.5.0-rc.1+dev", "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec", "seccomp": false},
+        "supervisor": "ABSENT"
+      }
+    },
+    "full_rootless": {
+      "tier": "FULL_ROOTLESS",
+      "identity": {
+        "user_namespace": "SUPPORTED",
+        "uid_mapping_mode": "MULTI_ID",
+        "gid_mapping_mode": "MULTI_ID",
+        "ownership_model": "FAITHFUL",
+        "image_user_support": "ANY_UID"
+      },
+      "process": {
+        "pid_namespace": "SUPPORTED",
+        "proc_policy": {"mode": "PRIVATE_PROC", "confidentiality": "PRIVATE"},
+        "seccomp": "AVAILABLE"
+      },
+      "resource": {
+        "cgroup_delegated": "SUPPORTED",
+        "hard_memory_limit": "SUPPORTED",
+        "hard_cpu_limit": "SUPPORTED",
+        "hard_pid_limit": "SUPPORTED"
+      },
+      "filesystem": {"rootfs_driver": "OVERLAY", "persistent_cow": "SUPPORTED", "ephemeral_cow": "SUPPORTED"},
+      "network": {
+        "namespace": "SUPPORTED",
+        "outbound": "SUPPORTED",
+        "inbound": "DEGRADED",
+        "raw_socket": "UNSUPPORTED",
+        "net_admin": "UNSUPPORTED"
+      },
+      "runtime": {
+        "runc": {"version": "1.5.0-rc.1+dev", "sha256": "c5ede65cfbcec11a8b4ed2137f5ed3d73b18bd65c5256d5df99bd828e6d6b625", "seccomp": true},
+        "supervisor": "PRESENT"
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "R1-single-id-host-multi-uid-required",
+      "host": "portable_rootless_measured",
+      "spec": {"image": {"ref": "img@sha256:aaa"}, "requires": {"multi_uid": true}},
+      "expect": {
+        "outcome": "REJECT",
+        "rejections": [{"requirement": "multi_uid", "code": "HOST_CAPABILITY_UNAVAILABLE", "capability": "identity.uid_mapping_mode"}]
+      }
+    },
+    {
+      "name": "R2-no-cgroup-hard-memory-required",
+      "host": "portable_rootless_measured",
+      "spec": {"image": {"ref": "img@sha256:aaa"}, "requires": {"hard_memory_limit": true}, "resources": {"memory_bytes": 536870912}},
+      "expect": {
+        "outcome": "REJECT",
+        "rejections": [{"requirement": "hard_memory_limit", "code": "HOST_CAPABILITY_UNAVAILABLE", "capability": "resource.hard_memory_limit"}],
+        "note": "requesting 512MiB does NOT create hardness; RLIMIT fallback forbidden"
+      }
+    },
+    {
+      "name": "R3-metadata-proc-private-required",
+      "host": "portable_rootless_measured",
+      "spec": {"image": {"ref": "img@sha256:aaa"}, "requires": {"private_proc": true}},
+      "expect": {
+        "outcome": "REJECT",
+        "rejections": [{"requirement": "private_proc", "code": "HOST_CAPABILITY_UNAVAILABLE", "capability": "process.proc_policy.mode"}]
+      }
+    },
+    {
+      "name": "R4-seccomp-unavailable-required",
+      "host": "portable_rootless_no_seccomp",
+      "spec": {"image": {"ref": "img@sha256:aaa"}, "requires": {"seccomp": true}},
+      "expect": {
+        "outcome": "REJECT",
+        "rejections": [{"requirement": "seccomp", "code": "HOST_CAPABILITY_UNAVAILABLE", "capability": "process.seccomp"}],
+        "note": "never silently run unfiltered"
+      }
+    },
+    {
+      "name": "R4b-seccomp-available-accepted",
+      "host": "portable_rootless_measured",
+      "spec": {"image": {"ref": "img@sha256:aaa"}, "requires": {"seccomp": true}},
+      "expect": {"outcome": "ACCEPT", "rejections": []}
+    },
+    {
+      "name": "R5-network-none-outbound-required",
+      "host": "portable_rootless_measured",
+      "spec": {"image": {"ref": "img@sha256:aaa"}, "requires": {"outbound_network": true}},
+      "expect": {
+        "outcome": "REJECT",
+        "rejections": [{"requirement": "outbound_network", "code": "HOST_CAPABILITY_UNAVAILABLE", "capability": "network.outbound"}]
+      }
+    },
+    {
+      "name": "A1-baseline-portable-visible",
+      "host": "portable_rootless_measured",
+      "spec": {"image": {"ref": "img@sha256:aaa"}},
+      "expect": {
+        "outcome": "ACCEPT",
+        "rejections": [],
+        "degradations": [],
+        "note": "no requirements: sandbox may run; effective capabilities still enumerate EVERY dimension (unsupported never disappears)"
+      }
+    },
+    {
+      "name": "A2-strict-default-image-user-1000",
+      "host": "portable_rootless_measured",
+      "spec": {"image": {"ref": "img@sha256:aaa", "user": "1000"}},
+      "expect": {
+        "outcome": "REJECT",
+        "rejections": [{"requirement": "image.user", "code": "POLICY_UNSUPPORTED", "capability": "identity.image_user_support"}],
+        "note": "default policy is STRICT; USER 1000 cannot be faithfully represented on a single-ID host"
+      }
+    },
+    {
+      "name": "A3-flatten-root-disclosed",
+      "host": "portable_rootless_measured",
+      "spec": {"image": {"ref": "img@sha256:aaa", "user": "1000"}, "single_id_compatibility_policy": "FLATTEN_ROOT"},
+      "expect": {
+        "outcome": "ACCEPT",
+        "rejections": [],
+        "degradations": [{"capability": "identity.ownership_model", "mode": "FLATTEN_ROOT", "detail": "image user 1000 folded to uid 0"}],
+        "note": "explicit benchmark-compat switch; degradation MUST be visible"
+      }
+    },
+    {
+      "name": "A4-full-rootless-accepts-everything",
+      "host": "full_rootless",
+      "spec": {
+        "image": {"ref": "img@sha256:aaa", "user": "1000"},
+        "requires": {"multi_uid": true, "hard_memory_limit": true, "private_proc": true, "seccomp": true, "outbound_network": true}
+      },
+      "expect": {"outcome": "ACCEPT", "rejections": []}
+    }
+  ],
+  "schema_level_cases": [
+    {
+      "name": "S1-units-string-mb",
+      "spec": {"image": {"ref": "img"}, "resources": {"memory_bytes": "512MB"}},
+      "expect": "SCHEMA_REJECT",
+      "note": "canonical integer bytes only; adapters convert upstream units with fixed source-pinned rules"
+    },
+    {
+      "name": "S2-requires-not-bool",
+      "spec": {"image": {"ref": "img"}, "requires": {"multi_uid": "yes"}},
+      "expect": "SCHEMA_REJECT"
+    },
+    {
+      "name": "S3-unknown-requires-field",
+      "spec": {"image": {"ref": "img"}, "requires": {"magic_acceleration": true}},
+      "expect": "SCHEMA_REJECT",
+      "note": "unknown requirements are never silently ignored"
+    },
+    {
+      "name": "S4-unknown-spec-field",
+      "spec": {"image": {"ref": "img"}, "priority": "high"},
+      "expect": "SCHEMA_REJECT"
+    },
+    {
+      "name": "S5-policy-default-strict",
+      "spec": {"image": {"ref": "img"}},
+      "expect": "SCHEMA_ACCEPT",
+      "normalized_policy": "STRICT"
+    }
+  ]
+}

@@ -1,0 +1,373 @@
+{
+  "version": "v1",
+  "schema": "../../exec.schema.json",
+  "x-rule": "every engine (JSON schema, Rust serde types, Python reference) MUST agree with expect; ACCEPT cases also pin the normalized view",
+  "cases": [
+    {
+      "name": "argv-basic",
+      "expect": "ACCEPT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "printf",
+            "%s",
+            "a b;$HOME"
+          ]
+        },
+        "timeout_ms": 30000,
+        "env": {}
+      },
+      "normalized": {
+        "argv": [
+          "printf",
+          "%s",
+          "a b;$HOME"
+        ],
+        "env": {}
+      }
+    },
+    {
+      "name": "argv-empty-string-preserved",
+      "expect": "ACCEPT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "echo",
+            ""
+          ]
+        }
+      },
+      "normalized": {
+        "argv": [
+          "echo",
+          ""
+        ],
+        "env": {}
+      },
+      "note": "empty trailing argument survives verbatim; argv is never word-split"
+    },
+    {
+      "name": "argv-empty-array",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": []
+        }
+      }
+    },
+    {
+      "name": "argv-empty-executable",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "",
+            "x"
+          ]
+        }
+      }
+    },
+    {
+      "name": "argv-nul-rejected",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "a\u0000b"
+          ]
+        }
+      }
+    },
+    {
+      "name": "argv-arg-number",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "echo",
+            42
+          ]
+        }
+      }
+    },
+    {
+      "name": "shell-ok",
+      "expect": "ACCEPT",
+      "document": {
+        "command": {
+          "kind": "shell",
+          "executable": "/bin/bash",
+          "script": "cd /app && pytest -q"
+        },
+        "timeout_ms": 30000
+      },
+      "normalized": {
+        "executable": "/bin/bash",
+        "script": "cd /app && pytest -q",
+        "env": {}
+      }
+    },
+    {
+      "name": "shell-relative-interpreter",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "shell",
+          "executable": "bash",
+          "script": "true"
+        }
+      }
+    },
+    {
+      "name": "shell-missing-script",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "shell",
+          "executable": "/bin/bash"
+        }
+      }
+    },
+    {
+      "name": "shell-with-stray-argv-key",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "shell",
+          "executable": "/bin/bash",
+          "script": "true",
+          "argv": [
+            "x"
+          ]
+        }
+      }
+    },
+    {
+      "name": "command-kind-unknown",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "exec",
+          "argv": [
+            "true"
+          ]
+        }
+      }
+    },
+    {
+      "name": "command-missing",
+      "expect": "REJECT",
+      "document": {
+        "timeout_ms": 1000
+      }
+    },
+    {
+      "name": "timeout-bool",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "timeout_ms": true
+      },
+      "note": "JSON bool is never a number"
+    },
+    {
+      "name": "timeout-zero",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "timeout_ms": 0
+      }
+    },
+    {
+      "name": "timeout-float",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "timeout_ms": 1.5
+      }
+    },
+    {
+      "name": "timeout-string",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "timeout_ms": "1000"
+      }
+    },
+    {
+      "name": "unknown-top-level-field",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "surprise": 1
+      },
+      "note": "no silent ignore of unknown fields"
+    },
+    {
+      "name": "null-env",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "env": null
+      },
+      "note": "null != missing: explicit null is rejected (see missing-env-accepted)"
+    },
+    {
+      "name": "null-timeout",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "timeout_ms": null
+      }
+    },
+    {
+      "name": "null-cwd",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "cwd": null
+      }
+    },
+    {
+      "name": "missing-env-accepted",
+      "expect": "ACCEPT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        }
+      },
+      "normalized": {
+        "argv": [
+          "true"
+        ],
+        "env": {}
+      },
+      "note": "absent env defaults to {}"
+    },
+    {
+      "name": "env-name-with-equals",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "env": {
+          "A=B": "x"
+        }
+      }
+    },
+    {
+      "name": "env-value-nul",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "env": {
+          "A": "x\u0000y"
+        }
+      }
+    },
+    {
+      "name": "cwd-relative",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "cwd": "app"
+      }
+    },
+    {
+      "name": "cwd-absolute",
+      "expect": "ACCEPT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "cwd": "/app"
+      },
+      "normalized": {
+        "argv": [
+          "true"
+        ],
+        "cwd": "/app",
+        "env": {}
+      }
+    },
+    {
+      "name": "user-empty-string",
+      "expect": "REJECT",
+      "document": {
+        "command": {
+          "kind": "argv",
+          "argv": [
+            "true"
+          ]
+        },
+        "user": ""
+      }
+    }
+  ]
+}

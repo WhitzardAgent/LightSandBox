@@ -1,0 +1,64 @@
+{
+  "version": "v1",
+  "x-rule": "generation = sandbox incarnation fence; revision = record-state CAS counter; daemon/API restart NEVER increments generation",
+  "cases": [
+    {
+      "name": "api-restart-keeps-generation",
+      "given": {"sandbox_id": "sbx-01", "generation": 3, "revision": 9},
+      "action": {"kind": "api_restart"},
+      "expect": {"generation": 3, "revision": 9}
+    },
+    {
+      "name": "new-incarnation-new-generation",
+      "given": {"sandbox_id": "sbx-01", "generation": 3, "revision": 9},
+      "action": {"kind": "recreate_incarnation"},
+      "expect": {"generation": 4, "revision": 0},
+      "note": "deleted sandbox ids are never reused; generation increments only on a new incarnation"
+    },
+    {
+      "name": "revision-cas-match",
+      "given": {"sandbox_id": "sbx-01", "generation": 3, "revision": 9},
+      "action": {"kind": "cas_update", "expected_revision": 9},
+      "expect": {"outcome": "ACCEPT", "revision": 10, "generation": 3}
+    },
+    {
+      "name": "revision-cas-conflict",
+      "given": {"sandbox_id": "sbx-01", "generation": 3, "revision": 9},
+      "action": {"kind": "cas_update", "expected_revision": 8},
+      "expect": {
+        "outcome": "REJECT",
+        "error": {"code": "STALE_GENERATION", "http_status": 409},
+        "revision": 9
+      },
+      "note": "CAS conflict is explicit; no blind overwrite"
+    },
+    {
+      "name": "stale-generation-fences-exec",
+      "given": {"sandbox_id": "sbx-01", "generation": 3, "revision": 9},
+      "action": {"kind": "bind_execution", "execution_id": "ex-77", "claimed_generation": 2},
+      "expect": {
+        "outcome": "REJECT",
+        "error": {"code": "STALE_GENERATION", "http_status": 409}
+      },
+      "note": "an older generation may never attach work to the current incarnation"
+    },
+    {
+      "name": "current-generation-binds-exec",
+      "given": {"sandbox_id": "sbx-01", "generation": 3, "revision": 9},
+      "action": {"kind": "bind_execution", "execution_id": "ex-77", "claimed_generation": 3},
+      "expect": {"outcome": "ACCEPT"}
+    },
+    {
+      "name": "error-envelope-shape",
+      "given": {"sandbox_id": "sbx-01", "generation": 3, "revision": 9},
+      "action": {"kind": "cas_update", "expected_revision": 8},
+      "expect": {
+        "outcome": "REJECT",
+        "error_document": {
+          "error": {"code": "STALE_GENERATION", "message": "resource incarnation changed", "request_id": "rq_fixture_1"}
+        }
+      },
+      "note": "error_document must validate against error.schema.json"
+    }
+  ]
+}

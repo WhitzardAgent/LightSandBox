@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native HostCapabilities v1 (dimensioned, evidence-bound)",
+  "x-implementation-status": "FROZEN_CONTRACT",
+  "x-notes": [
+    "observation of a host, never a requirement; SandboxSpec.requires is the flip side (sandbox-requirements.schema.json)",
+    "PORTABLE_ROOTLESS contract class for /proc on the reference host is METADATA_AND_ARGV_VISIBLE (ADR 0001)",
+    "secrets MUST NOT enter argv (LSR-1, docs/security/SECRET_HANDLING.md)"
+  ],
+  "type": "object",
+  "required": ["tier", "identity", "process", "resource", "filesystem", "network", "runtime"],
+  "additionalProperties": false,
+  "properties": {
+    "tier": {
+      "enum": ["PORTABLE_ROOTLESS", "FULL_ROOTLESS", "ROOTFUL", "UNSUPPORTED_HOST"]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["user_namespace", "uid_mapping_mode", "gid_mapping_mode", "ownership_model", "image_user_support"],
+      "properties": {
+        "user_namespace": {"$ref": "#/$defs/status"},
+        "uid_mapping_mode": {"enum": ["SINGLE_ID", "MULTI_ID", "UNSUPPORTED", "NOT_TESTED"]},
+        "gid_mapping_mode": {"enum": ["SINGLE_ID", "MULTI_ID", "UNSUPPORTED", "NOT_TESTED"]},
+        "ownership_model": {
+          "enum": ["FAITHFUL", "FLATTENED", "EMULATED_PARTIAL", "UNKNOWN"],
+          "description": "how file ownership/uids in images map; FLATTENED/EMULATED_PARTIAL must be disclosed as degradations when relied upon"
+        },
+        "image_user_support": {
+          "enum": ["ANY_UID", "ROOT_ONLY", "UNSUPPORTED", "NOT_TESTED"],
+          "description": "ROOT_ONLY on single-ID hosts (measured: USER 1000 BROKEN)"
+        }
+      }
+    },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pid_namespace", "proc_policy", "seccomp"],
+      "properties": {
+        "pid_namespace": {"$ref": "#/$defs/status"},
+        "proc_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "confidentiality"],
+          "properties": {
+            "mode": {"enum": ["PRIVATE_PROC", "RBIND_RO_HOST_PROC", "UNAVAILABLE", "NOT_TESTED"]},
+            "confidentiality": {
+              "enum": ["PRIVATE", "METADATA_AND_ARGV_VISIBLE", "CONTENT_VISIBLE", "NOT_TESTED"],
+              "description": "cross-sandbox read exposure class measured by P2.1; ARGV content is PUBLIC to co-located sandboxes on this host"
+            }
+          }
+        },
+        "seccomp": {"enum": ["AVAILABLE", "UNAVAILABLE", "NOT_TESTED"]}
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cgroup_delegated", "hard_memory_limit", "hard_cpu_limit", "hard_pid_limit"],
+      "properties": {
+        "cgroup_delegated": {"$ref": "#/$defs/status"},
+        "hard_memory_limit": {"$ref": "#/$defs/status"},
+        "hard_cpu_limit": {"$ref": "#/$defs/status"},
+        "hard_pid_limit": {"$ref": "#/$defs/status"},
+        "process_guardrails_note": {
+          "type": "string",
+          "description": "RLIMIT_* are process-level guardrails only and MUST NOT be named cgroup hard limits"
+        }
+      }
+    },
+    "filesystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootfs_driver", "persistent_cow", "ephemeral_cow"],
+      "properties": {
+        "rootfs_driver": {"enum": ["FULL_COPY", "REFLINK_COPY", "TMPFS_COW", "OVERLAY", "NOT_TESTED"]},
+        "persistent_cow": {"$ref": "#/$defs/status"},
+        "ephemeral_cow": {"$ref": "#/$defs/status"}
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "outbound", "inbound", "raw_socket", "net_admin"],
+      "properties": {
+        "namespace": {"$ref": "#/$defs/status"},
+        "outbound": {"$ref": "#/$defs/status"},
+        "inbound": {"$ref": "#/$defs/status"},
+        "raw_socket": {"$ref": "#/$defs/status"},
+        "net_admin": {"$ref": "#/$defs/status"}
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runc", "supervisor"],
+      "properties": {
+        "runc": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "sha256", "seccomp"],
+          "properties": {
+            "version": {"type": "string", "minLength": 1, "pattern": "^[^\\u0000]*$"},
+            "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "seccomp": {"type": "boolean"}
+          }
+        },
+        "supervisor": {"enum": ["PRESENT", "ABSENT"]}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "description": "optional per-dimension evidence binding (command/exit_code/output_excerpt) per T03 HostReport conventions",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "exit_code", "output_excerpt"],
+        "properties": {
+          "command": {"type": "string", "minLength": 1},
+          "exit_code": {"type": "integer"},
+          "output_excerpt": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "status": {"enum": ["SUPPORTED", "DEGRADED", "UNSUPPORTED", "NOT_TESTED"]}
+  }
+}

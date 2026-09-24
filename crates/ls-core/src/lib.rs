@@ -4,6 +4,8 @@
 //! T03 HostReport. No HTTP, SQL, privileged syscalls or evaluation semantics
 //! belong in this crate (see docs/v5/02_ARCHITECTURE.md and docs/v5/03_DOMAIN.md).
 
+pub mod contracts;
+
 pub mod capability {
     use serde::{Deserialize, Serialize};
     use std::fmt;

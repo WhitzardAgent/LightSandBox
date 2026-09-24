@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native unified error envelope v1",
+  "x-implementation-status": "FROZEN_CONTRACT",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "request_id"],
+      "properties": {
+        "code": {
+          "enum": [
+            "INVALID_ARGUMENT",
+            "AUTHENTICATION_REQUIRED",
+            "FORBIDDEN",
+            "NOT_FOUND",
+            "CONFLICT",
+            "STALE_GENERATION",
+            "CAPABILITY_UNAVAILABLE",
+            "HOST_CAPABILITY_UNAVAILABLE",
+            "POLICY_UNSUPPORTED",
+            "RESOURCE_EXHAUSTED",
+            "INTERNAL_FAILURE",
+            "UNAVAILABLE"
+          ]
+        },
+        "message": {"type": "string", "minLength": 1},
+        "request_id": {"type": "string", "minLength": 1, "pattern": "^[^\\u0000]*$"}
+      }
+    }
+  }
+}

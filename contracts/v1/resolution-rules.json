@@ -1,0 +1,51 @@
+{
+  "version": "v1",
+  "x-implementation-status": "FROZEN_RULES_TABLE_consumed_by_rust_and_python_resolvers",
+  "purpose": "requested capability -> capability resolver -> effective capability -> degradation/rejection. Machine-readable; no silent downgrade; no silent drop.",
+  "rejection": {
+    "code": "HOST_CAPABILITY_UNAVAILABLE",
+    "http_status": 412,
+    "rule": "a boolean requirement set true MUST have its mapped host capability SUPPORTED, otherwise the sandbox is REJECTED BEFORE CREATE with this code; no fallback rewriting (no USER->0, no RLIMIT sold as hard limit, no unfiltered seccomp)"
+  },
+  "policy_rejection": {
+    "code": "POLICY_UNSUPPORTED",
+    "http_status": 412,
+    "rule": "SingleIdCompatibilityPolicy=STRICT refuses unfaithful UID/GID expressions (image user != 0, required ownership) at create/preflight"
+  },
+  "degradation_rule": "every difference between requested and effective MUST be listed in effective_degradations; every declared dimension MUST appear in effective capabilities even when UNSUPPORTED (unsupported cannot silently disappear)",
+  "requirements_map": {
+    "multi_uid": {
+      "capability": "identity.uid_mapping_mode",
+      "accepted_value": "MULTI_ID"
+    },
+    "hard_memory_limit": {
+      "capability": "resource.hard_memory_limit",
+      "accepted_value": "SUPPORTED"
+    },
+    "private_proc": {
+      "capability": "process.proc_policy.mode",
+      "accepted_value": "PRIVATE_PROC"
+    },
+    "seccomp": {
+      "capability": "process.seccomp",
+      "accepted_value": "AVAILABLE"
+    },
+    "outbound_network": {
+      "capability": "network.outbound",
+      "accepted_value": "SUPPORTED"
+    }
+  },
+  "single_id_compat": {
+    "field": "single_id_compatibility_policy",
+    "default": "STRICT",
+    "values": ["STRICT", "FLATTEN_ROOT"],
+    "strict": "unfaithful UID/GID expressions (image user != uid 0, required ownership) REJECT at create/preflight with POLICY_UNSUPPORTED",
+    "flatten_root": "benchmark compatibility mode: ownership/USER flattening allowed, MUST be visible in effective_degradations with capability identity.ownership_model",
+    "note": "policy never downgrades an explicit true requirement in requirements_map; it governs ownership/USER faithfulness only"
+  },
+  "image_user_rule": {
+    "applies_when": "spec.image.user is set and != \"0\" and != \"root\" and host identity.uid_mapping_mode == SINGLE_ID",
+    "STRICT": "REJECT POLICY_UNSUPPORTED",
+    "FLATTEN_ROOT": "ACCEPT with degradation identity.ownership_model=FLATTENED (image user folded to 0, disclosed)"
+  }
+}

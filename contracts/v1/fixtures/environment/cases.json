@@ -1,0 +1,134 @@
+{
+  "version": "v1",
+  "schema": "../../environment.schema.json",
+  "x-rule": "native EnvironmentSpec carries NO trial/agent/verifier/reward vocabulary; advanced volume/network fields are rejected loudly with the offending field named",
+  "cases": [
+    {
+      "name": "C02-harbor-recipe-verifier-reward",
+      "expect": "REJECT",
+      "expect_fields": ["verifier", "reward"],
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "task@sha256:bbb"}},
+        "verifier": {"image": "verifier@sha256:ccc"},
+        "reward": {"metric": "pass@1"},
+        "steps": [{"name": "run-tests"}]
+      },
+      "note": "verifier/reward/steps belong to HarborRecipe (adapter-side metadata); native core rejects them by name, never silently drops them"
+    },
+    {
+      "name": "C02b-adapter-metadata-preserved-verbatim",
+      "expect": "METADATA_ROUNDTRIP",
+      "document": {
+        "harbor_recipe": {
+          "verifier": {"image": "verifier@sha256:ccc"},
+          "reward": {"metric": "pass@1"},
+          "agent_service": "main"
+        }
+      },
+      "note": "the SAME content is legitimate as adapter-side metadata: it must round-trip byte-identically JSON-semantically; it simply never enters the native EnvironmentSpec"
+    },
+    {
+      "name": "minimal-valid",
+      "expect": "ACCEPT",
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "task@sha256:bbb"}}
+      }
+    },
+    {
+      "name": "C05-non-empty-mounts",
+      "expect": "REJECT",
+      "expect_fields": ["mounts"],
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img", "mounts": ["/data:/data"]}}
+      },
+      "note": "advanced mount support is planned-not-implemented; non-empty is rejected, empty []/{} tolerated"
+    },
+    {
+      "name": "C05-non-empty-networks",
+      "expect": "REJECT",
+      "expect_fields": ["networks"],
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img", "networks": {"front": {}}}}
+      }
+    },
+    {
+      "name": "C05-non-empty-top-volumes",
+      "expect": "REJECT",
+      "expect_fields": ["volumes"],
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img"}},
+        "volumes": {"data": {}}
+      }
+    },
+    {
+      "name": "entrypoint-null-inherits",
+      "expect": "ACCEPT",
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img", "entrypoint": null}}
+      },
+      "note": "launch override: null/missing = inherit image entrypoint (03_DOMAIN §launch)"
+    },
+    {
+      "name": "entrypoint-empty-clears",
+      "expect": "ACCEPT",
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img", "entrypoint": [], "command": []}}
+      },
+      "note": "[] = explicitly cleared; distinct from null"
+    },
+    {
+      "name": "entrypoint-empty-first-item",
+      "expect": "REJECT",
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img", "entrypoint": [""]}}
+      }
+    },
+    {
+      "name": "resources-bool-cpu",
+      "expect": "REJECT",
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img", "resources": {"cpu_millis": true}}}
+      }
+    },
+    {
+      "name": "resources-string-memory",
+      "expect": "REJECT",
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img", "resources": {"memory_bytes": "512MB"}}}
+      },
+      "note": "canonical integer bytes; upstream MB/s conversions happen in adapters with source-pinned rules"
+    },
+    {
+      "name": "launch-mode-unknown",
+      "expect": "REJECT",
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img", "launch_mode": "debug-shell"}}
+      }
+    },
+    {
+      "name": "unknown-service-field",
+      "expect": "REJECT",
+      "expect_fields": ["healthcheck_url"],
+      "document": {
+        "schema_version": "v1",
+        "services": {"main": {"image": "img", "healthcheck_url": "http://x/"}}
+      }
+    },
+    {
+      "name": "empty-services",
+      "expect": "REJECT",
+      "document": {"schema_version": "v1", "services": {}}
+    }
+  ]
+}

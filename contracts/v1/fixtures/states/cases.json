@@ -1,0 +1,71 @@
+{
+  "version": "v1",
+  "states_source": "../../states.json",
+  "x-rule": "legal transitions are enumerated from states.json only; these fixtures pin illegal rejections and evidence rules",
+  "illegal_transitions": [
+    {"domain": "operation", "from": "succeeded", "to": "running"},
+    {"domain": "operation", "from": "failed", "to": "running"},
+    {"domain": "operation", "from": "pending", "to": "succeeded"},
+    {"domain": "operation", "from": "unknown", "to": "running"},
+    {"domain": "execution", "from": "exited", "to": "running"},
+    {"domain": "execution", "from": "accepted", "to": "exited"},
+    {"domain": "execution", "from": "unknown", "to": "running"},
+    {"domain": "execution", "from": "start-failed", "to": "running"},
+    {"domain": "sandbox", "from": "deleted", "to": "running"},
+    {"domain": "sandbox", "from": "requested", "to": "running"},
+    {"domain": "sandbox", "from": "running", "to": "deleted"},
+    {"domain": "sandbox", "from": "cleanup-required", "to": "deleted"}
+  ],
+  "late_confirmation_rules": [
+    {
+      "domain": "operation",
+      "from": "unknown",
+      "allowed_to": ["succeeded", "failed"],
+      "forbidden_to": ["running", "pending"],
+      "requires_non_empty": true,
+      "note": "unknown NEVER re-executes; only an authoritative receipt moves it, with audit"
+    },
+    {
+      "domain": "execution",
+      "from": "unknown",
+      "allowed_to": ["exited", "start-failed"],
+      "forbidden_to": ["running", "accepted"],
+      "requires_non_empty": true
+    }
+  ],
+  "semantic_facts": [
+    {
+      "name": "nonzero-exit-is-not-operation-failure",
+      "document": {
+        "execution": {"state": "exited", "exit_record": {"kind": "exited", "exit_code": 137}},
+        "operation": {"state": "succeeded"}
+      },
+      "consistent": true,
+      "note": "process exit code belongs to the Execution; the management Operation may succeed regardless"
+    },
+    {
+      "name": "start-failed-without-ghost-execution",
+      "document": {
+        "execution": {"state": "start-failed", "exit_record": null},
+        "operation": {"state": "succeeded"}
+      },
+      "consistent": true
+    },
+    {
+      "name": "exited-requires-exit-record",
+      "document": {
+        "execution": {"state": "exited", "exit_record": null}
+      },
+      "consistent": false,
+      "note": "exited without an observed wait status / trusted supervisor receipt is FORBIDDEN"
+    },
+    {
+      "name": "unknown-is-terminal-not-deleted",
+      "document": {
+        "execution": {"state": "unknown", "exit_record": null}
+      },
+      "consistent": true,
+      "note": "old unknown records are never erased; later receipts move state only per late_confirmation_rules"
+    }
+  ]
+}

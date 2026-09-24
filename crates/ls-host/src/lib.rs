@@ -87,7 +87,7 @@ pub mod probe {
     /// Unprivileged baseline probes used for smoke checks. T03 owns the full set.
     pub fn baseline_probes() -> Vec<CapabilityFinding> {
         vec![
-            command_finding(ls_core::capability::USERNS_SINGLE_ID, &["unshare", "-Ur", "true"]),
+            command_finding(ls_core::capability::USERNS_CREATE, &["unshare", "-Ur", "true"]),
             positive_numeric_file_finding(
                 "kernel.max_user_namespaces",
                 "/proc/sys/user/max_user_namespaces",
@@ -139,7 +139,7 @@ pub mod probe {
             let findings = baseline_probes();
             let userns = findings
                 .iter()
-                .find(|f| f.name == ls_core::capability::USERNS_SINGLE_ID)
+                .find(|f| f.name == ls_core::capability::USERNS_CREATE)
                 .unwrap();
             assert_eq!(
                 userns.status,

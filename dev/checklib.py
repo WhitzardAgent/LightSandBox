@@ -146,6 +146,7 @@ def suite_fast(root):
     commands.append(python_script(root / 'dev' / 'check_native.py', 'native-reference'))
     commands.append(python_script(root / 'dev' / 'check_seeds.py', 'seed-reference'))
     commands.append(python_unittest(root / 'tests' / 'pack', root, label='pack-tools'))
+    commands.append(python_unittest(root / 'tests' / 'contracts', root, label='contract-locks'))
     res = run_command([sys.executable, str(root / 'tools' / 'packctl.py'), 'validate'])
     commands.append({'argv': res['argv'], 'label': 'packctl-validate', 'exit': res['exit'],
                      'tests': 0, 'duration_ms': res['duration_ms'], 'output': res['output']})

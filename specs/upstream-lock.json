@@ -1,94 +1,254 @@
 {
   "schema_version": "2.0",
-  "status": "UNLOCKED",
-  "reason": "本轮可读取公开文档；容器到GitHub的DNS不可用，未获得完整源码与制品。T01必须在开发机器锁定并计算哈希。",
+  "status": "LOCKED",
+  "observed_at": "2026-09-24T08:07:07.746691+00:00",
   "repositories": [
     {
       "name": "opensandbox",
       "url": "https://github.com/opensandbox-group/OpenSandbox.git",
-      "revision": null,
-      "status": "UNLOCKED",
+      "revision": "1953159a0935a546009a695c92683beb5c58cb09",
+      "status": "LOCKED",
       "required_files": [
         "specs/sandbox-lifecycle.yml",
         "specs/execd-api.yaml"
-      ]
+      ],
+      "role": "api-reference",
+      "spdx": "Apache-2.0",
+      "tree_hash": "acc75dce60ce40be59556fb2568ff959795790f7",
+      "license": {
+        "path": "LICENSE",
+        "sha256": "50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "specs/sandbox-lifecycle.yml": "b5c137193e830c7603d811e5b60e68f293551a938728af3467e7f02585c8e6fa",
+        "specs/execd-api.yaml": "ef7f43747f58f78b174fba97df81644820a206ca86918fd8a0c1d0db1dc47dff"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
     },
     {
       "name": "runc",
       "url": "https://github.com/opencontainers/runc.git",
-      "revision": null,
-      "status": "UNLOCKED",
+      "revision": "41b74772b651b3b42a1f04a43a803db16f0e7e9b",
+      "status": "LOCKED",
       "required_files": [
         "README.md",
         "docs/terminals.md"
-      ]
+      ],
+      "role": "oci-runtime",
+      "spdx": "Apache-2.0",
+      "tree_hash": "630e8a7537f207e3524f9ee35f88cc0fb5eee002",
+      "license": {
+        "path": "LICENSE",
+        "sha256": "552a739c3b25792263f731542238b92f6f8d07e9a488eae27e6c4690038a8243",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "README.md": "90c9050f1d5bff14e28ce2bdf8cd6a6de8eb71abd13a732b6ddf5a90d3572d95",
+        "docs/terminals.md": "4d267bb67a3011ad97b12e52d4e0c2aaeff15fe4d892e7c9fe838a518bc54997"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
     },
     {
       "name": "runtime-spec",
       "url": "https://github.com/opencontainers/runtime-spec.git",
-      "revision": null,
-      "status": "UNLOCKED",
+      "revision": "6999a89a76a0329f440d5740497bedb9dd431297",
+      "status": "LOCKED",
       "required_files": [
         "config.md",
         "config-linux.md"
-      ]
+      ],
+      "role": "spec",
+      "spdx": "Apache-2.0",
+      "tree_hash": "a77eea4b98ce64d6ffe77edf0e16af1ebf275e54",
+      "license": {
+        "path": "LICENSE",
+        "sha256": "a964a27c435167bdd78827ff83e4bd4473eca53d583a39598d2f445894a9225d",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "config.md": "3d99d67f4e1a32c2581aee44cf3cbee51f5b335fa74af191d1f9df495f92ee0b",
+        "config-linux.md": "0b9bdad8c8b5ff0ef3e99ff4452c874d9d78a4af347dd145d2b6087e67ca1395"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
     },
     {
       "name": "image-spec",
       "url": "https://github.com/opencontainers/image-spec.git",
-      "revision": null,
-      "status": "UNLOCKED",
+      "revision": "ca68a05fad732be329ef67e713c3af60fb7d5f76",
+      "status": "LOCKED",
       "required_files": [
         "config.md",
         "layer.md"
-      ]
+      ],
+      "role": "spec",
+      "spdx": "Apache-2.0",
+      "tree_hash": "9f134743f83d66d9bd7072312ab15bb010b2efd9",
+      "license": {
+        "path": "LICENSE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "config.md": "2b9dffcd8087aed0ad30f4dcf6ff63daf1a82dd4d63a50c839c9bc5819fc9a97",
+        "layer.md": "e4bcea539746c5a63d707d9b7d1dab55990a7d2dc33a2d181d87b7636aa8092f"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
     },
     {
       "name": "swebench",
       "url": "https://github.com/SWE-bench/SWE-bench.git",
-      "revision": null,
-      "status": "UNLOCKED",
+      "revision": "02e7a74ffd0b707aab73d203fe87bdc7c76afc8e",
+      "status": "LOCKED",
       "required_files": [
         "README.md"
-      ]
+      ],
+      "role": "benchmark",
+      "spdx": "MIT",
+      "tree_hash": "3c53c27bd4ae6a14ddf58be94156965dcd00f6f3",
+      "license": {
+        "path": "LICENSE",
+        "sha256": "2bd2e08df7147f67a69b42c10efae09bd4bf119df397371036187d5dd1b02f57",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "README.md": "06841624d7b5130dfe3cc6714642e9a8fd2a608c95c66ae0180e409f12b73aaa"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
     },
     {
       "name": "cybergym",
       "url": "https://github.com/sunblaze-ucb/cybergym.git",
-      "revision": null,
-      "status": "UNLOCKED",
+      "revision": "c6fe2027d39471375920b92cf1025e23a99ffda5",
+      "status": "LOCKED",
       "required_files": [
         "README.md"
-      ]
+      ],
+      "role": "benchmark",
+      "spdx": "Apache-2.0",
+      "tree_hash": "fcb496e2fbce873305c18e5a70bde8c2dd211a3f",
+      "license": {
+        "path": "LICENSE",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "README.md": "066c3fc3c19e0264e0e444ad92d1fa96d7cecf04919a5d097284223495879fe0"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
     },
     {
       "name": "terminalbench",
       "url": "https://github.com/harbor-framework/terminal-bench.git",
-      "revision": null,
-      "status": "UNLOCKED",
+      "revision": "4def1f367467b34b18e0dbdc086400ba71c3e037",
+      "status": "LOCKED",
       "required_files": [
         "README.md"
-      ]
+      ],
+      "role": "benchmark",
+      "spdx": "Apache-2.0",
+      "tree_hash": "37501b1ae09633743628948f0b307737ea79fa37",
+      "license": {
+        "path": "LICENSE",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "README.md": "19cd7542ab806fc5732503f2fe2d6ee7e342de549ab1acfba184060f1290b03b"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
     },
     {
       "name": "harbor",
       "url": "https://github.com/harbor-framework/harbor.git",
-      "revision": null,
-      "status": "UNLOCKED",
+      "revision": "cdb76bae6dc88d5bca1c8f0754bbba300d6574b4",
+      "status": "LOCKED",
       "required_files": [
         "README.md"
-      ]
+      ],
+      "role": "adapter-reference",
+      "spdx": "Apache-2.0",
+      "tree_hash": "455353b21ea0a80ca442f646ed71edeb154a5971",
+      "license": {
+        "path": "LICENSE",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "README.md": "687e4f416b43e1ab28afb3cd48f556d7a9f4d664ac78ac1a2a07a7ab9b95b1b7"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
     },
     {
       "name": "buildkit",
       "url": "https://github.com/moby/buildkit.git",
-      "revision": null,
-      "status": "UNLOCKED",
+      "revision": "878c3a5ffb95b1c14bf0e089a9896be512ea7b6e",
+      "status": "LOCKED",
       "required_files": [
         "README.md",
         "docs/rootless.md"
-      ]
+      ],
+      "role": "oci-worker",
+      "spdx": "Apache-2.0",
+      "tree_hash": "1614514756b0c6a6f5abe2508a546dfe4a15aee1",
+      "license": {
+        "path": "LICENSE",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "README.md": "5a20dccd3a0dd39706fc1d2d9e1048a9f635c8840ef844977ed6553df13f72aa",
+        "docs/rootless.md": "156c9ba88d14be15a641b3b6ef982a50c7d3ae60a64c3a606747078472801a67"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
+    },
+    {
+      "name": "umoci",
+      "url": "https://github.com/opencontainers/umoci.git",
+      "revision": "f5d1219acaf67127ebacf6306776d3ff465735ea",
+      "status": "LOCKED",
+      "role": "image-unpack",
+      "spdx": "Apache-2.0",
+      "required_files": [
+        "README.md",
+        "COPYING"
+      ],
+      "tree_hash": "19fe2786290b3f1022291c726208552ad1cf03f9",
+      "license": {
+        "path": "COPYING",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "README.md": "b91539dc7b93fe557fe6d0156350fd10cabb2acd2905d56739a85893a7eefd61",
+        "COPYING": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
+    },
+    {
+      "name": "proot",
+      "url": "https://github.com/termux/proot.git",
+      "revision": "58c3b42849fac502c6c60a45c4d2a82da9e9f8d4",
+      "status": "LOCKED",
+      "role": "compat-backend",
+      "spdx": "GPL-2.0-or-later",
+      "required_files": [
+        "README.md",
+        "COPYING"
+      ],
+      "tree_hash": "7a019d24dbd0fd7058619970dbd287e689b890c1",
+      "license": {
+        "path": "COPYING",
+        "sha256": "0ffa6454acbe7e410ac6f0007df83b9b3161fe55484c1f4b87487c0f2d228a6d",
+        "status": "PRESENT"
+      },
+      "file_hashes": {
+        "README.md": "bf5ffae8068ddb8b1d6368900131d5d4f88dccd9370843a08cd32cfb5bc5976d",
+        "COPYING": "0ffa6454acbe7e410ac6f0007df83b9b3161fe55484c1f4b87487c0f2d228a6d"
+      },
+      "provenance": "clean_local_git_bytes_origin_matched_no_network"
     }
   ],
-  "release_blocking": true
+  "scope": "source bytes only; SDK packages, binaries, image digests and dataset manifests require separate locks",
+  "release_blocking": false
 }

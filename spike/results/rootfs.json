@@ -1,0 +1,217 @@
+{
+  "experiment": "rootfs",
+  "started_at": "2026-09-24T09:59:42.807824+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "FULL_COPY prepare (cp -a)",
+      "note": "972 ms wall",
+      "result": {
+        "argv": [
+          "/bin/cp",
+          "-a",
+          "/tmp/lsbx-spike/bundles/a/.",
+          "/tmp/lsbx-spike/rootfs-fullcopy"
+        ],
+        "exit": 0,
+        "ms": 972,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "FULL_COPY du",
+      "note": "",
+      "result": {
+        "argv": [
+          "/usr/bin/du",
+          "-sb",
+          "/tmp/lsbx-spike/bundles/a/rootfs",
+          "/tmp/lsbx-spike/rootfs-fullcopy/rootfs"
+        ],
+        "exit": 0,
+        "ms": 24,
+        "stdout": "972170603\t/tmp/lsbx-spike/bundles/a/rootfs\n972170707\t/tmp/lsbx-spike/rootfs-fullcopy/rootfs\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container fc-write: /bin/bash -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/rootfs-fullcopy",
+          "fc-write"
+        ],
+        "exit": 0,
+        "ms": 58,
+        "run_as": "65534:65534",
+        "stdout": "marker-3567\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container fc-reread: /bin/cat /workspace/marker.txt",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/rootfs-fullcopy",
+          "fc-reread"
+        ],
+        "exit": 0,
+        "ms": 69,
+        "run_as": "65534:65534",
+        "stdout": "marker-3567\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "FULL_COPY persistence across two container starts",
+      "note": "",
+      "result": {
+        "written": "marker-3567",
+        "reread": "marker-3567",
+        "persistent": true
+      }
+    },
+    {
+      "title": "FULL_COPY delete (contents as uid 65534; top dir is host state, not sandbox)",
+      "note": "196 ms wall",
+      "result": {
+        "argv": [
+          "/bin/bash",
+          "-c",
+          "/bin/rm -rf --one-file-system /tmp/lsbx-spike/rootfs-fullcopy/rootfs /tmp/lsbx-spike/rootfs-fullcopy/config.json"
+        ],
+        "exit": 0,
+        "ms": 196,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container cow-tmpfs-scratch: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "cow-tmpfs-scratch"
+        ],
+        "exit": 0,
+        "ms": 77,
+        "run_as": "65534:65534",
+        "stdout": "mount rc 0 errno 0\nscratch-ok 8MB\numount rc 0 errno 0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container cow-lazy-copy-micro: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "cow-lazy-copy-micro"
+        ],
+        "exit": 0,
+        "ms": 80,
+        "run_as": "65534:65534",
+        "stdout": "lazy copy-on-first-write ms 5 bytes 5904936\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container cow-bind-ro-mask: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "cow-bind-ro-mask"
+        ],
+        "exit": 0,
+        "ms": 66,
+        "run_as": "65534:65534",
+        "stdout": "write-blocked errno 30\nmask-umount rc 0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container cow-mem-impact: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "cow-mem-impact"
+        ],
+        "exit": 0,
+        "ms": 136,
+        "run_as": "65534:65534",
+        "stdout": "mem_available_delta_kb_while_live 62864\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "TMPFS memory boundedness (32MB tmpfs file, host MemAvailable delta measured INSIDE the live sandbox)",
+      "note": "",
+      "result": {
+        "delta": [
+          "mem_available_delta_kb_while_live 62864"
+        ]
+      }
+    },
+    {
+      "title": "TMPFS_COW architecture block",
+      "note": "",
+      "result": {
+        "why_runc_cannot_wire_it": "a tmpfs COW layer must be mounted inside the sandbox user+mount namespaces, but runc prepares rootfs mounts before that userns owns anything; a nested launcher is required",
+        "required_block": "per-sandbox supervisor sharing the container mountns: mount tmpfs -> userspace lazy copy-on-write (no FUSE: /dev/fuse absent)",
+        "disk_overlay": "excluded by design AND by host EPERM evidence",
+        "v1_shape": "FULL_COPY (persistent) works today; TMPFS_COW = mechanism proven, runtime wiring pending the supervisor architecture block"
+      }
+    }
+  ],
+  "verdict": "rootfs: FULL_COPY WORKS; TMPFS_COW mechanism PROVEN (supervisor block required for runtime wiring)"
+}

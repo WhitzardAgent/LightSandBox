@@ -1,0 +1,212 @@
+{
+  "experiment": "firstrun",
+  "started_at": "2026-09-24T08:47:03.671729+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "baseline: runc run as euid-0 (rootful path)",
+      "note": "documents why the PORTABLE_ROOTLESS runtime must run as the real user",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "rootful-euid0"
+        ],
+        "exit": 1,
+        "ms": 16,
+        "stdout": "",
+        "stderr": "time=\"2026-09-24T08:47:03Z\" level=warning msg=\"unable to get oom kill count\" error=\"openat2 /sys/fs/cgroup/rootful-euid0/memory.events: no such file or directory\"\ntime=\"2026-09-24T08:47:03Z\" level=error msg=\"runc run failed: unable to start container process: unable to apply cgroup configuration: mkdir /sys/fs/cgroup/rootful-euid0: read-only file system\"\n"
+      }
+    },
+    {
+      "title": "P0: runc run with fresh private /proc",
+      "note": "expected EPERM layer identification, not assumed",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "p0-proc"
+        ],
+        "exit": 1,
+        "ms": 30,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": "time=\"2026-09-24T08:47:03Z\" level=error msg=\"runc run failed: unable to start container process: error during container init: error mounting \\\"proc\\\" to rootfs at \\\"/proc\\\": mount src=proc, dst=/proc, dstFd=/proc/thread-self/fd/12: operation not permitted\"\n"
+      }
+    },
+    {
+      "title": "no-proc shape rejected by runc (true)",
+      "note": "runc>=1.4 procfs handle safety check; rootfs /proc is overlayfs-typed",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "noproc-true"
+        ],
+        "exit": 1,
+        "ms": 49,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": "time=\"2026-09-24T08:47:03Z\" level=error msg=\"runc run failed: unable to start container process: error during container init: unsafe procfs detected: incorrect procfs root filesystem type 0x794c7630\"\n"
+      }
+    },
+    {
+      "title": "no-proc shape rejected by runc (id)",
+      "note": "runc>=1.4 procfs handle safety check; rootfs /proc is overlayfs-typed",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "noproc-id"
+        ],
+        "exit": 1,
+        "ms": 64,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": "time=\"2026-09-24T08:47:03Z\" level=error msg=\"runc run failed: unable to start container process: error during container init: unsafe procfs detected: incorrect procfs root filesystem type 0x794c7630\"\n"
+      }
+    },
+    {
+      "title": "no-proc shape rejected by runc (pwdcwd)",
+      "note": "runc>=1.4 procfs handle safety check; rootfs /proc is overlayfs-typed",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "noproc-pwdcwd"
+        ],
+        "exit": 1,
+        "ms": 41,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": "time=\"2026-09-24T08:47:04Z\" level=error msg=\"runc run failed: unable to start container process: error during container init: unsafe procfs detected: incorrect procfs root filesystem type 0x794c7630\"\n"
+      }
+    },
+    {
+      "title": "no-proc shape rejected by runc (env)",
+      "note": "runc>=1.4 procfs handle safety check; rootfs /proc is overlayfs-typed",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "noproc-env"
+        ],
+        "exit": 1,
+        "ms": 61,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": "time=\"2026-09-24T08:47:04Z\" level=error msg=\"runc run failed: unable to start container process: error during container init: unsafe procfs detected: incorrect procfs root filesystem type 0x794c7630\"\n"
+      }
+    },
+    {
+      "title": "first execution with rbind-ro host /proc: true",
+      "note": "rbind+ro+nosuid+noexec+nodev host /proc (security experiment shape)",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "bindproc-true"
+        ],
+        "exit": 0,
+        "ms": 263,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "first execution with rbind-ro host /proc: id",
+      "note": "rbind+ro+nosuid+noexec+nodev host /proc (security experiment shape)",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "bindproc-id"
+        ],
+        "exit": 0,
+        "ms": 97,
+        "run_as": "65534:65534",
+        "stdout": "uid=0(root) gid=0(root) groups=0(root),65534\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "first execution with rbind-ro host /proc: pwdcwd",
+      "note": "rbind+ro+nosuid+noexec+nodev host /proc (security experiment shape)",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "bindproc-pwdcwd"
+        ],
+        "exit": 0,
+        "ms": 46,
+        "run_as": "65534:65534",
+        "stdout": "/workspace\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "first execution with rbind-ro host /proc: env",
+      "note": "rbind+ro+nosuid+noexec+nodev host /proc (security experiment shape)",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "bindproc-env"
+        ],
+        "exit": 0,
+        "ms": 122,
+        "run_as": "65534:65534",
+        "stdout": "PATH=/usr/local/bin:/usr/bin:/bin\nLSBX_SPIKE=1\nHOME=/root\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "verdict": "first rootless runc executions recorded (P0 fresh proc, runc proc check, bind-proc shape)"
+}

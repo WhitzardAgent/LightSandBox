@@ -1,0 +1,175 @@
+{
+  "experiment": "isolation",
+  "started_at": "2026-09-24T09:47:42.536242+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "prepare sandbox B bundle (copy of A)",
+      "note": "",
+      "result": {
+        "argv": [
+          "/bin/cp",
+          "-a",
+          "/tmp/lsbx-spike/bundles/a/.",
+          "/tmp/lsbx-spike/bundles/a2iso"
+        ],
+        "exit": 0,
+        "ms": 1001,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "detached start iso-a",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "-d",
+          "--pid-file",
+          "/tmp/lsbx-runtime/iso-a.pid",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "iso-a"
+        ],
+        "exit": 0,
+        "ms": 65,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "detached start iso-b",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "-d",
+          "--pid-file",
+          "/tmp/lsbx-runtime/iso-b.pid",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a2iso",
+          "iso-b"
+        ],
+        "exit": 0,
+        "ms": 65,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "cross-sandbox isolation matrix",
+      "note": "",
+      "result": [
+        {
+          "axis": "filesystem",
+          "classification": "ISOLATED",
+          "detail": "cat: /tmp/b_marker: No such file or directory",
+          "note": "separate rootfs copies + own mount ns"
+        },
+        {
+          "axis": "process_metadata",
+          "classification": "VISIBLE_READONLY",
+          "detail": "35 host pids visible via bound host /proc",
+          "note": "host-level numbering; contents subject to ptrace_may_access of same-uid processes"
+        },
+        {
+          "axis": "signals",
+          "classification": "ISOLATED",
+          "detail": "errno 3",
+          "note": "kill() resolves in caller pid ns; A's host pid has no mapping in B"
+        },
+        {
+          "axis": "ptrace",
+          "classification": "ISOLATED",
+          "detail": "rc -1 errno 3",
+          "note": "PTRACE_ATTACH to A's host pid: ESRCH(president ns) or EPERM both block control"
+        },
+        {
+          "axis": "proc_cmdline_of_A",
+          "classification": "VISIBLE",
+          "detail": "b'/bin/sleep\\x00600\\x00'",
+          "note": ""
+        },
+        {
+          "axis": "proc_environ_of_A",
+          "classification": "ISOLATED",
+          "detail": "",
+          "note": "SECURITY EXPERIMENT result; same-host-uid processes pass ptrace_may_access"
+        },
+        {
+          "axis": "proc_fd_of_A",
+          "classification": "VISIBLE",
+          "detail": "FD_COUNT 3",
+          "note": ""
+        },
+        {
+          "axis": "network_tcp_loopback",
+          "classification": "ISOLATED",
+          "detail": "FAIL ConnectionRefusedError 111",
+          "note": "private netns per sandbox (loopback-only); no cross-sandbox TCP"
+        },
+        {
+          "axis": "network_host_loopback",
+          "classification": "ISOLATED",
+          "detail": "FAIL ConnectionRefusedError 111",
+          "note": "host loopback services unreachable from sandbox netns"
+        },
+        {
+          "axis": "unix_abstract_socket",
+          "classification": "ISOLATED",
+          "detail": "FAIL ConnectionRefusedError 111",
+          "note": "abstract unix namespace is per-netns"
+        },
+        {
+          "axis": "sysv_shm",
+          "classification": "ISOLATED",
+          "detail": "A created shmid=0; B attach: rc 18446744073709551615 errno 22",
+          "note": "own IPC ns per sandbox; A's shmid is invalid in B"
+        },
+        {
+          "axis": "hostname",
+          "classification": "ISOLATED",
+          "detail": "iso-a",
+          "note": "uts ns per sandbox"
+        },
+        {
+          "axis": "environment",
+          "classification": "ISOLATED-at-exec / VISIBLE-via-/proc",
+          "detail": "exec envs are per-container; the ONLY cross-read path is the shared bound host /proc (see proc_environ_of_A)",
+          "note": ""
+        }
+      ]
+    }
+  ],
+  "verdict": "13 axes; interference=none; metadata-exposed=['process_metadata', 'proc_cmdline_of_A', 'proc_fd_of_A']"
+}

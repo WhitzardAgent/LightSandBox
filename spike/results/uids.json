@@ -1,0 +1,210 @@
+{
+  "experiment": "uids",
+  "started_at": "2026-09-24T09:39:10.292528+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "container uid-id-root: /usr/bin/id",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/b",
+          "uid-id-root"
+        ],
+        "exit": 0,
+        "ms": 54,
+        "run_as": "65534:65534",
+        "stdout": "uid=0(root) gid=0(root) groups=0(root),65534\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container uid-ls-ownership: /bin/ls -la",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/b",
+          "uid-ls-ownership"
+        ],
+        "exit": 0,
+        "ms": 110,
+        "run_as": "65534:65534",
+        "stdout": "/home:\ntotal 4\ndrwxr-xr-x  3 root root   25 Sep 24 09:26 .\ndrwxr-xr-x 13 root root 4096 Sep 24 09:39 ..\ndrwxr-x---  2 root root   29 Sep 24 09:26 app\n\n/srv:\ntotal 4\ndrwxr-xr-x  3 root root   25 Sep 24 09:26 .\ndrwxr-xr-x 13 root root 4096 Sep 24 09:39 ..\ndrwx------  2 root root   29 Sep 24 09:26 svc\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container uid-cat-app-file: /bin/cat /home/app/app.txt",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/b",
+          "uid-cat-app-file"
+        ],
+        "exit": 0,
+        "ms": 66,
+        "run_as": "65534:65534",
+        "stdout": "owned by app(1000)\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container uid-cat-svc-file: /bin/cat /srv/svc/svc.txt",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/b",
+          "uid-cat-svc-file"
+        ],
+        "exit": 0,
+        "ms": 59,
+        "run_as": "65534:65534",
+        "stdout": "owned by svc(1001)\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container uid-chmod: /bin/chmod 600",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/b",
+          "uid-chmod"
+        ],
+        "exit": 0,
+        "ms": 50,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container uid-chown-to-1000: /bin/chown 1000",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/b",
+          "uid-chown-to-1000"
+        ],
+        "exit": 1,
+        "ms": 175,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": "/bin/chown: changing ownership of '/home/app/app.txt': Invalid argument\n"
+      }
+    },
+    {
+      "title": "container uid-su-app: /usr/bin/su -s",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/b",
+          "uid-su-app"
+        ],
+        "exit": 1,
+        "ms": 1115,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": "su: Critical error - immediate abort\n"
+      }
+    },
+    {
+      "title": "container uid-setuid-binary: /usr/bin/whoami-setuid -u",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/b",
+          "uid-setuid-binary"
+        ],
+        "exit": 0,
+        "ms": 107,
+        "run_as": "65534:65534",
+        "stdout": "0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container uid-image-USER-1000: /usr/bin/id",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/b",
+          "uid-image-USER-1000"
+        ],
+        "exit": 1,
+        "ms": 133,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": "time=\"2026-09-24T09:39:12Z\" level=error msg=\"runc run failed: unable to start container process: error during container init: unable to setup user: chown /dev/stdin: invalid argument\"\n"
+      }
+    },
+    {
+      "title": "single-ID multi-user classification",
+      "note": "no silent USER->0 rewriting: failures remain BROKEN evidence",
+      "result": {
+        "id-root": "SUPPORTED (exit=0)",
+        "ls-ownership": "SUPPORTED (exit=0)",
+        "cat-app-file": "SUPPORTED (exit=0)",
+        "cat-svc-file": "SUPPORTED (exit=0)",
+        "chmod": "SUPPORTED (exit=0)",
+        "chown-to-1000": "BROKEN (exit=1)",
+        "su-app": "BROKEN (exit=1)",
+        "setuid-binary": "EMULATED (exit=0)",
+        "image-USER-1000": "BROKEN (exit=1)"
+      }
+    }
+  ],
+  "verdict": "single-ID multi-user semantics classified (tests/harness policy: no flatten-and-claim)"
+}

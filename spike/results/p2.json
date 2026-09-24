@@ -1,0 +1,97 @@
+{
+  "experiment": "p2",
+  "started_at": "2026-09-24T09:39:08.668037+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "detached start sbx-a",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "-d",
+          "--pid-file",
+          "/tmp/lsbx-runtime/sbx-a.pid",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "sbx-a"
+        ],
+        "exit": 0,
+        "ms": 66,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container sbx-b: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a2",
+          "sbx-b"
+        ],
+        "exit": 0,
+        "ms": 216,
+        "run_as": "65534:65534",
+        "stdout": "{\n \"sleep_procs_visible\": [\n  [\n   \"241685\",\n   \"b'/bin/sleep 600'\"\n  ],\n  [\n   \"242147\",\n   \"b\\\"/usr/bin/python3 -c \\\\nimport os, sys, ctypes, signal\\\\nhost = '\\\"\"\n  ]\n ],\n \"environ\": \"PermissionError: Permission denied\",\n \"fd_count\": 3,\n \"cmdline\": \"/bin/sleep 600 \",\n \"signal_0_exists\": \"ProcessLookupError: No such process\",\n \"sigterm\": \"ProcessLookupError: No such process\",\n \"ptrace_attach\": \"rc=-1 errno=3\"\n}\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "sandbox A state after B probe",
+      "note": "pid ns should make SIGTERM undeliverable",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "state",
+          "sbx-a"
+        ],
+        "exit": 0,
+        "ms": 7,
+        "run_as": "65534:65534",
+        "stdout": "{\n  \"ociVersion\": \"1.3.0\",\n  \"id\": \"sbx-a\",\n  \"pid\": 241685,\n  \"status\": \"running\",\n  \"bundle\": \"/tmp/lsbx-spike/bundles/a\",\n  \"rootfs\": \"/tmp/lsbx-spike/bundles/a/rootfs\",\n  \"created\": \"2026-09-24T09:39:08.87748297Z\",\n  \"owner\": \"\"\n}",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "cross-sandbox exposure classification",
+      "note": "determines whether shared bound /proc is REJECTED as default",
+      "result": {
+        "a_host_pid": 241685,
+        "secret_in_environ_read_by_b": false,
+        "b_stdout": "{\n \"sleep_procs_visible\": [\n  [\n   \"241685\",\n   \"b'/bin/sleep 600'\"\n  ],\n  [\n   \"242147\",\n   \"b\\\"/usr/bin/python3 -c \\\\nimport os, sys, ctypes, signal\\\\nhost = '\\\"\"\n  ]\n ],\n \"environ\": \"PermissionError: Permission denied\",\n \"fd_count\": 3,\n \"cmdline\": \"/bin/sleep 600 \",\n \"signal_0_exists\": \"ProcessLookupError: No such process\",\n \"sigterm\": \"ProcessLookupError: No such process\",\n \"ptrace_attach\": \"rc=-1 errno=3\"\n}\n"
+      }
+    }
+  ],
+  "verdict": "P2 measured; classification recorded (secret leaked via shared /proc: False)"
+}

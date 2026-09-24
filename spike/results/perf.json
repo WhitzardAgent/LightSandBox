@@ -1,0 +1,125 @@
+{
+  "experiment": "perf",
+  "started_at": "2026-09-24T09:59:44.696989+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "rootfs prepare FULL_COPY",
+      "note": "",
+      "result": {
+        "runs_ms": [
+          928,
+          890,
+          820
+        ],
+        "rootfs_bytes": 972170603
+      }
+    },
+    {
+      "title": "sandbox delete (rootfs contents as uid 65534)",
+      "note": "",
+      "result": {
+        "exit": 0,
+        "ms": 187
+      }
+    },
+    {
+      "title": "create+exec /bin/true",
+      "note": "",
+      "result": {
+        "runs_ms": [
+          52,
+          185,
+          163,
+          58,
+          75
+        ],
+        "exits": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "title": "create+exec python3 -c pass",
+      "note": "",
+      "result": {
+        "runs_ms": [
+          95,
+          155,
+          70
+        ],
+        "exits": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "title": "detached start perf-idle",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "-d",
+          "--pid-file",
+          "/tmp/lsbx-runtime/perf-idle.pid",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "perf-idle"
+        ],
+        "exit": 0,
+        "ms": 121,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "idle sandbox (sleep 600 payload)",
+      "note": "",
+      "result": {
+        "payload_host_pid": 741737,
+        "payload_status": [
+          "VmSize:\t    2792 kB",
+          "VmRSS:\t     272 kB",
+          "VmData:\t     224 kB"
+        ],
+        "ppid": "1",
+        "resident_runc_supervisors": 0,
+        "note": "detached runc exits after start; payload reparents (see ppid). A resident per-sandbox lifecycle supervisor is an explicit architecture block NOT provided by runc in this mode"
+      }
+    }
+  ],
+  "verdict": "performance baseline recorded (no tuning applied)"
+}

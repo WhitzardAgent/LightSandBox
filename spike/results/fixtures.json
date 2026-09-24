@@ -1,0 +1,176 @@
+{
+  "experiment": "fixtures",
+  "started_at": "2026-09-24T09:26:32.936167+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "fixture A rootfs+built",
+      "note": "single-user root, python3/gcc/git/node payload",
+      "result": {
+        "size_bytes": "971718723"
+      }
+    },
+    {
+      "title": "fixture B rootfs+built",
+      "note": "multi-uid: root/app(1000)/svc(1001), setuid binary, device node, USER 1000:1000",
+      "result": {
+        "size_bytes": "6417757",
+        "device_note": "created char 1:3"
+      }
+    },
+    {
+      "title": "image facts",
+      "note": "",
+      "result": {
+        "stat_a": {
+          "manifest": {
+            "descriptor": {
+              "mediaType": "application/vnd.oci.image.manifest.v1+json",
+              "digest": "sha256:4b4f77753749240fb1cb31debe1c4ad70afba04db36d31ef0095bd01fa9124b5",
+              "size": 468,
+              "annotations": {
+                "org.opencontainers.image.ref.name": "a"
+              }
+            },
+            "blob": {
+              "schemaVersion": 2,
+              "mediaType": "application/vnd.oci.image.manifest.v1+json",
+              "config": {
+                "mediaType": "application/vnd.oci.image.config.v1+json",
+                "digest": "sha256:7a87652b9966042a1481bb2bf9e6693d303e24772fbe2d1d215f9c4170077646",
+                "size": 485
+              },
+              "layers": [
+                {
+                  "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                  "digest": "sha256:3073f06fdb29e20f91432cc94bdfa80896472ceace72a1504719a44d3455277f",
+                  "size": 449496249,
+                  "annotations": {
+                    "ci.umo.uncompressed_blob_size": "974043136"
+                  }
+                }
+              ]
+            }
+          },
+          "config": {
+            "descriptor": {
+              "mediaType": "application/vnd.oci.image.config.v1+json",
+              "digest": "sha256:7a87652b9966042a1481bb2bf9e6693d303e24772fbe2d1d215f9c4170077646",
+              "size": 485
+            },
+            "blob": {
+              "created": "2026-09-24T09:26:34.605824491Z",
+              "architecture": "amd64",
+              "os": "linux",
+              "config": {
+                "User": "0:0",
+                "Env": [
+                  "LSBX_FIXTURE=a",
+                  "PATH=/usr/bin:/bin"
+                ],
+                "Cmd": [
+                  "/bin/sh"
+                ],
+                "WorkingDir": "/workspace"
+              },
+              "rootfs": {
+                "type": "layers",
+                "diff_ids": [
+                  "sha256:d2099bc41e2406c312b8880cc98f4bec67b3b025242ea6562308bb9eea900b09"
+                ]
+              },
+              "history": [
+                {
+                  "created": "2026-09-24T09:26:34.63625844Z",
+                  "created_by": "umoci insert"
+                },
+                {
+                  "created": "2026-09-24T09:26:36.509446915Z",
+                  "created_by": "umoci config",
+                  "empty_layer": true
+                }
+              ]
+            }
+          },
+          "history": [
+            {
+              "layer": {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:3073f06fdb29e20f91432cc94bdfa80896472ceace72a1504719a44d3455277f",
+                "size": 449496249,
+                "annotations": {
+                  "ci.umo.uncompressed_blob_size": "974043136"
+                }
+              },
+              "diff_id": "sha256:d2099bc41e2406c312b8880cc98f4bec67b3b025242ea6562308bb9eea900b09",
+              "created": "2026-09-24T09:26:34.63625844Z",
+              "created_by": "umoci insert"
+            },
+            {
+              "layer": null,
+              "diff_id": "",
+              "created": "2026-09-24T09:26:36.509446915Z",
+              "created_by": "umoci config",
+              "empty_layer": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "image index",
+      "note": "",
+      "result": {
+        "index": {
+          "schemaVersion": 2,
+          "mediaType": "application/vnd.oci.image.index.v1+json",
+          "manifests": [
+            {
+              "mediaType": "application/vnd.oci.image.manifest.v1+json",
+              "digest": "sha256:4b4f77753749240fb1cb31debe1c4ad70afba04db36d31ef0095bd01fa9124b5",
+              "size": 468,
+              "annotations": {
+                "org.opencontainers.image.ref.name": "a"
+              }
+            },
+            {
+              "mediaType": "application/vnd.oci.image.manifest.v1+json",
+              "digest": "sha256:e89d201b342afd8fbe305f10a4e3896afeb56d1a866f264ac6b5b473360491c7",
+              "size": 464,
+              "annotations": {
+                "org.opencontainers.image.ref.name": "b"
+              }
+            }
+          ]
+        },
+        "layer_digest": "sha256:3073f06fdb29e20f91432cc94bdfa80896472ceace72a1504719a44d3455277f"
+      }
+    }
+  ],
+  "verdict": "fixtures A/B built from scratch with umoci (no docker daemon involved)"
+}

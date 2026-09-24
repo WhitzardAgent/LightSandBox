@@ -1,0 +1,340 @@
+{
+  "experiment": "unpack",
+  "started_at": "2026-09-24T09:26:36.821958+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "umoci unpack --rootless image:a",
+      "note": "10370ms wall",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/umoci",
+          "unpack",
+          "--rootless",
+          "--image",
+          "/tmp/lsbx-spike/fixtures.oci:a",
+          "/tmp/lsbx-spike/bundles/a"
+        ],
+        "exit": 0,
+        "ms": 10370,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "rootfs metadata measurement (a)",
+      "note": "ownership/setuid/devices/xattrs after rootless unpack",
+      "result": {
+        "owners": {
+          "0:0": 3521
+        },
+        "setuid": [
+          [
+            "usr/bin/su",
+            "0o4755",
+            "0:0"
+          ]
+        ],
+        "devices": [],
+        "entries_with_xattrs": 0
+      }
+    },
+    {
+      "title": "generated config skeleton (a)",
+      "note": "",
+      "result": {
+        "ociVersion": "1.3.0",
+        "process": {
+          "terminal": true,
+          "user": {
+            "uid": 0,
+            "gid": 0
+          },
+          "args": [
+            "/bin/sh"
+          ],
+          "env": [
+            "PATH=/usr/bin:/bin",
+            "TERM=xterm",
+            "LSBX_FIXTURE=a",
+            "HOME=/root"
+          ],
+          "cwd": "/workspace",
+          "capabilities": {
+            "bounding": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ],
+            "effective": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ],
+            "inheritable": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ],
+            "permitted": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ],
+            "ambient": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ]
+          },
+          "rlimits": [
+            {
+              "type": "RLIMIT_NOFILE",
+              "hard": 1024,
+              "soft": 1024
+            }
+          ],
+          "noNewPrivileges": true
+        },
+        "root": {
+          "path": "rootfs"
+        },
+        "linux": {
+          "uidMappings": [
+            {
+              "containerID": 0,
+              "hostID": 0,
+              "size": 1
+            }
+          ],
+          "gidMappings": [
+            {
+              "containerID": 0,
+              "hostID": 0,
+              "size": 1
+            }
+          ],
+          "namespaces": [
+            {
+              "type": "cgroup"
+            },
+            {
+              "type": "pid"
+            },
+            {
+              "type": "ipc"
+            },
+            {
+              "type": "uts"
+            },
+            {
+              "type": "mount"
+            },
+            {
+              "type": "user"
+            }
+          ],
+          "maskedPaths": [
+            "/proc/kcore",
+            "/proc/latency_stats",
+            "/proc/timer_list",
+            "/proc/timer_stats",
+            "/proc/sched_debug",
+            "/sys/firmware",
+            "/proc/scsi"
+          ],
+          "readonlyPaths": [
+            "/proc/asound",
+            "/proc/bus",
+            "/proc/fs",
+            "/proc/irq",
+            "/proc/sys",
+            "/proc/sysrq-trigger"
+          ]
+        }
+      }
+    },
+    {
+      "title": "umoci unpack --rootless image:b",
+      "note": "89ms wall",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/umoci",
+          "unpack",
+          "--rootless",
+          "--image",
+          "/tmp/lsbx-spike/fixtures.oci:b",
+          "/tmp/lsbx-spike/bundles/b"
+        ],
+        "exit": 0,
+        "ms": 89,
+        "stdout": "",
+        "stderr": "   • rootless{dev/null} creating empty file in place of device 1:3\n"
+      }
+    },
+    {
+      "title": "rootfs metadata measurement (b)",
+      "note": "ownership/setuid/devices/xattrs after rootless unpack",
+      "result": {
+        "owners": {
+          "0:0": 55
+        },
+        "setuid": [
+          [
+            "usr/bin/su",
+            "0o4755",
+            "0:0"
+          ],
+          [
+            "usr/bin/whoami-setuid",
+            "0o4755",
+            "0:0"
+          ]
+        ],
+        "devices": [],
+        "entries_with_xattrs": 4
+      }
+    },
+    {
+      "title": "generated config skeleton (b)",
+      "note": "",
+      "result": {
+        "ociVersion": "1.3.0",
+        "process": {
+          "terminal": true,
+          "user": {
+            "uid": 1000,
+            "gid": 1000
+          },
+          "args": [
+            "/bin/sh"
+          ],
+          "env": [
+            "PATH=/usr/bin:/bin",
+            "TERM=xterm",
+            "LSBX_FIXTURE=b",
+            "HOME=/home/app"
+          ],
+          "cwd": "/workspace",
+          "capabilities": {
+            "bounding": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ],
+            "effective": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ],
+            "inheritable": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ],
+            "permitted": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ],
+            "ambient": [
+              "CAP_AUDIT_WRITE",
+              "CAP_KILL",
+              "CAP_NET_BIND_SERVICE"
+            ]
+          },
+          "rlimits": [
+            {
+              "type": "RLIMIT_NOFILE",
+              "hard": 1024,
+              "soft": 1024
+            }
+          ],
+          "noNewPrivileges": true
+        },
+        "root": {
+          "path": "rootfs"
+        },
+        "linux": {
+          "uidMappings": [
+            {
+              "containerID": 0,
+              "hostID": 0,
+              "size": 1
+            }
+          ],
+          "gidMappings": [
+            {
+              "containerID": 0,
+              "hostID": 0,
+              "size": 1
+            }
+          ],
+          "namespaces": [
+            {
+              "type": "cgroup"
+            },
+            {
+              "type": "pid"
+            },
+            {
+              "type": "ipc"
+            },
+            {
+              "type": "uts"
+            },
+            {
+              "type": "mount"
+            },
+            {
+              "type": "user"
+            }
+          ],
+          "maskedPaths": [
+            "/proc/kcore",
+            "/proc/latency_stats",
+            "/proc/timer_list",
+            "/proc/timer_stats",
+            "/proc/sched_debug",
+            "/sys/firmware",
+            "/proc/scsi"
+          ],
+          "readonlyPaths": [
+            "/proc/asound",
+            "/proc/bus",
+            "/proc/fs",
+            "/proc/irq",
+            "/proc/sys",
+            "/proc/sysrq-trigger"
+          ]
+        }
+      }
+    }
+  ],
+  "verdict": "umoci unpack --rootless measured for fixtures A/B"
+}

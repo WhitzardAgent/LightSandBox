@@ -141,6 +141,70 @@ class SyntheticLockTests(unittest.TestCase):
         self.assertNotEqual(gate.returncode, 0)
         self.assertIn("revision", gate.stderr + gate.stdout)
 
+    # ---- round-01 review finding #5: port the verifier's negative probes ----
+
+    def _locked_catalog(self) -> Path:
+        r = self.lock_all("--output", str(Path(self.tmp.name) / "locked.json"))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return Path(self.tmp.name) / "locked.json"
+
+    def test_lock_rejects_dirty_clone(self):
+        (self.repos["runc"] / "README.md").write_bytes(b"dirtied\n")
+        r = self.lock_all()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("dirty", (r.stderr + r.stdout).lower())
+
+    def test_lock_rejects_missing_required_file(self):
+        bad = json.loads(self.catalog.read_text())
+        bad["repositories"][0]["required_files"] = ["NO_SUCH_FILE.md"]
+        path = Path(self.tmp.name) / "missing.json"
+        path.write_text(json.dumps(bad))
+        r = run_tool("--catalog", str(path),
+                     "--repo", f"runc={self.repos['runc']}",
+                     "--repo", f"umoci={self.repos['umoci']}")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("NO_SUCH_FILE.md", r.stderr + r.stdout)
+
+    def test_lock_rejects_origin_mismatch(self):
+        bad = json.loads(self.catalog.read_text())
+        bad["repositories"][0]["url"] = "https://github.com/opencontainers/attacker.git"
+        path = Path(self.tmp.name) / "mismatch.json"
+        path.write_text(json.dumps(bad))
+        r = run_tool("--catalog", str(path),
+                     "--repo", f"runc={self.repos['runc']}",
+                     "--repo", f"umoci={self.repos['umoci']}")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("origin", (r.stderr + r.stdout).lower())
+
+    def test_gate_rejects_invalid_file_hash(self):
+        locked = json.loads(self._locked_catalog().read_text())
+        first = locked["repositories"][0]
+        rel = next(iter(first["file_hashes"]))
+        first["file_hashes"][rel] = "zz" * 32
+        path = Path(self.tmp.name) / "badhash.json"
+        path.write_text(json.dumps(locked))
+        gate = run_tool("--catalog", str(path), "--check-release")
+        self.assertNotEqual(gate.returncode, 0)
+        self.assertIn("sha256", (gate.stderr + gate.stdout).lower())
+
+    def test_gate_rejects_missing_license_bytes(self):
+        locked = json.loads(self._locked_catalog().read_text())
+        locked["repositories"][0]["license"] = {"path": "LICENSE"}
+        path = Path(self.tmp.name) / "nolicense.json"
+        path.write_text(json.dumps(locked))
+        gate = run_tool("--catalog", str(path), "--check-release")
+        self.assertNotEqual(gate.returncode, 0)
+        self.assertIn("license", (gate.stderr + gate.stdout).lower())
+
+    def test_gate_rejects_empty_role(self):
+        locked = json.loads(self._locked_catalog().read_text())
+        locked["repositories"][0]["role"] = ""
+        path = Path(self.tmp.name) / "norole.json"
+        path.write_text(json.dumps(locked))
+        gate = run_tool("--catalog", str(path), "--check-release")
+        self.assertNotEqual(gate.returncode, 0)
+        self.assertIn("role", (gate.stderr + gate.stdout).lower())
+
 
 class RealCatalogTests(unittest.TestCase):
     """The shipped catalog must be internally complete; no network access."""

@@ -6,7 +6,11 @@ The authoritative rule set lives in docs/v5/03_DOMAIN.md §宿主能力分层.
 """
 from __future__ import annotations
 
-TIERS = {"PORTABLE_ROOTLESS", "FULL_ROOTLESS", "ROOTFUL"}
+# Admission tiers mirror ls-core::capability::HostCapabilityTier. UNSUPPORTED_HOST is
+# NOT an admission tier: it is the honest report value when no tier can be derived
+# (round-01 review finding #1: never silently coerce it into an admission tier).
+TIERS = {"PORTABLE_ROOTLESS", "FULL_ROOTLESS", "ROOTFUL", "UNSUPPORTED_HOST"}
+ADMISSION_TIERS = {"PORTABLE_ROOTLESS", "FULL_ROOTLESS", "ROOTFUL"}
 STATUSES = {"SUPPORTED", "DEGRADED", "UNSUPPORTED", "NOT_TESTED"}
 
 _REQUIRED_FINDING_KEYS = ("name", "status", "evidence_command")

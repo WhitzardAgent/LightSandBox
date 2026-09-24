@@ -71,7 +71,7 @@
         "resource": "UNSUPPORTED"
       },
       "report": "evidence/host/hostreport-v1.json",
-      "report_sha256": "241e38420df21a6d8e1010336ced862bce76615940d1564419aa08d6b5c520d4",
+      "report_sha256": "848fe669c19a6b92c66c577ca351c7f658d1eb152e259f479da923765cfbe93b",
       "hard_claims_forbidden": [
         "full Docker UID/GID semantics",
         "hard cgroup resource enforcement",

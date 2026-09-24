@@ -80,6 +80,46 @@ class HostReportFileTests(unittest.TestCase):
         self.assertIn("PORTABLE_ROOTLESS",
                       json.dumps(report.get("tier_notes", {})))
 
+    def test_derived_tier_never_silently_coerced(self):
+        """round-01 review finding #1: a host without userns evidence must come
+        out UNSUPPORTED_HOST, never a rewritten admission tier."""
+        from lightsandbox_dev import host_probe
+        supported = dict(status="SUPPORTED", evidence_command="fixture", exit_code=0,
+                         output_excerpt="ok")
+        unsupported = dict(status="UNSUPPORTED", evidence_command="fixture", exit_code=1,
+                           output_excerpt="no", limitation="fixture")
+        degraded = dict(status="DEGRADED", evidence_command="fixture", exit_code=1,
+                        output_excerpt="degraded", limitation="fixture")
+
+        probes = {name: (lambda _d, s=degraded: dict(s)) for name in host_probe.ORDER}
+        probes["userns"] = lambda _d: dict(unsupported)
+        report = host_probe.build_report(probe_table=probes)
+        self.assertEqual(report["derived_tier"], "UNSUPPORTED_HOST")
+        self.assertEqual(validate_report(report), [])
+
+        # userns present but cgroup/multi-id/procfs absent => PORTABLE_ROOTLESS
+        probes2 = {name: (lambda _d, s=degraded: dict(s)) for name in host_probe.ORDER}
+        probes2["userns"] = lambda _d: dict(supported)
+        self.assertEqual(host_probe.build_report(probe_table=probes2)["derived_tier"],
+                         "PORTABLE_ROOTLESS")
+
+        # full evidence => FULL_ROOTLESS (rule aligned with ls-core derive_tier)
+        probes3 = {name: (lambda _d, s=degraded: dict(s)) for name in host_probe.ORDER}
+        for key in ("userns", "uid_mappings", "cgroup", "procfs"):
+            probes3[key] = lambda _d: dict(supported)
+        self.assertEqual(host_probe.build_report(probe_table=probes3)["derived_tier"],
+                         "FULL_ROOTLESS")
+
+    def test_network_probe_never_mutates_caller_netns(self):
+        """round-01 review finding #2: the veth experiment must be described as
+        namespace-scoped; a literal bare `ip link add` evidence command would
+        mean host mutation on hosts that ship iproute2."""
+        report = load_report()
+        net = next(f for f in report["findings"] if f["name"] == "network")
+        self.assertFalse(net["evidence_command"].startswith("ip link add"),
+                         "veth probe must run inside unshare -Urn, not the caller netns")
+        self.assertIn("unshare", net["evidence_command"])
+
     def test_probe_repeatable_and_status_stable(self):
         from lightsandbox_dev import host_probe
         first = host_probe.build_report()

@@ -435,7 +435,8 @@ def main(argv=None):
         arg = argv[i]
         if arg == '--json':
             opts['json'] = True
-        elif arg.startswith('--') and i + 1 < len(argv):
+        elif arg.startswith('--') and i + 1 < len(argv) and not argv[i + 1].startswith('--'):
+            # round-01 review finding #9: never swallow another flag as a value
             opts[arg[2:]] = argv[i + 1]
             skip = True
         elif arg.startswith('--'):

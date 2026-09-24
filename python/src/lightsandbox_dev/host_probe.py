@@ -26,7 +26,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "python" / "src"))
 
-from lightsandbox_dev.capability_report import validate_report  # noqa: E402
+from lightsandbox_dev.capability_report import ADMISSION_TIERS, validate_report  # noqa: E402
 
 REPORT_PATH = REPO_ROOT / "evidence" / "host" / "hostreport-v1.json"
 RUNC = Path.home() / ".local" / "libexec" / "lightsandbox" / "bin" / "runc"
@@ -93,11 +93,24 @@ def probe_uid_mappings(_: dict) -> dict:
                            "需要 SingleIdCompatibilityPolicy 显式声明")
 
 
+def _cgroup_mount_state() -> str:
+    """ro/rw state from the mount-OPTIONS field (index 5) of the cgroup2
+    mountinfo line — not the superblock field, which can misleadingly read
+    'rw' on this nested host while the vfs options say 'ro' (and EROFS is the
+    primary write evidence anyway)."""
+    for line in _read("/proc/self/mountinfo").splitlines():
+        if " cgroup2 " in line or " cgroup " in line:
+            fields = line.split()
+            if len(fields) > 5 and "ro" in fields[5].split(","):
+                return "ro"
+            return "rw?"
+    return "absent"
+
+
 def probe_cgroup(_: dict) -> dict:
     probe_path = "/sys/fs/cgroup/.lsbx-delegation-probe"
     rc, out = run(["touch", probe_path])
-    mount = [l for l in _read("/proc/self/mountinfo").splitlines() if "cgroup2" in l]
-    ro = " ro," in (mount[0].split(" ", 5)[-1] + " " if mount else "")
+    ro = _cgroup_mount_state() == "ro"
     if rc == 0:
         run(["rm", "-f", probe_path])
         return dict(status="SUPPORTED", evidence_command=f"touch {probe_path}",
@@ -188,18 +201,24 @@ def probe_network(_: dict) -> dict:
     nets = sorted(l.split(":", 1)[0].strip()
                   for l in netdev.splitlines() if ":" in l) if rc_lo == 0 else []
     helpers = [h for h in ("slirp4netns", "pasta", "passt", "rootlesskit") if shutil.which(h)]
-    rc_veth, out_veth = run(["ip", "link", "add", "lsbxprobe0", "type", "veth",
-                             "peer", "name", "lsbxprobe1"])
-    if rc_veth == 0:
-        run(["ip", "link", "del", "lsbxprobe0"])
+    # round-01 review finding #2: the veth experiment must run INSIDE a private
+    # netns (created+destroyed with the probe process), never in the caller's
+    # netns — a literal `ip link add` here would mutate the host on hosts that
+    # ship iproute2 + CAP_NET_ADMIN.
+    rc_veth, out_veth = run(["unshare", "-Urn", "sh", "-c",
+                             "ip link add lsbxprobe0 type veth peer name "
+                             "lsbxprobe1 && ip link del lsbxprobe0"])
     if rc_lo == 0 and nets == ["lo"] and not helpers:
-        return dict(status="DEGRADED", evidence_command="ip link add lsbxprobe0 type veth peer name lsbxprobe1",
+        return dict(status="DEGRADED",
+                    evidence_command="unshare -Urn sh -c 'ip link add lsbxprobe0 type veth "
+                                     "peer name lsbxprobe1 && ip link del lsbxprobe0'",
                     exit_code=rc_veth,
                     output_excerpt=("veth pair creation rejected"
                                     if rc_veth not in (0, 127) else f"{out_veth}")
                                    + f"; netns 可建但仅 {nets!r}; helpers={helpers or 'none'}",
-                    limitation="无 rootless 网络 helper(slirp4netns/pasta 均缺);v1 承诺 "
-                               "network=none(loopback only),出口网络属可选增强")
+                    limitation="无 rootless 网络 helper(slirp4netns/pasta 均缺);veth 实验在 "
+                               "私有 netns 内执行(宿主零残留);v1 承诺 network=none(loopback "
+                               "only),出口网络属可选增强")
     if rc_lo == 0 and helpers:
         return dict(status="SUPPORTED", evidence_command="unshare -Urn ls /sys/class/net",
                     exit_code=0, output_excerpt=f"netns nets={nets!r}; helpers={helpers}",
@@ -293,16 +312,41 @@ ORDER = ("userns", "uid_mappings", "cgroup", "procfs", "mount", "rootfs",
          "network", "seccomp", "lsm", "filesystem", "resource")
 
 
-def build_report() -> dict:
+def _nested_container_traits() -> str:
+    """Live measured traits (round-01 review finding #6: never hardcode a prior
+    host observation into every regenerated report)."""
+    caps = None
+    for line in _read("/proc/self/status").splitlines():
+        if line.startswith("CapBnd:"):
+            try:
+                caps = int(line.split(":", 1)[1].strip(), 16)
+            except ValueError:
+                caps = None
+    cap_txt = f"cap 掩码 {caps:#x}(live /proc/self/status CapBnd)" if caps is not None \
+        else "cap 掩码 unreadable"
+    return f"{cap_txt}; cgroupfs={_cgroup_mount_state()}(live mountinfo); 见 identity_observation"
+
+
+def build_report(probe_table: dict | None = None) -> dict:
+    probes = probe_table or PROBES
     findings = []
     for name in ORDER:
-        finding = PROBES[name]({})
+        finding = probes[name]({})
         finding = {"name": name, **finding}
         findings.append(finding)
     by = {f["name"]: f["status"] for f in findings}
-    tier = ("PORTABLE_ROOTLESS"
-            if by["userns"] == "SUPPORTED" and by["cgroup"] != "SUPPORTED"
-            else "FULL_ROOTLESS" if by["cgroup"] == "SUPPORTED" else "UNSUPPORTED_HOST")
+    # Tier rule shared with ls-core::capability::HostCapabilityReport::derive_tier
+    # (same finding names, same semantics; Rust errors instead of labeling when
+    # no tier is derivable, this report records UNSUPPORTED_HOST instead —
+    # round-01 review finding #1: never coerce a no-evidence host into an
+    # admission tier).
+    if by.get("userns") == "SUPPORTED" and all(
+            by.get(k) == "SUPPORTED" for k in ("uid_mappings", "cgroup", "procfs")):
+        tier = "FULL_ROOTLESS"
+    elif by.get("userns") == "SUPPORTED":
+        tier = "PORTABLE_ROOTLESS"
+    else:
+        tier = "UNSUPPORTED_HOST"
     return {
         "schema": "lightsandbox.hostreport/1",
         "probe_date": datetime.now(timezone.utc).date().isoformat(),
@@ -313,12 +357,13 @@ def build_report() -> dict:
             "kernel": _read("/proc/sys/kernel/osrelease"),
             "arch": os.uname().machine,
             "uid": os.getuid(),
-            "nested_container_traits": "cap 掩码 0xa80425fb(Docker 默认集),cgroupfs ro,见 identity_observation",
+            "nested_container_traits": _nested_container_traits(),
         },
         "findings": findings,
-        "derived_tier": tier if tier in ("PORTABLE_ROOTLESS", "FULL_ROOTLESS") else "PORTABLE_ROOTLESS",
+        "derived_tier": tier,
         "tier_notes": {
             "PORTABLE_ROOTLESS": "首发宿主类;承诺 Benchmark Task Parity,不承诺 General Docker Semantic Parity",
+            "UNSUPPORTED_HOST": "非接纳 tier:无足够实测证据时的诚实记录值,不得被改写为任何接纳 tier",
             "explicitly_not_claimed": [
                 "full Docker UID/GID semantics (single-ID host)",
                 "hard cgroup resource enforcement (no delegation)",
@@ -350,7 +395,9 @@ def main() -> int:
     statuses = {f["name"]: f["status"] for f in report["findings"]}
     print(json.dumps({"written": str(REPORT_PATH), "tier": report["derived_tier"],
                       "statuses": statuses}, ensure_ascii=False, indent=2))
-    return 0
+    # Non-admission tiers are written honestly (evidence of the host), but the
+    # process rc lets admission-time CI reject the host instead of deploying it.
+    return 0 if report["derived_tier"] in ADMISSION_TIERS else 3
 
 
 if __name__ == "__main__":

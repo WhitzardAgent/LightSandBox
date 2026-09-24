@@ -7,7 +7,7 @@
     "kernel": "5.15.0-119-generic",
     "arch": "x86_64",
     "uid": 0,
-    "nested_container_traits": "cap 掩码 0xa80425fb(Docker 默认集),cgroupfs ro,见 identity_observation"
+    "nested_container_traits": "cap 掩码 0xa80425fb(live /proc/self/status CapBnd); cgroupfs=ro(live mountinfo); 见 identity_observation"
   },
   "findings": [
     {
@@ -31,7 +31,7 @@
       "status": "UNSUPPORTED",
       "evidence_command": "touch /sys/fs/cgroup/.lsbx-delegation-probe",
       "exit_code": 1,
-      "output_excerpt": "touch: cannot touch '/sys/fs/cgroup/.lsbx-delegation-probe': Read-only file system; mount=rw?; /proc/self/cgroup: 0::/",
+      "output_excerpt": "touch: cannot touch '/sys/fs/cgroup/.lsbx-delegation-probe': Read-only file system; mount=ro; /proc/self/cgroup: 0::/",
       "limitation": "无 cgroup v2 委托:不可声明任何 memory/pids/cpu/io 硬限额;HardResourceLimits=HOST_UNSUPPORTED 直到管理员委托"
     },
     {
@@ -55,16 +55,16 @@
       "status": "DEGRADED",
       "evidence_command": "unshare -Urm mount -t overlay overlay -o lowerdir=..,upperdir=<disk>,workdir=.. ..",
       "exit_code": 32,
-      "output_excerpt": "mount: /tmp/lsbx-ov-jllaxx0r/t: wrong fs type, bad option, bad superblock on overlay, missing codepage or helper program, or other error.; home fs=overlayfs; /dev/fuse absent",
+      "output_excerpt": "mount: /tmp/lsbx-ov-r_pwktv2/t: wrong fs type, bad option, bad superblock on overlay, missing codepage or helper program, or other error.; home fs=overlayfs; /dev/fuse absent",
       "limitation": "磁盘 overlay upper 与 fuse-overlayfs 不可用;v1 rootfs 仅承诺 FULL_COPY(磁盘整树复制)与 TMPFS_COW(内存回写层)两条路径"
     },
     {
       "name": "network",
       "status": "DEGRADED",
-      "evidence_command": "ip link add lsbxprobe0 type veth peer name lsbxprobe1",
+      "evidence_command": "unshare -Urn sh -c 'ip link add lsbxprobe0 type veth peer name lsbxprobe1 && ip link del lsbxprobe0'",
       "exit_code": 127,
-      "output_excerpt": "ip: command not found; netns 可建但仅 ['lo']; helpers=none",
-      "limitation": "无 rootless 网络 helper(slirp4netns/pasta 均缺);v1 承诺 network=none(loopback only),出口网络属可选增强"
+      "output_excerpt": "sh: 1: ip: not found; netns 可建但仅 ['lo']; helpers=none",
+      "limitation": "无 rootless 网络 helper(slirp4netns/pasta 均缺);veth 实验在 私有 netns 内执行(宿主零残留);v1 承诺 network=none(loopback only),出口网络属可选增强"
     },
     {
       "name": "seccomp",
@@ -102,6 +102,7 @@
   "derived_tier": "PORTABLE_ROOTLESS",
   "tier_notes": {
     "PORTABLE_ROOTLESS": "首发宿主类;承诺 Benchmark Task Parity,不承诺 General Docker Semantic Parity",
+    "UNSUPPORTED_HOST": "非接纳 tier:无足够实测证据时的诚实记录值,不得被改写为任何接纳 tier",
     "explicitly_not_claimed": [
       "full Docker UID/GID semantics (single-ID host)",
       "hard cgroup resource enforcement (no delegation)",

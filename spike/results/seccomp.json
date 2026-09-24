@@ -1,0 +1,168 @@
+{
+  "experiment": "seccomp",
+  "started_at": "2026-09-24T15:25:08.588734+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "container sc-noprofile-personality: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc-seccomp",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "sc-noprofile-personality"
+        ],
+        "exit": 0,
+        "ms": 224,
+        "run_as": "65534:65534",
+        "stdout": "personality rc 0 errno 0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container sc-profile-personality: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc-seccomp",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "sc-profile-personality"
+        ],
+        "exit": 0,
+        "ms": 74,
+        "run_as": "65534:65534",
+        "stdout": "personality rc -1 errno 1\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "seccomp enforcement (personality baseline vs denied)",
+      "note": "",
+      "result": {
+        "without_profile": "personality rc 0 errno 0",
+        "with_profile": "personality rc -1 errno 1",
+        "enforced": true
+      }
+    },
+    {
+      "title": "container sc-profile-bash: /bin/bash -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc-seccomp",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "sc-profile-bash"
+        ],
+        "exit": 0,
+        "ms": 70,
+        "run_as": "65534:65534",
+        "stdout": "bash-ok\n42\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container sc-profile-python3: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc-seccomp",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "sc-profile-python3"
+        ],
+        "exit": 0,
+        "ms": 161,
+        "run_as": "65534:65534",
+        "stdout": "py-ok\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container sc-profile-git: /usr/bin/git --version",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc-seccomp",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "sc-profile-git"
+        ],
+        "exit": 0,
+        "ms": 51,
+        "run_as": "65534:65534",
+        "stdout": "git version 2.34.1\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container sc-profile-node: /usr/bin/node -e",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc-seccomp",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "sc-profile-node"
+        ],
+        "exit": 0,
+        "ms": 186,
+        "run_as": "65534:65534",
+        "stdout": "node-ok\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "container sc-profile-gcc: /bin/bash -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc-seccomp",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "sc-profile-gcc"
+        ],
+        "exit": 0,
+        "ms": 102,
+        "run_as": "65534:65534",
+        "stdout": "gcc-exit-0\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "verdict": "seccomp: enforced=True; workloads_ok=5/5; capability AVAILABLE for contract (profile policy design = T30)"
+}

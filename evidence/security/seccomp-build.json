@@ -1,0 +1,24 @@
+{
+  "experiment": "seccomp-build",
+  "recorded": "2026-09-24 Round-02",
+  "build_facts": {
+    "libseccomp_version": "2.5.6",
+    "libseccomp_tarball_url": "https://github.com/seccomp/libseccomp/releases/download/v2.5.6/libseccomp-2.5.6.tar.gz",
+    "libseccomp_tarball_sha256": "04c37d72965dce218a0c94519b056e1775cf786b5260ee2b7992956c4ee38633",
+    "libseccomp_prefix": "/opt/toolchains/lightsandbox",
+    "libseccomp_archive_sha256": "6fbe3314842a1f9bd62c5679c4931ae65bf9ed02ceba018559af5ec5ffac5424",
+    "runc_commit": "41b74772b651b3b42a1f04a43a803db16f0e7e9b",
+    "runc_seccomp_sha256": "c5ede65cfbcec11a8b4ed2137f5ed3d73b18bd65c5256d5df99bd828e6d6b625",
+    "go_version": "go1.27.1",
+    "build_tags": "seccomp"
+  },
+  "binary": "/opt/toolchains/lightsandbox/bin/runc-seccomp",
+  "linkage": "dynamic glibc (CGO_ENABLED=1); production static build would need musl \u2014 feasibility-only",
+  "runtime_result": {
+    "enforced": "personality syscall denied (errno 1) with profile, allowed (errno 0) without",
+    "workloads_under_allow_all_plus_one_deny": "bash/python3/git/node/gcc all pass",
+    "verdict": "seccomp: enforced=True; workloads_ok=5/5; capability AVAILABLE for contract (profile policy design = T30)"
+  },
+  "root_of_trust_note": "libseccomp tarball sha256 self-recorded at fetch time (no upstream checksum list published); promotion into specs/upstream-lock.json requires multi-party verification",
+  "capability_proposal": "seccomp = AVAILABLE on this host (runc-seccomp); profile policy design deferred to T30; UNCONFINED must be an explicit choice"
+}

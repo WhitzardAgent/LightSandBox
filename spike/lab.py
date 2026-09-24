@@ -1375,23 +1375,26 @@ def cmd_seccomp(ev: Evidence):
 
     # (b) allow-all baseline leaves real workloads intact
     workloads = [
-        ("bash", ["/bin/bash", "-c", "echo bash-ok; echo $((6*7))"]),
-        ("python3", ["/usr/bin/python3", "-c", "print('py-ok')"]),
-        ("git", ["/usr/bin/git", "--version"]),
-        ("node", ["/usr/bin/node", "-e", "console.log('node-ok')"]),
+        ("bash", ["/bin/bash", "-c", "echo bash-ok; echo $((6*7))"], "bash-ok"),
+        ("python3", ["/usr/bin/python3", "-c", "print('py-ok')"], "py-ok"),
+        ("git", ["/usr/bin/git", "--version"], "git version"),
+        ("node", ["/usr/bin/node", "-e", "console.log('node-ok')"], "node-ok"),
         ("gcc", ["/bin/bash", "-c",
                  "printf 'int main(){return 0;}\\n' > /tmp/s.c "
-                 "&& gcc -O2 -o /tmp/s /tmp/s.c && /tmp/s; echo gcc-exit-$?"]),
+                 "&& gcc -O2 -o /tmp/s /tmp/s.c && /tmp/s; echo gcc-exit-$?"],
+         "gcc-exit-0"),
     ]
-    ok = 0
-    for name, args in workloads:
+    ok, failed = 0, []
+    for name, args, marker in workloads:
         r = bundle_run(ev, bundle, f"sc-profile-{name}", cfg_for(args, True),
                        runc=RSECC)
-        good = (r["exit"] == 0 and "ok" in r["stdout"].lower()
-                or name == "gcc" and "gcc-exit-0" in r["stdout"])
+        good = r["exit"] == 0 and marker in r["stdout"]
         ok += 1 if good else 0
+        if not good:
+            failed.append(name)
     chown_tree(bundle, 0, 0)
-    ev.finish(f"seccomp: enforced={enforced}; workloads_ok={ok}/{len(workloads)}; "
+    ev.finish(f"seccomp: enforced={enforced}; workloads_ok={ok}/{len(workloads)}"
+              f"{'; failed=' + ','.join(failed) if failed else ''}; "
               "capability AVAILABLE for contract (profile policy design = T30)")
 
 

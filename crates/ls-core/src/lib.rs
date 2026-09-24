@@ -5,6 +5,7 @@
 //! belong in this crate (see docs/v5/02_ARCHITECTURE.md and docs/v5/03_DOMAIN.md).
 
 pub mod contracts;
+pub mod domain;
 
 pub mod capability {
     use serde::{Deserialize, Serialize};

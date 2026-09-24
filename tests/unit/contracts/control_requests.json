@@ -1,0 +1,53 @@
+{
+  "version": "t04-control/1",
+  "x-rule": "typed UDS protocol boundary between unprivileged API and privileged manager; unregistered op, unknown field, or host-path-shaped input MUST be rejected at parse; no op ever reaches a host shell (T04-C03)",
+  "accept": [
+    {
+      "name": "create-full",
+      "doc": {"op": "sandbox.create", "sandbox_id": "sb_01", "bundle": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "workdir": "/app", "env": {"A": "B"}},
+      "expect_op": "sandbox.create"
+    },
+    {
+      "name": "create-minimal",
+      "doc": {"op": "sandbox.create", "sandbox_id": "sb_01", "bundle": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+      "expect_op": "sandbox.create"
+    },
+    {
+      "name": "delete",
+      "doc": {"op": "sandbox.delete", "sandbox_id": "sb_01", "generation": 3},
+      "expect_op": "sandbox.delete"
+    },
+    {
+      "name": "exec",
+      "doc": {"op": "execution.start", "sandbox_id": "sb_01", "generation": 3, "execution_id": "ex_01", "argv": ["/bin/echo", "hi there"]},
+      "expect_op": "execution.start"
+    },
+    {
+      "name": "exec-shell-metachars-are-literal-guest-argv",
+      "doc": {"op": "execution.start", "sandbox_id": "sb_01", "generation": 3, "execution_id": "ex_02", "argv": ["sh", "-c", "echo $HOME; rm -rf /"]},
+      "expect_op": "execution.start",
+      "note": "literal argv for the GUEST is not protocol injection; argv never reaches a host shell"
+    },
+    {
+      "name": "cancel-tree",
+      "doc": {"op": "execution.cancel", "execution_id": "ex_01", "scope": "tree"},
+      "expect_op": "execution.cancel"
+    }
+  ],
+  "reject": [
+    {"name": "unknown-op-host-shell", "doc": {"op": "host.shell", "argv": ["id"]}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "unknown-op-exec-shell", "doc": {"op": "execution.shell", "script": "rm -rf /"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "missing-op", "doc": {"sandbox_id": "sb_01"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "op-not-string", "doc": {"op": 42, "sandbox_id": "sb_01"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "unknown-field", "doc": {"op": "sandbox.delete", "sandbox_id": "sb_01", "generation": 1, "force": true}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "host-rootfs-path", "doc": {"op": "sandbox.create", "sandbox_id": "sb_01", "rootfs": "/host/debian"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "bundle-not-digest", "doc": {"op": "sandbox.create", "sandbox_id": "sb_01", "bundle": "debian:latest"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "traversal-workdir", "doc": {"op": "sandbox.create", "sandbox_id": "sb_01", "bundle": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "workdir": "/etc/../../host"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "relative-workdir", "doc": {"op": "sandbox.create", "sandbox_id": "sb_01", "bundle": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "workdir": "app"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "negative-generation", "doc": {"op": "sandbox.delete", "sandbox_id": "sb_01", "generation": -1}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "bool-generation", "doc": {"op": "sandbox.delete", "sandbox_id": "sb_01", "generation": true}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "empty-argv", "doc": {"op": "execution.start", "sandbox_id": "sb_01", "generation": 1, "execution_id": "ex_01", "argv": []}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "empty-sandbox-id", "doc": {"op": "sandbox.delete", "sandbox_id": "", "generation": 1}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "unknown-scope", "doc": {"op": "execution.cancel", "execution_id": "ex_01", "scope": "galaxy"}, "expect_code": "INVALID_ARGUMENT"}
+  ]
+}

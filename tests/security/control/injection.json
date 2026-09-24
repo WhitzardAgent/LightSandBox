@@ -1,0 +1,13 @@
+{
+  "version": "t04-control-injection/1",
+  "x-rule": "every vector below MUST be rejected at the typed protocol parse boundary; none may reach a host shell, a host filesystem path, or an unregistered opcode (T04-C03)",
+  "vectors": [
+    {"name": "shell-metachars-in-op", "doc": {"op": "sandbox.create; rm -rf /", "sandbox_id": "sb_01", "bundle": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "eval-op", "doc": {"op": "eval", "code": "print(1)"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "host-path-field-root", "doc": {"op": "sandbox.create", "sandbox_id": "sb_01", "bundle": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "root": "/"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "host-path-field-camel", "doc": {"op": "sandbox.create", "sandbox_id": "sb_01", "bundle": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "hostPath": "/etc/shadow"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "mount-source-host-path", "doc": {"op": "sandbox.create", "sandbox_id": "sb_01", "bundle": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "mount_source": "/var/lib/host"}, "expect_code": "INVALID_ARGUMENT"},
+    {"name": "sandbox-id-with-slash", "doc": {"op": "sandbox.delete", "sandbox_id": "../../etc", "generation": 1}, "expect_code": "INVALID_ARGUMENT"}
+  ],
+  "note": "guest argv containing shell metacharacters is intentionally ACCEPTED by this boundary (see control_requests.json): argv is literal guest execution input and never interpreted by any host shell. NUL-byte vectors cannot be represented in JSON fixtures (the encoding layer rewrites them); they are tested with real NUL characters in the Rust test nul_is_rejected_in_all_string_positions (crates/ls-core/src/domain/control.rs)"
+}

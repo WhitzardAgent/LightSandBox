@@ -1,0 +1,50 @@
+{
+  "version": "t04-idempotency/1",
+  "x-rule": "idempotency scope = principal + API version + method + canonical route + resource identity + key; same key + same canonical request body replays the original result; same key + different body is CONFLICT and MUST NOT be auto-retried with a new key (T04-C02); digest covers canonical body only, never secret plaintext logs",
+  "hash_kat": [
+    {"name": "sha256-empty", "input": "", "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"name": "sha256-abc", "input": "abc", "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"},
+    {"name": "sha256-multiblock-220B", "input": "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij", "sha256": "14fdd19977e6d72c890a7fd956a45ab9f0660d93c56fc2cf70208f0e20e4989e"}
+  ],
+  "canonical_pairs": [
+    {"name": "key-order", "left": {"b": 2, "a": 1}, "right": {"a": 1, "b": 2}, "equal": true},
+    {"name": "nested", "left": {"x": [1, {"y": "z", "w": [true, null]}]}, "right": {"x": [1, {"w": [true, null], "y": "z"}]}, "equal": true},
+    {"name": "unicode", "left": {"k": "沙盒"}, "right": {"k": "沙盒"}, "equal": true},
+    {"name": "differ-value", "left": {"a": 1}, "right": {"a": 2}, "equal": false},
+    {"name": "differ-key", "left": {"a": 1}, "right": {"a": 1, "b": null}, "equal": false}
+  ],
+  "decisions": [
+    {
+      "name": "replay-original-result",
+      "existing": {"scope": {"principal": "alice", "api_version": "v1", "method": "POST", "canonical_route": "/v1/sandboxes", "resource_identity": "", "key": "K1"}, "body": {"image": "sha256:cc", "cpu_millis": 500}, "result_ref": "sb_abc"},
+      "incoming": {"scope": {"principal": "alice", "api_version": "v1", "method": "POST", "canonical_route": "/v1/sandboxes", "resource_identity": "", "key": "K1"}, "body": {"cpu_millis": 500, "image": "sha256:cc"}},
+      "expect": "replay",
+      "expect_ref": "sb_abc"
+    },
+    {
+      "name": "conflict-same-key-different-body",
+      "existing": {"scope": {"principal": "alice", "api_version": "v1", "method": "POST", "canonical_route": "/v1/sandboxes", "resource_identity": "", "key": "K1"}, "body": {"image": "sha256:cc"}, "result_ref": "sb_abc"},
+      "incoming": {"scope": {"principal": "alice", "api_version": "v1", "method": "POST", "canonical_route": "/v1/sandboxes", "resource_identity": "", "key": "K1"}, "body": {"image": "sha256:dd"}},
+      "expect": "conflict",
+      "expect_code": "CONFLICT"
+    },
+    {
+      "name": "independent-principal-same-key",
+      "existing": {"scope": {"principal": "alice", "api_version": "v1", "method": "POST", "canonical_route": "/v1/sandboxes", "resource_identity": "", "key": "K1"}, "body": {"x": 1}, "result_ref": "sb_abc"},
+      "incoming": {"scope": {"principal": "bob", "api_version": "v1", "method": "POST", "canonical_route": "/v1/sandboxes", "resource_identity": "", "key": "K1"}, "body": {"x": 1}},
+      "expect": "fresh"
+    },
+    {
+      "name": "independent-key",
+      "existing": {"scope": {"principal": "alice", "api_version": "v1", "method": "POST", "canonical_route": "/v1/sandboxes", "resource_identity": "", "key": "K1"}, "body": {"x": 1}, "result_ref": "sb_abc"},
+      "incoming": {"scope": {"principal": "alice", "api_version": "v1", "method": "POST", "canonical_route": "/v1/sandboxes", "resource_identity": "", "key": "K2"}, "body": {"x": 1}},
+      "expect": "fresh"
+    },
+    {
+      "name": "independent-route",
+      "existing": {"scope": {"principal": "alice", "api_version": "v1", "method": "POST", "canonical_route": "/v1/sandboxes", "resource_identity": "", "key": "K1"}, "body": {"x": 1}, "result_ref": "sb_abc"},
+      "incoming": {"scope": {"principal": "alice", "api_version": "v1", "method": "POST", "canonical_route": "/v1/environments", "resource_identity": "", "key": "K1"}, "body": {"x": 1}},
+      "expect": "fresh"
+    }
+  ]
+}

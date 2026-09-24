@@ -1,0 +1,496 @@
+{
+  "experiment": "p21",
+  "started_at": "2026-09-24T14:08:20.460790+00:00",
+  "host": {
+    "kernel": "5.15.0-119-generic",
+    "uid": 0
+  },
+  "tools": {
+    "umoci": {
+      "path": "/opt/toolchains/lightsandbox/bin/umoci",
+      "sha256": "ae2032845b5441b75fb47b89db32d7bf4c30684ac2f956605d54aabd0de300de",
+      "version": [
+        "umoci version 0.6.0+dev",
+        "image spec: 1.1.1",
+        "runtime spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    },
+    "runc": {
+      "path": "/opt/toolchains/lightsandbox/bin/runc",
+      "sha256": "a531415e7352edbd9704d1e13d8676097bb09c74d36d0baa16ce0e431a08f6ec",
+      "version": [
+        "runc version 1.5.0-rc.1+dev",
+        "commit: 41b7477",
+        "spec: 1.3.0",
+        "go: go1.27.1"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "detached start p21-b",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "-d",
+          "--pid-file",
+          "/tmp/lsbx-runtime/p21-b.pid",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/p21b",
+          "p21-b"
+        ],
+        "exit": 0,
+        "ms": 67,
+        "run_as": "65534:65534",
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "sandbox B live with markers (pid-file vs payload self-discovery)",
+      "note": "",
+      "result": {
+        "pid_file_host_pid": 2797266,
+        "payload_self_discovered_host_pid": "2797266",
+        "consistent": true,
+        "marker_shapes": [
+          "argv_suffix",
+          "env_value",
+          "cwd_path",
+          "open_file_path",
+          "unix_socket_path"
+        ]
+      }
+    },
+    {
+      "title": "kernel dumpable flags (harness-side read, mechanism evidence)",
+      "note": "userns entry clears dumpable -> same-uid ptrace_may_access fails",
+      "result": {
+        "sandbox_b_payload_userns": null,
+        "control_same_uid_no_userns": null
+      }
+    },
+    {
+      "title": "container p21-a-xb: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "p21-a-xb"
+        ],
+        "exit": 0,
+        "ms": 95,
+        "run_as": "65534:65534",
+        "stdout": "[{\"path\": \"cmdline\", \"marker_expected\": true, \"bytes\": 373, \"marker_found\": true, \"sample\": \"/usr/bin/python3|-c|import os,time,socket\\ntok=os.environ['LSBX_P21_TOKEN\", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"environ\", \"marker_expected\": true, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"cwd\", \"marker_expected\": true, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"root\", \"marker_expected\": false, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"fd\", \"marker_expected\": true, \"fd_count\": 5, \"links\": [{\"fd\": \"0\", \"oserror\": \"errno=13\"}, {\"fd\": \"1\", \"oserror\": \"errno=13\"}, {\"fd\": \"2\", \"oserror\": \"errno=13\"}, {\"fd\": \"3\", \"oserror\": \"errno=13\"}, {\"fd\": \"4\", \"oserror\": \"errno=13\"}], \"marker_found\": false, \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"maps\", \"marker_expected\": false, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"status\", \"marker_expected\": false, \"bytes\": 1447, \"marker_found\": false, \"sample\": \"Name:\\tpython3\\nUmask:\\t0022\\nState:\\tS (sleeping)\\nTgid:\\t2797266\\nNgid:\\t0\\nPid:\", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"mountinfo\", \"marker_expected\": false, \"bytes\": 2160, \"marker_found\": false, \"sample\": \"9251 3208 0:288 /tmp/lsbx-spike/bundles/p21b/rootfs / rw,relatime - over\", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"io\", \"marker_expected\": false, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"stat\", \"marker_expected\": false, \"bytes\": 188, \"marker_found\": false, \"sample\": \"2797266 (python3) S 1 2797266 2797266 0 -1 4194560 1640 0 0 0 1 1 0 0 20\", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"wchan\", \"marker_expected\": false, \"bytes\": 1, \"marker_found\": false, \"sample\": \"0\", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"syscall\", \"marker_expected\": false, \"oserror\": \"errno=1 Operation not permitted\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"stack\", \"marker_expected\": false, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "cross-sandbox proc confidentiality matrix (A reads B payload)",
+      "note": "",
+      "result": {
+        "cmdline": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": true,
+          "oserror": null
+        },
+        "environ": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "cwd": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "root": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "fd": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "maps": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "status": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "mountinfo": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "io": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "stat": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "wchan": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "syscall": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=1 Operation not permitted"
+        },
+        "stack": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        }
+      },
+      "extra": {
+        "raw_rows": [
+          {
+            "path": "cmdline",
+            "marker_expected": true,
+            "bytes": 373,
+            "marker_found": true,
+            "sample": "/usr/bin/python3|-c|import os,time,socket\ntok=os.environ['LSBX_P21_TOKEN",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "environ",
+            "marker_expected": true,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "cwd",
+            "marker_expected": true,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "root",
+            "marker_expected": false,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "fd",
+            "marker_expected": true,
+            "fd_count": 5,
+            "links": [
+              {
+                "fd": "0",
+                "oserror": "errno=13"
+              },
+              {
+                "fd": "1",
+                "oserror": "errno=13"
+              },
+              {
+                "fd": "2",
+                "oserror": "errno=13"
+              },
+              {
+                "fd": "3",
+                "oserror": "errno=13"
+              },
+              {
+                "fd": "4",
+                "oserror": "errno=13"
+              }
+            ],
+            "marker_found": false,
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "maps",
+            "marker_expected": false,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "status",
+            "marker_expected": false,
+            "bytes": 1447,
+            "marker_found": false,
+            "sample": "Name:\tpython3\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t2797266\nNgid:\t0\nPid:",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "mountinfo",
+            "marker_expected": false,
+            "bytes": 2160,
+            "marker_found": false,
+            "sample": "9251 3208 0:288 /tmp/lsbx-spike/bundles/p21b/rootfs / rw,relatime - over",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "io",
+            "marker_expected": false,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "stat",
+            "marker_expected": false,
+            "bytes": 188,
+            "marker_found": false,
+            "sample": "2797266 (python3) S 1 2797266 2797266 0 -1 4194560 1640 0 0 0 1 1 0 0 20",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "wchan",
+            "marker_expected": false,
+            "bytes": 1,
+            "marker_found": false,
+            "sample": "0",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "syscall",
+            "marker_expected": false,
+            "oserror": "errno=1 Operation not permitted",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "stack",
+            "marker_expected": false,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          }
+        ]
+      }
+    },
+    {
+      "title": "container p21-a-xc: /usr/bin/python3 -c",
+      "note": "",
+      "result": {
+        "argv": [
+          "/opt/toolchains/lightsandbox/bin/runc",
+          "run",
+          "--bundle",
+          "/tmp/lsbx-spike/bundles/a",
+          "p21-a-xc"
+        ],
+        "exit": 0,
+        "ms": 93,
+        "run_as": "65534:65534",
+        "stdout": "[{\"path\": \"cmdline\", \"marker_expected\": true, \"bytes\": 42, \"marker_found\": true, \"sample\": \"<TOK>-ctrlargv|300|\", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"environ\", \"marker_expected\": true, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"cwd\", \"marker_expected\": true, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"root\", \"marker_expected\": false, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"fd\", \"marker_expected\": true, \"fd_count\": 3, \"links\": [{\"fd\": \"0\", \"oserror\": \"errno=13\"}, {\"fd\": \"1\", \"oserror\": \"errno=13\"}, {\"fd\": \"2\", \"oserror\": \"errno=13\"}], \"marker_found\": false, \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"maps\", \"marker_expected\": false, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"status\", \"marker_expected\": false, \"bytes\": 1436, \"marker_found\": false, \"sample\": \"Name:\\tsleep\\nUmask:\\t0022\\nState:\\tS (sleeping)\\nTgid:\\t2797280\\nNgid:\\t0\\nPid:\\t2\", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"mountinfo\", \"marker_expected\": false, \"bytes\": 4092, \"marker_found\": false, \"sample\": \"4478 3043 0:288 / / rw,relatime master:1122 - overlay overlay rw,lowerdi\", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"io\", \"marker_expected\": false, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"stat\", \"marker_expected\": false, \"bytes\": 185, \"marker_found\": false, \"sample\": \"2797280 (sleep) S 2797232 2797231 2797231 0 -1 1077936384 443 0 0 0 0 0 \", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"wchan\", \"marker_expected\": false, \"bytes\": 1, \"marker_found\": false, \"sample\": \"0\", \"class\": \"CONTENT_VISIBLE\"}, {\"path\": \"syscall\", \"marker_expected\": false, \"oserror\": \"errno=1 Operation not permitted\", \"class\": \"ACCESS_DENIED\"}, {\"path\": \"stack\", \"marker_expected\": false, \"oserror\": \"errno=13 Permission denied\", \"class\": \"ACCESS_DENIED\"}]\n",
+        "stderr": ""
+      }
+    },
+    {
+      "title": "same-uid dumpable control matrix (A reads control process)",
+      "note": "if this leaks while B does not, the protection is the userns non-dumpable property, not the uid split",
+      "result": {
+        "cmdline": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": true,
+          "oserror": null
+        },
+        "environ": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "cwd": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "root": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "fd": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "maps": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "status": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "mountinfo": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "io": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        },
+        "stat": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "wchan": {
+          "class": "CONTENT_VISIBLE",
+          "marker_found": false,
+          "oserror": null
+        },
+        "syscall": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=1 Operation not permitted"
+        },
+        "stack": {
+          "class": "ACCESS_DENIED",
+          "marker_found": null,
+          "oserror": "errno=13 Permission denied"
+        }
+      },
+      "extra": {
+        "raw_rows": [
+          {
+            "path": "cmdline",
+            "marker_expected": true,
+            "bytes": 42,
+            "marker_found": true,
+            "sample": "<TOK>-ctrlargv|300|",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "environ",
+            "marker_expected": true,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "cwd",
+            "marker_expected": true,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "root",
+            "marker_expected": false,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "fd",
+            "marker_expected": true,
+            "fd_count": 3,
+            "links": [
+              {
+                "fd": "0",
+                "oserror": "errno=13"
+              },
+              {
+                "fd": "1",
+                "oserror": "errno=13"
+              },
+              {
+                "fd": "2",
+                "oserror": "errno=13"
+              }
+            ],
+            "marker_found": false,
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "maps",
+            "marker_expected": false,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "status",
+            "marker_expected": false,
+            "bytes": 1436,
+            "marker_found": false,
+            "sample": "Name:\tsleep\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t2797280\nNgid:\t0\nPid:\t2",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "mountinfo",
+            "marker_expected": false,
+            "bytes": 4092,
+            "marker_found": false,
+            "sample": "4478 3043 0:288 / / rw,relatime master:1122 - overlay overlay rw,lowerdi",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "io",
+            "marker_expected": false,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "stat",
+            "marker_expected": false,
+            "bytes": 185,
+            "marker_found": false,
+            "sample": "2797280 (sleep) S 2797232 2797231 2797231 0 -1 1077936384 443 0 0 0 0 0 ",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "wchan",
+            "marker_expected": false,
+            "bytes": 1,
+            "marker_found": false,
+            "sample": "0",
+            "class": "CONTENT_VISIBLE"
+          },
+          {
+            "path": "syscall",
+            "marker_expected": false,
+            "oserror": "errno=1 Operation not permitted",
+            "class": "ACCESS_DENIED"
+          },
+          {
+            "path": "stack",
+            "marker_expected": false,
+            "oserror": "errno=13 Permission denied",
+            "class": "ACCESS_DENIED"
+          }
+        ]
+      }
+    },
+    {
+      "title": "P2.1 verdict",
+      "note": "",
+      "result": {
+        "token": "LSBX_SECRET_1b33dfad856c9004",
+        "cross_sandbox_marker_content_visible_paths": [
+          "cmdline"
+        ],
+        "control_marker_content_visible_paths": [
+          "cmdline"
+        ],
+        "proc_confidentiality": "CONTENT_LEAKS_CROSS_SANDBOX",
+        "metadata_visibility": "host pid enumeration + per-pid dir metadata remain visible",
+        "integrity_isolation": "established separately in isolation.json (13 axes)",
+        "worker_trust_model": "single-trust-domain workers: hostile multi-tenant confidentiality is NOT claimed for PORTABLE_ROOTLESS",
+        "secret_handling_rule": "secrets must not enter argv/env of sandbox payloads until proc confidentiality is contract-guaranteed"
+      }
+    }
+  ],
+  "verdict": "P2.1: cross-sandbox CONTENT_LEAKS_CROSS_SANDBOX; control leaks=['cmdline']"
+}

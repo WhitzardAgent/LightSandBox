@@ -1044,6 +1044,199 @@ def cmd_isolation(ev: Evidence):
     ev.finish(f"{len(matrix)} axes; interference={bad or 'none'}; metadata-exposed={exposed or 'none'}")
 
 
+# ---------------------------------------------------------------- p21
+
+P21_PAYLOAD = (
+    "import os,time,socket\n"
+    "tok=os.environ['LSBX_P21_TOKEN']\n"
+    "os.makedirs('/tmp/'+tok+'-cwd',exist_ok=True)\n"
+    "os.chdir('/tmp/'+tok+'-cwd')\n"
+    "f=open('/tmp/'+tok+'-file','w')\n"
+    "s=socket.socket(socket.AF_UNIX)\n"
+    "s.bind('/tmp/'+tok+'.sock')\n"
+    "print('P21SELFHOSTPID='+os.readlink('/proc/self').rsplit('/',1)[-1],flush=True)\n"
+    "time.sleep(300)\n"
+)
+
+P21_READER = r'''
+import os, sys, json, errno
+pid = sys.argv[1]
+tok = sys.argv[2]
+tb = tok.encode()
+def clip(b, n=72):
+    return b[:n].replace(tb, b'<TOK>').decode('utf-8', 'replace')
+rows = []
+def classify(name, path, marker_expected, link=False):
+    row = {'path': name, 'marker_expected': marker_expected}
+    try:
+        if link:
+            t = os.readlink(path)
+            row['bytes'] = len(t)
+            row['marker_found'] = tok in t
+            row['sample'] = clip(t.encode())
+            row['class'] = 'CONTENT_VISIBLE'
+        else:
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+            try:
+                data = os.read(fd, 65536)
+            finally:
+                os.close(fd)
+            row['bytes'] = len(data)
+            row['marker_found'] = tb in data
+            row['sample'] = clip(data.replace(b'\x00', b'|'))
+            row['class'] = 'CONTENT_VISIBLE' if data else 'METADATA_ONLY'
+    except OSError as e:
+        row['oserror'] = f'errno={e.errno} {e.strerror}'
+        row['class'] = 'HIDDEN' if e.errno == errno.ENOENT else 'ACCESS_DENIED'
+    rows.append(row)
+b = '/proc/' + pid
+classify('cmdline', b + '/cmdline', True)
+classify('environ', b + '/environ', True)
+classify('cwd', b + '/cwd', True, link=True)
+classify('root', b + '/root', False, link=True)
+row = {'path': 'fd', 'marker_expected': True}
+try:
+    names = os.listdir(b + '/fd')
+    links = []
+    for n in sorted(names, key=int)[:16]:
+        try:
+            t = os.readlink(b + '/fd/' + n)
+            links.append({'fd': n, 'target': clip(t.encode()), 'marker': tok in t})
+        except OSError as e:
+            links.append({'fd': n, 'oserror': 'errno=%s' % e.errno})
+    row['fd_count'] = len(names)
+    row['links'] = links
+    row['marker_found'] = any(l.get('marker') for l in links)
+    row['class'] = 'CONTENT_VISIBLE'
+except OSError as e:
+    row['oserror'] = 'errno=%s %s' % (e.errno, e.strerror)
+    row['class'] = 'HIDDEN' if e.errno == errno.ENOENT else 'ACCESS_DENIED'
+rows.append(row)
+for nm in ('maps', 'status', 'mountinfo', 'io', 'stat', 'wchan', 'syscall', 'stack'):
+    classify(nm, b + '/' + nm, False)
+print(json.dumps(rows))
+'''
+
+
+def cmd_p21(ev: Evidence):
+    """P2.1 /proc confidentiality matrix (SECURITY EXPERIMENT, feasibility-only).
+    Sandbox B and a same-uid DUMPABLE CONTROL process carry artificial random
+    markers (argv / env / cwd / open-file / unix-socket-path); sandbox A
+    (cross-sandbox, same host uid 65534, own userns+pidns, rbind-ro host /proc)
+    attempts reads. Classification per path:
+    HIDDEN / METADATA_ONLY / CONTENT_VISIBLE / ACCESS_DENIED.
+    Markers are random LSBX_SECRET_<hex>; no real secrets are used or touched.
+    The control isolates WHAT protects payloads: userns non-dumpable vs uid."""
+    a = STATE / "bundles" / "a"
+    if not (a / "rootfs").is_dir():
+        raise SystemExit("run unpack first")
+    b = STATE / "bundles" / "p21b"
+    prepare_nobody_context()
+    chown_tree(a, NOBODY_UID, NOBODY_GID)
+    shutil.rmtree(b, ignore_errors=True)
+    os.makedirs(b, exist_ok=True)
+    run(["/bin/cp", "-a", str(a) + "/.", str(b)])
+    chown_tree(b, NOBODY_UID, NOBODY_GID)
+    tok = "LSBX_SECRET_" + os.urandom(8).hex()
+    ctrl = None
+    try:
+        pid_b, _ = start_detached(
+            ev, b, "p21-b",
+            ["/usr/bin/python3", "-c", P21_PAYLOAD, tok + "-argv"],
+            extra_env=[f"LSBX_P21_TOKEN={tok}", f"LSBX_SECRET_ENV={tok}-env"])
+        if not pid_b:
+            ev.finish("P2.1 aborted: sandbox B failed to start")
+            return
+        self_pid = ""
+        log = STATE / "p21-b.detached.log"
+        if log.exists():
+            m = re.search(r"P21SELFHOSTPID=(\d+)", log.read_text(errors="replace"))
+            self_pid = m.group(1) if m else ""
+        ev.step("sandbox B live with markers (pid-file vs payload self-discovery)",
+                {"pid_file_host_pid": pid_b,
+                 "payload_self_discovered_host_pid": self_pid,
+                 "consistent": str(pid_b) == self_pid,
+                 "marker_shapes": ["argv_suffix", "env_value", "cwd_path",
+                                   "open_file_path", "unix_socket_path"]})
+        pid_c = None
+        setpriv = shutil.which("setpriv")
+        if setpriv:
+            ctrl = subprocess.Popen([
+                setpriv, "--reuid", str(NOBODY_UID), "--regid", str(NOBODY_GID),
+                "--clear-groups", "env", f"LSBX_SECRET_CTRL={tok}-ctrlenv",
+                "/bin/bash", "-c", f"exec -a {tok}-ctrlargv sleep 300"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            pid_c = ctrl.pid
+            time.sleep(0.3)
+
+        def dumpable(pid):
+            try:
+                m = re.search(r"^Dumpable:\s+(\d+)", open(f"/proc/{pid}/status").read(), re.M)
+                return int(m.group(1)) if m else None
+            except (OSError, ValueError):
+                return None
+        ev.step("kernel dumpable flags (harness-side read, mechanism evidence)",
+                {"sandbox_b_payload_userns": dumpable(pid_b),
+                 "control_same_uid_no_userns": dumpable(pid_c)},
+                note="userns entry clears dumpable -> same-uid ptrace_may_access fails")
+
+        def read_matrix(target_pid, label):
+            cfg = minimal_config(
+                ["/usr/bin/python3", "-c", P21_READER, str(target_pid), tok],
+                host_uid=NOBODY_UID, host_gid=NOBODY_GID,
+                bind_proc_ro=True, hostname="p21a")
+            res = bundle_run(ev, a, f"p21-a-{label}", cfg)
+            try:
+                rows = json.loads(res["stdout"].strip().splitlines()[-1])
+            except (ValueError, IndexError, AttributeError):
+                rows = []
+            return rows
+
+        def summarize(rows):
+            return {r["path"]: {k: r.get(k) for k in ("class", "marker_found", "oserror")}
+                    for r in rows}
+
+        rows_b = read_matrix(pid_b, "xb")
+        ev.step("cross-sandbox proc confidentiality matrix (A reads B payload)",
+                summarize(rows_b), extra={"raw_rows": rows_b})
+        rows_c = read_matrix(pid_c, "xc") if pid_c else []
+        if rows_c:
+            ev.step("same-uid dumpable control matrix (A reads control process)",
+                    summarize(rows_c), extra={"raw_rows": rows_c},
+                    note="if this leaks while B does not, the protection is the "
+                         "userns non-dumpable property, not the uid split")
+
+        def leaks(rows):
+            return sorted({r["path"] for r in rows
+                           if r.get("class") == "CONTENT_VISIBLE" and r.get("marker_found")})
+        leaks_b, leaks_c = leaks(rows_b), (leaks(rows_c) if rows_c else None)
+        verdict = {
+            "token": tok,
+            "cross_sandbox_marker_content_visible_paths": leaks_b,
+            "control_marker_content_visible_paths": leaks_c,
+            "proc_confidentiality": ("CONTENT_LEAKS_CROSS_SANDBOX" if leaks_b
+                                     else "CONTENT_HIDDEN_FROM_CROSS_SANDBOX"),
+            "metadata_visibility": "host pid enumeration + per-pid dir metadata remain visible",
+            "integrity_isolation": "established separately in isolation.json (13 axes)",
+            "worker_trust_model": "single-trust-domain workers: hostile multi-tenant "
+                                  "confidentiality is NOT claimed for PORTABLE_ROOTLESS",
+            "secret_handling_rule": "secrets must not enter argv/env of sandbox payloads "
+                                    "until proc confidentiality is contract-guaranteed",
+        }
+        ev.step("P2.1 verdict", verdict)
+        path = ev.finish(f"P2.1: cross-sandbox {verdict['proc_confidentiality']}; "
+                         f"control leaks={leaks_c}")
+        sec = REPO / "evidence" / "security"
+        sec.mkdir(parents=True, exist_ok=True)
+        shutil.copy(path, sec / "proc-confidentiality.json")
+        print(f"canonical: {sec / 'proc-confidentiality.json'}")
+    finally:
+        stop_detached("p21-b")
+        if ctrl:
+            ctrl.terminate()
+        shutil.rmtree(b, ignore_errors=True)
+
+
 # ---------------------------------------------------------------- perf
 
 def cmd_perf(ev: Evidence):
@@ -1115,13 +1308,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("experiment",
                         choices=("fixtures", "unpack", "firstrun", "p1", "p2", "uids",
-                                 "rootfs", "isolation", "perf"))
+                                 "rootfs", "isolation", "p21", "perf"))
     args = parser.parse_args()
     STATE.mkdir(parents=True, exist_ok=True)
     ev = Evidence(args.experiment)
     {"fixtures": cmd_fixtures, "unpack": cmd_unpack, "firstrun": cmd_firstrun,
      "p1": cmd_p1, "p2": cmd_p2, "uids": cmd_uids,
-     "rootfs": cmd_rootfs, "isolation": cmd_isolation,
+     "rootfs": cmd_rootfs, "isolation": cmd_isolation, "p21": cmd_p21,
      "perf": cmd_perf}[args.experiment](ev)
 
 

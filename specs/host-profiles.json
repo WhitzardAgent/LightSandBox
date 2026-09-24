@@ -38,6 +38,45 @@
       "intent": "only local tooling, no sandbox claim",
       "required": [],
       "observed": false
+    },
+    {
+      "id": "portable-rootless",
+      "intent": "first supported host class: portable rootless VMs (benchmark task parity, not general docker semantic parity)",
+      "required": [
+        "namespaces_effective(single-ID userns)",
+        "rootfs_full_copy_effective",
+        "rootfs_tmpfs_cow_effective",
+        "process_supervision_effective",
+        "network_none_effective"
+      ],
+      "conditional": [
+        "userspace_network_when_helper_available",
+        "seccomp_policy_when_runtime_rebuilt_with_libseccomp",
+        "proot_compat_backend_as_explicit_option"
+      ],
+      "policy": "fail_closed",
+      "observed": true,
+      "derived_tier": "PORTABLE_ROOTLESS",
+      "capabilities_summary": {
+        "userns": "SUPPORTED",
+        "uid_mappings": "DEGRADED",
+        "cgroup": "UNSUPPORTED",
+        "procfs": "UNSUPPORTED",
+        "mount": "SUPPORTED",
+        "rootfs": "DEGRADED",
+        "network": "DEGRADED",
+        "seccomp": "DEGRADED",
+        "lsm": "DEGRADED",
+        "filesystem": "DEGRADED",
+        "resource": "UNSUPPORTED"
+      },
+      "report": "evidence/host/hostreport-v1.json",
+      "report_sha256": "241e38420df21a6d8e1010336ced862bce76615940d1564419aa08d6b5c520d4",
+      "hard_claims_forbidden": [
+        "full Docker UID/GID semantics",
+        "hard cgroup resource enforcement",
+        "private procfs per sandbox on this layer"
+      ]
     }
   ]
 }

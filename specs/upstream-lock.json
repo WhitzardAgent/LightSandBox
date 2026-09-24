@@ -1,0 +1,94 @@
+{
+  "schema_version": "2.0",
+  "status": "UNLOCKED",
+  "reason": "本轮可读取公开文档；容器到GitHub的DNS不可用，未获得完整源码与制品。T01必须在开发机器锁定并计算哈希。",
+  "repositories": [
+    {
+      "name": "opensandbox",
+      "url": "https://github.com/opensandbox-group/OpenSandbox.git",
+      "revision": null,
+      "status": "UNLOCKED",
+      "required_files": [
+        "specs/sandbox-lifecycle.yml",
+        "specs/execd-api.yaml"
+      ]
+    },
+    {
+      "name": "runc",
+      "url": "https://github.com/opencontainers/runc.git",
+      "revision": null,
+      "status": "UNLOCKED",
+      "required_files": [
+        "README.md",
+        "docs/terminals.md"
+      ]
+    },
+    {
+      "name": "runtime-spec",
+      "url": "https://github.com/opencontainers/runtime-spec.git",
+      "revision": null,
+      "status": "UNLOCKED",
+      "required_files": [
+        "config.md",
+        "config-linux.md"
+      ]
+    },
+    {
+      "name": "image-spec",
+      "url": "https://github.com/opencontainers/image-spec.git",
+      "revision": null,
+      "status": "UNLOCKED",
+      "required_files": [
+        "config.md",
+        "layer.md"
+      ]
+    },
+    {
+      "name": "swebench",
+      "url": "https://github.com/SWE-bench/SWE-bench.git",
+      "revision": null,
+      "status": "UNLOCKED",
+      "required_files": [
+        "README.md"
+      ]
+    },
+    {
+      "name": "cybergym",
+      "url": "https://github.com/sunblaze-ucb/cybergym.git",
+      "revision": null,
+      "status": "UNLOCKED",
+      "required_files": [
+        "README.md"
+      ]
+    },
+    {
+      "name": "terminalbench",
+      "url": "https://github.com/harbor-framework/terminal-bench.git",
+      "revision": null,
+      "status": "UNLOCKED",
+      "required_files": [
+        "README.md"
+      ]
+    },
+    {
+      "name": "harbor",
+      "url": "https://github.com/harbor-framework/harbor.git",
+      "revision": null,
+      "status": "UNLOCKED",
+      "required_files": [
+        "README.md"
+      ]
+    },
+    {
+      "name": "buildkit",
+      "url": "https://github.com/moby/buildkit.git",
+      "revision": null,
+      "status": "UNLOCKED",
+      "required_files": [
+        "README.md",
+        "docs/rootless.md"
+      ]
+    }
+  ],
+  "release_blocking": true
+}

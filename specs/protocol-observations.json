@@ -1,0 +1,49 @@
+{
+  "schema_version": "2.0",
+  "status": "PARTIAL_OBSERVATIONS_NOT_CONTRACT",
+  "source_ids": [
+    "S07",
+    "S08"
+  ],
+  "observed_date": "2026-09-23",
+  "notes": [
+    "来源为本轮浏览到的main网页，不是不可变锁。T01重新从实际固定spec提取完整inventory。",
+    "info.version不等于完整commit或SDK兼容保证。",
+    "下列只列核对过的关键区别，未列端点不能推断不存在。"
+  ],
+  "observations": [
+    {
+      "scope": "lifecycle",
+      "base_path": "/v1",
+      "auth_header": "OPEN-SANDBOX-API-KEY",
+      "paths": [
+        "/sandboxes",
+        "/sandboxes/{sandboxId}",
+        "/sandboxes/{sandboxId}/metadata",
+        "/sandboxes/{sandboxId}/pause",
+        "/sandboxes/{sandboxId}/resume",
+        "/sandboxes/{sandboxId}/renew-expiration",
+        "/sandboxes/{sandboxId}/endpoints/{port}",
+        "/sandboxes/{sandboxId}/snapshots",
+        "/snapshots",
+        "/snapshots/{snapshotId}"
+      ]
+    },
+    {
+      "scope": "execd",
+      "command_path": "/command",
+      "timeout_unit": "milliseconds",
+      "status_path": "/command/status/{id}",
+      "logs_path": "/command/{id}/logs",
+      "logs_cursor_unit": "line",
+      "logs_cursor_header": "EXECD-COMMANDS-TAIL-CURSOR",
+      "session_paths": [
+        "/session",
+        "/session/{sessionId}/run",
+        "/session/{sessionId}"
+      ],
+      "isolated_capabilities_path": "/v1/isolated/capabilities",
+      "warning": "不要将isolated capabilities写成通用/capabilities。"
+    }
+  ]
+}

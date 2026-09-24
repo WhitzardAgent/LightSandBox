@@ -1,0 +1,12 @@
+[package]
+name = "ls-core-seed"
+version = "0.3.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+# Deliberately standard-library-only. This is reference source, not the daemon.
+# No Rust compiler is available in the delivery environment; run cargo test on
+# the authorized development host before adopting this source.

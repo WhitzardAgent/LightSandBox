@@ -1,0 +1,57 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 面向评测与训练的租约、重置和吞吐
+
+本项目提供训练所需环境服务，不实现RL算法、模型池或reward定义。Harbor或其他训练框架持有episode进度；沙盒服务持有环境、操作和资源事实。
+
+## 1. 对外目标操作
+
+`prepare(spec) → PreparedEnvironment`准备不可变镜像/卷基线。
+
+`acquire(prepared, owner, request_key, budget) → Lease + handle`生成新执行代次。
+
+`exec/files/endpoints(lease, generation, …)`均带代次和owner检查。
+
+`heartbeat/extend(lease)`续期使用权，不隐式提高资源。
+
+`release(lease) → cleanup operation`停止执行、撤销入口、回收可变资源。
+
+`reset(lease, baseline)`通过新代次/新可变资源执行，不承诺原进程内存恢复。首次实现优先destroy+recreate的等价优化，再评估可验证的快速回收。
+
+以上是最终产品契约。本包LeasePool只实现确定性准入与回收状态reference，不含分布式锁、TTL定时器或cgroup驱动。
+
+## 2. 必须防住的轮次污染
+
+上轮在`/tmp`、`/home`、包管理cache、共享卷、数据库中写的状态，后台daemon、Unix socket、TCP连接、凭据文件和系统配置，不能在未声明情况下进入下一轮。只清空workspace远远不足。
+
+重置应停止整个环境组中由本轮拥有的进程，撤销端点和凭据，丢弃所有episode可变层，恢复明确版本的卷基线，再创建新的network与generation。可跨轮共享的内容只能是不可变镜像或显式授权的只读数据；任何可写cache要在实验合同中声明。
+
+新租约发出前检查旧回调、命令流、延迟文件上传和网络请求。旧generation必须在API和host两侧都拒绝，不能只靠客户端对象失效。
+
+## 3. 准入与释放
+
+容量至少分CPU预留、内存预算、可运行槽位、进程数、磁盘与制品上限。请求必须区分reservation与hard limit。CPU请求是管理服务的容量记账，不等于内核实时调度保证。
+
+状态为`ACTIVE → DRAINING → RELEASED`。DRAINING仍然占预算。只有worker确认进程、挂载、网络和可变卷清理完成，才退回容量。对于清理失败的环境保留隔离配额，并报警；不能为了提高吞吐先把预算退回去造成实际过载。
+
+`seed/python/.../leases.py`演示此不变量；生产版把账本与operation日志放在同一事务边界。cleanup receipt hash只是一条引用，真实性需由受信worker收据和独立检查保证。
+
+## 4. 异步训练失败分类
+
+| 场景 | 正确动作 |
+|---|---|
+| 模型端超时但环境存活 | Harbor/训练方决定等待或取消；不销毁同一任务的可恢复上下文 |
+| 已执行但回执丢失 | 查询同一execution_id，不能自动重跑副作用 |
+| 控制面重启 | 重连broker、对账；不把进程存在等同于结果已知 |
+| worker重启 | 旧进程内存不再存在；episode标记基础设施中断，按基线重建新一轮 |
+| lease到期 | 关闭新操作，回收；预算返还需完成清理 |
+| 输出预算耗尽 | 转制品流或显式错误；不截断后当作完整reward输入 |
+| 任务验证失败 | 保留任务结果，与平台故障分开 |
+
+## 5. 吞吐验收
+
+分别测准备命中、冷构建、环境创建、首条exec、端到端Oracle、回收、常驻内存、活跃资源和错误率。收集worker CPU/内存/page cache/FD/PID/挂载/cgroup/conntrack/磁盘inode，观察并发增加后的瓶颈。
+
+不要用1000个idle环境推导1000个编译任务同时运行。训练加速必须报告有效episode/小时、失败与重试开销、固定预算下的结果一致性；模型API等待时间不能误算成沙盒可节约的CPU时间。
+
+对批量创建使用有界队列，执行中控制面和GC要有资源保留。缓存key带镜像digest、platform、构建参数和基线版本。基线命中率的优化必须在全量正确性门禁之后。

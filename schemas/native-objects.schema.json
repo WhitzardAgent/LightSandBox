@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LightSandbox development native objects",
+  "description": "设计模型；不是已实现HTTP服务，也不是OpenSandbox官方协议。",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Handle"
+    },
+    {
+      "$ref": "#/$defs/ExecutionRequest"
+    },
+    {
+      "$ref": "#/$defs/ArtifactRef"
+    }
+  ],
+  "$defs": {
+    "Handle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sandbox_id",
+        "generation"
+      ],
+      "properties": {
+        "sandbox_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "digest",
+        "size",
+        "media_type"
+      ],
+      "properties": {
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ExecutionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "execution_id",
+        "handle",
+        "command"
+      ],
+      "properties": {
+        "execution_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "handle": {
+          "$ref": "#/$defs/Handle"
+        },
+        "command": {
+          "type": "string"
+        },
+        "cwd": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "user": {
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ]
+        },
+        "timeout_sec": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  }
+}

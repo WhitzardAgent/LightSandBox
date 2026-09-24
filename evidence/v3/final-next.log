@@ -1,0 +1,10 @@
+{
+  "ready": [
+    {
+      "id": "T00",
+      "title": "仓库骨架与可信开发入口",
+      "doc": "plans/tasks/T00.md"
+    }
+  ],
+  "note": "This command never executes or changes task state."
+}

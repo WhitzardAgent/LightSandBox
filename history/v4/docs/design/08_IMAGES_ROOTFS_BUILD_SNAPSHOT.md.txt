@@ -1,0 +1,43 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 08 镜像、文件系统、构建与快照
+
+## 镜像资产
+
+所有执行引用解析为OCI manifest digest与平台。保留config digest、层digest、uncompressed digest、镜像来源和构建证据。标签只能用于发现，最终运行日志写入不可变digest。
+
+先支持离线OCI layout/archive，再接registry。下载需有限并发、校验、可中断重试和原子发布。内容仓库去重不等于解包结果已经可安全共享；解包版本、uid映射与文件系统选项也进入缓存key。
+
+## 安全解包
+
+使用成熟OCI工具或库处理层与whiteout。[S20] 上游组件仍需锁版本。对tar路径穿越、符号链接链、设备文件、setuid、capability xattr、压缩炸弹和重复条目建立测试。提取路径不离开受控临时目录，完成校验后以原子发布方式进入只读缓存。
+
+## OCI配置合并
+
+区分image Entrypoint/Cmd、用户覆盖argv、WorkingDir、User、Env、停止信号、卷声明与健康检查。OCI image里的User需在镜像内按其文件解析，不能查询宿主passwd。OpenSandbox模式按固定请求规则覆盖；Docker差分模式按固定Docker规则比较。不同模式不共用未经测试的猜测默认值。
+
+## 驱动认证
+
+OverlayFS、fuse-overlayfs、reflink、完整复制分别测试：whiteout、opaque目录、copy-up、rename、硬链接、符号链接、xattr、文件锁、inotify、mmap、稀疏文件、权限和并发读写。
+
+reflink不保证共享与OverlayFS相同的page cache；完整复制有磁盘和冷缓存成本。Docker本来支持OverlayFS页缓存共享。[S12] 所有驱动在报告中显式标识，不把降级环境的结果合并成一个性能数字。
+
+可写目录不局限于`/workspace`：目标任务可能通过apt安装或修改系统配置。兼容模式提供正确的根文件系统可写层；只读系统目录优化只能作为已验证的独立profile。
+
+## BuildKit边界
+
+不重写Dockerfile解析器。使用独立BuildKit把上下文编译成OCI产物，candidate执行只消费该产物。[S14] 构建可能执行不可信RUN，因此使用专用构建身份/节点和资源预算。不能把Docker socket当作“构建适配器”。
+
+记录Dockerfile、context、frontend版本、build args（脱敏）、secret ID、目标stage、平台、网络策略与输出digest。网络依赖会变化，生产测试优先复用已生成且哈希固定的镜像。构建失败与运行失败分开归因。
+
+## rootfs快照
+
+默认快照种类为`rootfs`，包括运行层的文件系统状态，不包括RAM、进程、TCP或PTY。bind mount/named volume/tmpfs的包含范围分别显式声明。数据库一致快照需要应用级quiesce或独立卷方案，不能靠目录压缩推断。
+
+写入一致性策略：冻结可写进程、生成文件manifest与差异层、提交内容和哈希、再恢复运行。freezer不支持时可要求先停止工作负载，或返回能力不可用。快照协议表面与内部一致性状态分开，不篡改上游响应模式。
+
+恢复到新sandbox ID/generation，按记录的image与rootfs重建，再按正常入口启动。相同文件状态不代表原后台进程继续。卷快照为独立能力，只有纳入manifest并验证才可称为已恢复。
+
+## 预热与复用
+
+优先缓存不可变镜像和未使用的预建运行层。已执行过不可信任务的进程、内存、token与home目录不能直接分配给新任务。预热环境分配时绑定新身份；“快速reset”必须证明没有文件、进程、网络、日志或凭据残留。

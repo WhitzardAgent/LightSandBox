@@ -1,0 +1,62 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# Harbor任务加载、构建与Compose执行
+
+## 1. 加载流水线
+
+`定位本地/registry源 → 固定revision → 官方TaskConfig验证与迁移 → 识别agent/verifier定义 → 规范化配置 → 依赖能力准入 → 准备构建上下文 → 生成EnvironmentSpec → 创建环境`。
+
+离线inventory可以先读取TOML以发现缺口，但不能代替官方模型完成合法性判定。生产加载器直接使用已固定的`Task`/`TaskConfig`，保留步骤、健康检查、环境变量、资源策略和未知版本错误。[S02/S04]
+
+| 任务内容 | 处理时机 | 边界 |
+|---|---|---|
+| task.toml / instruction | Harbor解析与给agent分配任务 | 不默认复制整目录进guest |
+| environment/ | agent环境定义/构建上下文 | 构建与运行分别处理；禁止越界链接到solution |
+| solution/ | 只有明确Oracle模式由Harbor注入 | 普通agent不能读取 |
+| tests/ | Harbor共享verifier上传或独立verifier定义 | 不提前泄漏隐藏测试 |
+| logs/artifacts | 按原Trial路径与采集时序 | 采集失败不能当成空结果成功 |
+| steps/相关配置 | 交给固定Harbor进行多阶段编排 | 不自行压平成一个shell |
+
+## 2. 镜像优先级
+
+当前上游定义辅助函数表达的规则为：有`docker_image`且未强制构建时优先预构建镜像；强制构建但没有Dockerfile时，仍使用预构建镜像。[S03] 不把这个情形误判成不可执行。
+
+单镜像且缺少Dockerfile/Compose、环境目录还有普通文件时，上游会在启动后上传这些文件到工作目录。provider应调用固定版本的对应辅助逻辑，避免只拉镜像却漏掉任务数据。
+
+构建配置必须保存：Dockerfile、上下文文件、平台、build args、target、秘密引用、网络授权、构建超时、base digest和输出digest。`.dockerignore`交给BuildKit/Dockerfile frontend语义，不用通用目录hash当最终构建cache key。时间、UID/GID、权限、软硬链接与扩展属性是否参与identity按真正构建语义核对。
+
+本包的`bundle.py`用于受限、不含链接的安全seed上下文打包；它不处理完整OCI whiteout/xattr/硬链接语义。实际任务遇到这些类型必须补成熟导入路径，不能一直拒绝却声称全量兼容。
+
+## 3. Compose需要两个独立组件
+
+**规范化组件：** 用`compose-go/v2`载入原始任务Compose、固定Harbor叠加配置和operator明确授权的overlays。JSON输出保留字段来源、相对路径基准与实际生效值。[S07]
+
+**执行组件：** 将规范化配置编译为服务、卷、网络、依赖条件和操作。Compose库只负责解析，不会替你实现多容器生命周期。
+
+| 字段族 | 编译结果 | 验收关键点 |
+|---|---|---|
+| image/build/platform | ImageRef/BuildRequest | image与force_build、build target、平台一致 |
+| command/entrypoint/user/working_dir/environment | OCI进程配置+显式启动profile | 数组/字符串、空值/未指定语义不可混用 |
+| depends_on/healthcheck | 服务依赖图与ready条件 | started、healthy、completed不能全部当started |
+| volumes | 独立卷对象、可读写方式、生命周期 | named volume初始内容和跨服务可见性；禁止任意host bind |
+| networks/aliases | 任务隔离网络与DNS记录 | 相同别名在不同group不串线 |
+| ports | 认证端点映射 | host端口冲突、随机端口、停止后撤销 |
+| ulimits/shm_size/tmpfs/cap_add | 资源与权限配置 | 必须按能力准入；不可忽略ptrace等必要权限 |
+| restart/init/stop_grace_period | 进程监督与关闭策略 | 节点管理语义不能被Compose指令接管 |
+| extra_hosts/devices/privileged/host network | 高风险或能力受限项 | 默认拒绝并保留任务阻塞；获准配置单独worker域 |
+
+必须差分验证Harbor实际合成后的Compose，而非只读取用户文件。多文件路径重定位、`.env`、变量替换和匿名卷是常见偏差来源。任何暂未实现字段都给出结构化路径，例如`services.db.volumes[0]`，不能默默删字段。
+
+normalizer遇到未知tag、循环别名、超大输入、远程include或逃逸相对路径时受资源与路径策略约束。不要把完整管理服务环境直接传给它；registry凭据、模型密钥与BuildKit秘密分别管理。
+
+## 4. 独立验证环境
+
+让Harbor决定共享验证或独立验证，并创建对应provider实例。[S04] 独立verifier可能使用tests/中的定义、不同镜像及指定制品。不能一律复制agent根文件系统，也不能一律在agent环境中跑test.sh。
+
+服务级`exec/copy/stop`是Compose兼容的一部分：若需要先停止agent主服务再收集sidecar证据，不能把停止整个group当作等价实现。shared verifier也必须在原规定环境中执行；安全策略若需要改变实验设定，应另起显式配置，不能悄悄修改基准。
+
+## 5. 一次导入的产物
+
+产出`source-lock.json`、配置摘要、EnvironmentSpec、能力需求、构建日志引用、镜像digest、未支持字段列表和最终环境handle。敏感变量只保存密钥引用及脱敏key清单。创建失败保留原因与资源回收证据。模板中留空的实现状态不能转换成成功状态。
+
+来源索引：[S02–S07](../research/04_V3_SOURCES.md)。

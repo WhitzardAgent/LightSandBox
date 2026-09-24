@@ -1,0 +1,1 @@
+Write `ready` followed by a newline to `/workspace/result.txt`. Also write the same bytes to `/shared/result.txt`, then fetch `http://helper:8080/result.txt` and save the response bytes to `/workspace/fetched.txt`.

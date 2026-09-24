@@ -1,0 +1,191 @@
+{
+  "date": "2026-09-24",
+  "scope": "v5 authoring container; offline/reference/client tests, not product runtime",
+  "commands": [
+    {
+      "name": "native-tests",
+      "argv": [
+        "python3",
+        "dev/check_native.py"
+      ],
+      "started_at": "2026-09-24T04:18:05.698380+00:00",
+      "finished_at": "2026-09-24T04:18:07.236163+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "test_count": 75,
+      "raw_log": "evidence/v5/native-tests.log"
+    },
+    {
+      "name": "seed-tests",
+      "argv": [
+        "python3",
+        "dev/check_seeds.py"
+      ],
+      "started_at": "2026-09-24T04:18:07.236195+00:00",
+      "finished_at": "2026-09-24T04:18:07.995951+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "test_count": 109,
+      "raw_log": "evidence/v5/seed-tests.log"
+    },
+    {
+      "name": "pack-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/pack",
+        "-v"
+      ],
+      "started_at": "2026-09-24T04:18:07.995982+00:00",
+      "finished_at": "2026-09-24T04:18:30.270618+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "test_count": 34,
+      "raw_log": "evidence/v5/pack-tests.log"
+    },
+    {
+      "name": "structure",
+      "argv": [
+        "python3",
+        "tools/packctl.py",
+        "validate"
+      ],
+      "started_at": "2026-09-24T04:18:30.270665+00:00",
+      "finished_at": "2026-09-24T04:18:30.857206+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "test_count": null,
+      "raw_log": "evidence/v5/structure.log"
+    },
+    {
+      "name": "next-task",
+      "argv": [
+        "python3",
+        "tools/packctl.py",
+        "next"
+      ],
+      "started_at": "2026-09-24T04:18:30.857235+00:00",
+      "finished_at": "2026-09-24T04:18:31.448224+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "test_count": null,
+      "raw_log": "evidence/v5/next-task.log"
+    },
+    {
+      "name": "release-blocked",
+      "argv": [
+        "python3",
+        "tools/packctl.py",
+        "release-check"
+      ],
+      "started_at": "2026-09-24T04:18:31.448250+00:00",
+      "finished_at": "2026-09-24T04:18:32.030887+00:00",
+      "exit_code": 1,
+      "expected_exit": 1,
+      "test_count": null,
+      "raw_log": "evidence/v5/release-blocked.log"
+    },
+    {
+      "name": "cli-version",
+      "argv": [
+        "python3",
+        "tools/lsbx.py",
+        "--json",
+        "version"
+      ],
+      "started_at": "2026-09-24T04:18:32.030915+00:00",
+      "finished_at": "2026-09-24T04:18:32.678343+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "test_count": null,
+      "raw_log": "evidence/v5/cli-version.log"
+    },
+    {
+      "name": "cli-env-plan",
+      "argv": [
+        "python3",
+        "tools/lsbx.py",
+        "--json",
+        "env",
+        "plan",
+        "--file",
+        "examples/native/environment.json"
+      ],
+      "started_at": "2026-09-24T04:18:32.678373+00:00",
+      "finished_at": "2026-09-24T04:18:33.317419+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "test_count": null,
+      "raw_log": "evidence/v5/cli-env-plan.log"
+    },
+    {
+      "name": "cli-exec-dry-run",
+      "argv": [
+        "python3",
+        "tools/lsbx.py",
+        "--json",
+        "exec",
+        "--generation",
+        "1",
+        "--dry-run",
+        "sb_demo",
+        "--",
+        "printf",
+        "%s",
+        "a b;$HOME"
+      ],
+      "started_at": "2026-09-24T04:18:33.317447+00:00",
+      "finished_at": "2026-09-24T04:18:33.962774+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "test_count": null,
+      "raw_log": "evidence/v5/cli-exec-dry-run.log"
+    }
+  ],
+  "actual_tests": {
+    "native_reference": 75,
+    "legacy_reference": 109,
+    "planning_tools": 34,
+    "total": 218
+  },
+  "syntax_checks": {
+    "python": 42,
+    "json": 32,
+    "toml": 6,
+    "yaml": 1
+  },
+  "environment": {
+    "python": "3.13.5",
+    "packages": {
+      "httpx": "0.28.1",
+      "jsonschema": "4.26.0",
+      "PyYAML": "6.0.3"
+    },
+    "tools": {
+      "cargo": null,
+      "rustc": null,
+      "runc": null,
+      "docker": null,
+      "buildctl": null,
+      "go": "/usr/local/go/bin/go"
+    }
+  },
+  "not_executed": [
+    "Rust compilation",
+    "native daemon",
+    "runc/container kernel integration",
+    "BuildKit builds",
+    "real Harbor package interoperability",
+    "OpenSandbox unmodified SDK interoperability",
+    "CyberGym/SWE-bench/Terminal-Bench full corpus",
+    "VM density/performance",
+    "independent security review"
+  ],
+  "legacy_test_adjustment": "test_missing_design_reference_is_rejected now deletes the current T14 referenced design instead of an obsolete redirect file; negative assertion unchanged.",
+  "upstream_lock": "UNLOCKED",
+  "host_probe": "user VM NOT_PROBED",
+  "runtime_implemented": false
+}

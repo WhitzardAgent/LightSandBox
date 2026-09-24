@@ -1,0 +1,54 @@
+test_cli (unittest.loader._FailedTest.test_cli) ... ERROR
+test_contracts (unittest.loader._FailedTest.test_contracts) ... ERROR
+test_sdk (unittest.loader._FailedTest.test_sdk) ... ERROR
+
+======================================================================
+ERROR: test_cli (unittest.loader._FailedTest.test_cli)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_cli
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/mnt/data/lightsandbox_v5_2026-09-24/tests/native/test_cli.py", line 3, in <module>
+    from lightsandbox.cli import main
+ModuleNotFoundError: No module named 'lightsandbox.cli'
+
+
+======================================================================
+ERROR: test_contracts (unittest.loader._FailedTest.test_contracts)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_contracts
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/mnt/data/lightsandbox_v5_2026-09-24/tests/native/test_contracts.py", line 3, in <module>
+    from lightsandbox.contracts import (SandboxRef, ExecSpec, ContractError, ExitStatus,
+        resolve_launch, validate_environment, allowed_transition)
+ModuleNotFoundError: No module named 'lightsandbox.contracts'
+
+
+======================================================================
+ERROR: test_sdk (unittest.loader._FailedTest.test_sdk)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_sdk
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/mnt/data/lightsandbox_v5_2026-09-24/tests/native/test_sdk.py", line 2, in <module>
+    from lightsandbox import Client, AsyncClient, SandboxRef, ExecSpec
+ImportError: cannot import name 'Client' from 'lightsandbox' (unknown location)
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+FAILED (errors=3)

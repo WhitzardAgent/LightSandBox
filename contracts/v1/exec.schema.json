@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native ExecutionSpec v1 reference",
+  "x-implementation-status": "REFERENCE_CONTRACT_NO_SERVER",
+  "x-scope": "strict reference subset; unimplemented advanced fields fail validation",
+  "type": "object",
+  "properties": {
+    "command": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "argv"
+            },
+            "argv": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$"
+              },
+              "prefixItems": [
+                {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$",
+                  "minLength": 1
+                }
+              ],
+              "minItems": 1
+            }
+          },
+          "required": [
+            "kind",
+            "argv"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "shell"
+            },
+            "executable": {
+              "type": "string",
+              "pattern": "^/[^\\u0000]*$"
+            },
+            "script": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$"
+            }
+          },
+          "required": [
+            "kind",
+            "executable",
+            "script"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "cwd": {
+      "type": "string",
+      "pattern": "^/[^\\u0000]*$"
+    },
+    "env": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^=\\u0000]+$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[^\\u0000]*$"
+      }
+    },
+    "timeout_ms": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "user": {
+      "type": "string",
+      "pattern": "^[^\\u0000]*$",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "command"
+  ],
+  "additionalProperties": false
+}

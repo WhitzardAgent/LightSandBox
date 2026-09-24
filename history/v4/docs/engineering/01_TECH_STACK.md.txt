@@ -1,0 +1,78 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 技术栈与依赖选型
+
+**决策状态：v3 推荐实施方案。依赖名称已核对原始文档；生产精确版本、完整传递依赖、二进制摘要仍须由 T00/T01/T33 在实际开发机锁定。** 不把网页的 `latest` 当作构建锁，不把编译器版本当作宿主内核能力。
+
+## 1. 交付单元与职责
+
+| 单元 | 语言与首选实现 | 安装位置与生命周期 | 禁止承担的职责 |
+|---|---|---|---|
+| `ls-api` | Rust；Tokio、Axum、Tower | 每个节点一个非特权API服务，可独立重启 | 直接执行mount、任意宿主shell |
+| `ls-host` | Rust；Tokio、rustix、runc命令适配 | 授权的节点管理服务；限定UDS调用 | 处理模型推理、打分、读取任意客户路径 |
+| 执行/PTY broker | `ls-host`同一代码库的独立运行模式 | 初期每个worker一个；实测需要时分片 | 把断线当作命令成功；重启后猜测退出码 |
+| `ls-core` | Rust；Serde、thiserror、SQLite状态接口 | 公共类型及确定性逻辑，无特权系统调用 | 依赖Harbor、OpenSandbox SDK、Evaluation |
+| `ls-guest` | Rust小型程序；按需文件助手与最小init | 每个运行沙盒tiny init，文件助手按需启动 | HTTP服务、调度器、业务策略 |
+| Python SDK | Python；httpx、Pydantic（仅客户端数据模型） | 客户端/评测机；异步连接池 | 每个沙盒启动一个Python服务 |
+| Harbor provider | Python；固定Harbor包与SDK | Harbor所在进程；可选安装项 | 自行解释reward、重写Trial/Agent/Verifier |
+| Compose normalizer | 小型Go CLI；`compose-go/v2` | 构建/准备阶段调用，输出标准JSON IR | 常驻每个沙盒；执行Compose编排 |
+| 镜像/构建辅助程序 | skopeo、umoci、独立BuildKit OCI worker | 节点共享或单独构建节点 | 候选执行路径偷偷回退Docker |
+| 网络辅助程序 | CNI bridge/host-local/loopback；受控nft适配 | rootful首发路径 | 让任务直接控制宿主防火墙 |
+
+Rust工作区先维持四个主体crate。broker、network、rootfs作为内部模块/二进制入口；只有独立依赖或审查边界确有必要才拆crate。整个控制面不需要再加一个Python FastAPI服务，也不引入Redis、PostgreSQL、Kafka、Kubernetes。
+
+## 2. Rust具体依赖
+
+| 能力 | 选择 | 使用约束 | 首轮不选择的替代方案 |
+|---|---|---|---|
+| 异步I/O | `tokio` 1.x | 初期只开runtime、net、process、signal、sync、time、io-util；阻塞工作外移 | 自建线程池/事件循环 |
+| HTTP/SSE/WebSocket | `axum` 0.8系列、`tower`、按需`tower-http` | 提取认证、请求体上限、限流；禁止无限日志队列；版本族仍需统一解析 | 并用Actix、FastAPI两套服务 |
+| 序列化与错误 | `serde`、`serde_json`、`thiserror` | 内外协议分开；未知安全字段拒绝；错误码稳定；`anyhow`只用于程序入口 | 字符串拼接JSON、运行时自由字典 |
+| 文件描述符/Unix | `rustix` 1.x + `std::os::fd::OwnedFd` | 默认CLOEXEC，审查继承表；优先安全封装；不在多线程Tokio中直接切换namespace | 大片自写libc/unsafe、Python preexec_fn |
+| OCI数据结构 | `oci-spec`，观察到0.10系列 | 类型校验不能替代OCI行为测试；镜像Config与Runtime Spec分开 | 手写不完整config.json拼接 |
+| 运行时 | 固定`runc`二进制 | 验证来源、摘要、rootless/rootful能力；CLI argv传参；退出状态单独记录 | 从头造container runtime、嵌入Docker SDK |
+| 持久化 | `rusqlite` + SQLite | 单写者actor；WAL；持久化关键收据使用明确同步策略；读查询限时；禁跨await事务 | 首期分布式数据库、多个服务自由写库 |
+| 日志/诊断 | `tracing`、`tracing-subscriber` | 字段化ID与span；命令正文/环境秘密默认不记入控制日志；输出制品分开 | 只写终端字符串日志 |
+| HTTP客户端 | `reqwest` + `rustls` | 默认验证证书、限制重定向、禁带凭据跨源跳转；仅必要feature | 自写TLS、关闭验证绕过接入 |
+| ID/内容摘要 | `uuid`、`sha2` | 随机身份与内容哈希用途分开；外部名称不作为路径；秘密不入公开哈希清单 | 使用任务名/PID作为全局ID |
+| CLI | `clap` | 严格参数、明确dry-run、非零错误码 | 一套复杂shell脚本当管理服务 |
+| 测试 | `proptest`、`tempfile`、原生Rust tests | 单元/真实runtime/差分/故障测试分层；随机种子留档 | 只测mock或覆盖率达标 |
+| 供应链 | `cargo audit`、`cargo deny`、锁文件和SBOM | 根据许可证与安全通告做独立审查；不能把执行工具成功等同于没有漏洞 | 未锁定主分支、静默更新传递依赖 |
+
+版本表用于选型；最终`Cargo.lock`、`rust-toolchain.toml`和制品摘要是T00/T01产物。本包没有伪造它们。Axum/Tower、rustix、rusqlite和oci-spec能力参见来源[S08–S11]。
+
+## 3. Python与Harbor
+
+基础SDK可独立安装，不必拉取Harbor和全部模型/云厂商SDK。Harbor适配做成可选包/extra。观察到Harbor主分支`pyproject.toml`标为0.20.0、Python>=3.12，但**未证明该代码快照等同于某个已发布wheel**；必须锁定实际源树或制品。[S06]
+
+生产Python工具使用`uv`生成锁文件；lint/类型检查选`ruff`与`mypy`或`pyright`之一，团队统一，避免同类工具堆叠；测试用`pytest`/`pytest-asyncio`/`httpx.MockTransport`。本包可运行seed只依赖Python标准库，使用`unittest`，不会为阅读规划安装大型依赖。
+
+协议客户端分两个门面：原版OpenSandbox SDK互操作测试；LightSandbox原生客户端供Harbor provider及独立环境导入使用。两者转向同一内部服务模型。不能通过改官方SDK代码来证明兼容。
+
+## 4. 为什么保留一个Go辅助程序
+
+Compose包含变量替换、多文件合并、路径基准、服务依赖等语义。首选官方参考库`compose-go/v2`加载并生成规范化模型，再由Rust编译为EnvironmentGroup。[S07] 不把Go引入主运行时，也不让每个沙盒启动Go服务。
+
+normalizer进程应无管理权限、禁网、限定根目录、配置长度和时间预算。显式提供允许的环境变量；不继承管理服务全部环境，不自动处理未经许可的远程include。依赖的安全更新与源码锁定同样纳入T01。JSON解析成功后，还必须验证每个字段是否已经具备可执行语义。
+
+## 5. 构建、运行、引用基线三类依赖
+
+| 类别 | 允许存在 | 证据要求 |
+|---|---|---|
+| 候选运行 | ls-*、runc、网络/文件系统helper | 实际进程树、二进制摘要与调用审计；无Docker/containerd daemon |
+| 构建 | 独立BuildKit、skopeo、umoci、normalizer | 构建隔离与网络单独准入；OCI worker路线；输出OCI制品可追溯 |
+| 参考测试 | Docker、固定OpenSandbox、官方harness | 与候选worker分开命名与制品目录，不计入候选路径成功 |
+
+runc不提供镜像仓库、Dockerfile、端口发布或会话持久化。去掉Docker daemon后，这些上层职责仍须有人完成，不能称为几行runc封装。
+
+## 6. 二进制兼容性
+
+Python版本、Rust编译工具链、glibc/musl ABI、CPU架构、内核能力是五个独立维度。静态链接不能补齐宿主缺失的namespace/cgroup能力。最低glibc及目标CPU指令集由实际VM清单选择并在最老支持节点验证；不要在新开发机编译后宣称所有旧VM可运行。
+
+首发Linux amd64 rootful能力配置。arm64、rootless、cgroup v1各自建立支持矩阵，不用平台名称推断支持。没有root管理权限或delegated cgroup时，硬内存限制可能无法兑现，必须拒绝相应要求。
+
+## 7. 锁定产物
+
+T01/T33至少产出：上游源码commit+文件哈希、Harbor契约文件哈希、OpenSandbox SDK制品哈希、Rust/Python/Go依赖锁、runc/CNI/BuildKit/helper二进制摘要、构建基镜像digest、三基准完整任务manifest。随后运行漏洞/许可证检查及本地构建，再将状态改为LOCKED。浏览网页的观察记录始终保留为OBSERVED。
+
+来源索引：[04_V3_SOURCES](../research/04_V3_SOURCES.md)。

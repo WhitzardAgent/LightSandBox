@@ -1,0 +1,49 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 05 OpenSandbox兼容目标与协议冻结
+
+## 三个独立兼容维度
+
+`wire`：HTTP路径、方法、请求/响应模式、状态码、认证、SSE/终端传输语义。
+
+`sdk`：未修改的固定版本OpenSandbox SDK通过更改服务地址/连接配置使用本服务。另写一个同名Python类不能证明SDK兼容。
+
+`behavior`：调用观察到的运行结果、错误与状态符合声明契约。每项均有单独的 `planned/implemented/verified/unsupported`。
+
+## 版本冻结
+
+T01同时锁定OpenSandbox源码、生命周期spec、execd spec、Python SDK发布包及源码、参考server与execd镜像digest。仅记录spec中的`info.version`不足以锁定协议。
+
+本轮浏览的公开规范观察到生命周期`/v1`与execd分离的协议面。[S07][S08] 本包不打包未经确认的“完整兼容OpenAPI”。T01从固定源码生成endpoint inventory、字段与错误清单，再生成测试输入，避免手写遗漏。
+
+## 最小兼容面与扩大顺序
+
+| 能力组 | 首要目标 | 说明 |
+|---|---|---|
+| 生命周期 | create/get/list/delete/metadata/TTL | 包含分页过滤与失败响应 |
+| 执行 | foreground/background/status/logs/cancel | 保留超时单位与日志cursor语义 |
+| Shell/PTY | session与交互终端 | 分别测试，不能互相代替 |
+| 文件 | 上传、下载、查询、编辑与目录 | 保留二进制、权限及异常 |
+| 入口 | execd路由、应用端口、认证 | SDK实际发现链路必须成立 |
+| 管理 | pause/resume/metrics/rootfs snapshot | 能力受宿主与明确快照范围约束 |
+| 可选扩展 | code interpreter、isolated session等 | 逐项声明，不假装全部实现 |
+
+## 已观察到的协议陷阱
+
+生命周期与命令超时使用的单位不同，不能共享一个未经转换的整数。创建/删除的成功响应也不等价于所有资源已经完成最终清理。具体字段与HTTP码以固定规范和独立参考测试决定。[S07][S08]
+
+日志流应测试事件顺序、空输出、非UTF-8、截断、后台轮询、断开和重连。两条独立stdout/stderr管道没有天然的全局字节顺序；声明能保证的范围。
+
+当前看到的execd规范存在特定隔离执行能力路由，不能将项目自定义的通用能力API称为上游已有接口。[S08] 项目扩展统一放在独立命名空间，并单独维护文档和测试。
+
+## 统一入口的安全实现
+
+兼容层可以在宿主代理沙盒执行API，但每个路由必须绑定 `owner / sandbox / generation / expiry`。不能仅凭请求里的sandbox ID授权。控制面API key、数据面访问token和应用端口访问凭据分离；参考实现的发现/headers/cookies/SSE/WebSocket行为均纳入测试。
+
+优先验证SDK自带的server-proxy连接模式是否满足统一入口。若固定SDK使用其他路由方式，提供相应兼容路由。禁止先改SDK绕过问题再称为兼容。
+
+## 不确定性处理
+
+规范与参考行为冲突时输出三个证据：固定spec条目、SDK真实请求、参考server响应。由ADR决定兼容行为、拒绝行为或上游bug说明。不能默默选择最容易实现的一种。
+
+上游漏洞、越权或泄漏行为不属于必须复制的结果。偏离要显式记载，安全风险由负责人审查，不以“完全无差异”为理由复制危险行为。

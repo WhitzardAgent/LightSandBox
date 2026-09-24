@@ -1,0 +1,3033 @@
+{
+  "schema_version": "5.0",
+  "meaning": "具体待实现验收用例，未执行产品测试。",
+  "tests": [
+    {
+      "id": "T00-C01",
+      "task_id": "T00",
+      "requirements": [
+        "R01",
+        "R19",
+        "R21"
+      ],
+      "given": "未知suite或空测试集合",
+      "when": "运行dev/check unknown及空fixture",
+      "then": "退出非0并说明未知suite/zero collected，不能返回PASS",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T00-C02",
+      "task_id": "T00",
+      "requirements": [
+        "R01",
+        "R19",
+        "R21"
+      ],
+      "given": "故意失败的子进程测试",
+      "when": "runner执行固定exit 17测试",
+      "then": "报告原始退出码且CI红灯",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T00-C03",
+      "task_id": "T00",
+      "requirements": [
+        "R01",
+        "R19",
+        "R21"
+      ],
+      "given": "反向依赖/禁用导入",
+      "when": "在临时副本加入core依赖conformance",
+      "then": "结构lint指出确切路径并失败",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T00-C04",
+      "task_id": "T00",
+      "requirements": [
+        "R01",
+        "R19",
+        "R21"
+      ],
+      "given": "干净构建",
+      "when": "独立临时工作树执行fast与unit",
+      "then": "实际收集测试数量大于0，workspace可构建且无生产功能完成声明",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T01-C01",
+      "task_id": "T01",
+      "requirements": [
+        "R06",
+        "R20",
+        "R22"
+      ],
+      "given": "未锁定revision",
+      "when": "尝试通过release-check使用main或短SHA",
+      "then": "门禁拒绝并显示具体未锁定来源",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T01-C02",
+      "task_id": "T01",
+      "requirements": [
+        "R06",
+        "R20",
+        "R22"
+      ],
+      "given": "源码被修改",
+      "when": "clone存在tracked/untracked修改或spec哈希改变",
+      "then": "锁工具拒绝或要求显式新锁，不覆盖旧证据",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T01-C03",
+      "task_id": "T01",
+      "requirements": [
+        "R06",
+        "R20",
+        "R22"
+      ],
+      "given": "SDK/spec漂移",
+      "when": "对同一已锁定contract替换不同版本SDK",
+      "then": "独立契约检查识别不匹配",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T01-C04",
+      "task_id": "T01",
+      "requirements": [
+        "R06",
+        "R20",
+        "R22"
+      ],
+      "given": "协议解析完整性",
+      "when": "对锁定spec逐operation计数并枚举",
+      "then": "inventory与spec数量一致，扩展API单列且无虚构通用capabilities端点",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T02-C01",
+      "task_id": "T02",
+      "requirements": [
+        "R12",
+        "R13",
+        "R14",
+        "R17",
+        "R20"
+      ],
+      "given": "有不支持字段的任务",
+      "when": "fixture含devices、ulimits和未知Compose字段",
+      "then": "任务仍在manifest，能力缺口清楚列出",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T02-C02",
+      "task_id": "T02",
+      "requirements": [
+        "R12",
+        "R13",
+        "R14",
+        "R17",
+        "R20"
+      ],
+      "given": "缺少oracle的任务",
+      "when": "fixture无solution或有效PoC",
+      "then": "保留任务并标ORACLE_UNAVAILABLE，不计正向通过",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T02-C03",
+      "task_id": "T02",
+      "requirements": [
+        "R12",
+        "R13",
+        "R14",
+        "R17",
+        "R20"
+      ],
+      "given": "重复/遗漏ID",
+      "when": "输入manifest重复ID或与上游完整枚举差一项",
+      "then": "一致性门禁失败且给出差集",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T02-C04",
+      "task_id": "T02",
+      "requirements": [
+        "R12",
+        "R13",
+        "R14",
+        "R17",
+        "R20"
+      ],
+      "given": "canary和全量",
+      "when": "按字段生成canary并重算完整集合哈希",
+      "then": "canary只改变开发子集，不改变发行分母",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T03-C01",
+      "task_id": "T03",
+      "requirements": [
+        "R02",
+        "R03",
+        "R10",
+        "R15",
+        "R23"
+      ],
+      "given": "无/dev/kvm但容器原语可用",
+      "when": "执行准入与最小namespace探测",
+      "then": "通过KVM-free条件，不尝试打开KVM",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T03-C02",
+      "task_id": "T03",
+      "requirements": [
+        "R02",
+        "R03",
+        "R10",
+        "R15",
+        "R23"
+      ],
+      "given": "cgroup目录存在但控制器不可写",
+      "when": "施加内存/PID限额并观察实际行为",
+      "then": "拒绝声明hard limit支持",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T03-C03",
+      "task_id": "T03",
+      "requirements": [
+        "R02",
+        "R03",
+        "R10",
+        "R15",
+        "R23"
+      ],
+      "given": "namespace被LSM阻止",
+      "when": "在受限配置下执行实际探测",
+      "then": "报告拒绝原因且不自动修改宿主策略",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T03-C04",
+      "task_id": "T03",
+      "requirements": [
+        "R02",
+        "R03",
+        "R10",
+        "R15",
+        "R23"
+      ],
+      "given": "探测异常中断",
+      "when": "中止probe后审计标记资源",
+      "then": "本次资源清理完成，无其他实例资源被删除",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T04-C01",
+      "task_id": "T04",
+      "requirements": [
+        "R03",
+        "R08",
+        "R15",
+        "R19",
+        "R22"
+      ],
+      "given": "跨owner或旧generation句柄",
+      "when": "inspect/exec/delete引用其他主体或重建前ID",
+      "then": "FORBIDDEN/STALE_GENERATION，无外部副作用",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T04-C02",
+      "task_id": "T04",
+      "requirements": [
+        "R03",
+        "R08",
+        "R15",
+        "R19",
+        "R22"
+      ],
+      "given": "相同幂等key不同参数",
+      "when": "重复提交不同CreateSpec",
+      "then": "CONFLICT而非偷偷复用/重建",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T04-C03",
+      "task_id": "T04",
+      "requirements": [
+        "R03",
+        "R08",
+        "R15",
+        "R19",
+        "R22"
+      ],
+      "given": "IPC任意命令/路径注入",
+      "when": "发送未注册operation和宿主绝对路径字段",
+      "then": "边界解析拒绝，root服务不启动shell",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T04-C04",
+      "task_id": "T04",
+      "requirements": [
+        "R03",
+        "R08",
+        "R15",
+        "R19",
+        "R22"
+      ],
+      "given": "迁移中断",
+      "when": "在schema变更步骤注入失败后重新启动",
+      "then": "恢复到受支持schema或拒绝启动，数据不静默丢失",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T05-C01",
+      "task_id": "T05",
+      "requirements": [
+        "R16",
+        "R17",
+        "R18",
+        "R20"
+      ],
+      "given": "参考启动失败",
+      "when": "故意使用无效reference endpoint",
+      "then": "REFERENCE_INFRA_ERROR而非候选失败或跳过",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T05-C02",
+      "task_id": "T05",
+      "requirements": [
+        "R16",
+        "R17",
+        "R18",
+        "R20"
+      ],
+      "given": "错误patch/伪造旧结果文件",
+      "when": "运行负控fixture",
+      "then": "检测验证器未执行或判错，不能产出PASS",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T05-C03",
+      "task_id": "T05",
+      "requirements": [
+        "R16",
+        "R17",
+        "R18",
+        "R20"
+      ],
+      "given": "候选输出真实差异",
+      "when": "改变退出码/文件权限/单流字节",
+      "then": "比较器报差异且保留原始数据",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T05-C04",
+      "task_id": "T05",
+      "requirements": [
+        "R16",
+        "R17",
+        "R18",
+        "R20"
+      ],
+      "given": "冷热条件不匹配",
+      "when": "将candidate warm与reference cold标同组",
+      "then": "测量校验拒绝或拆分组，不报误导加速比",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T06-C01",
+      "task_id": "T06",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20"
+      ],
+      "given": "损坏layer/config",
+      "when": "更改一个字节后导入",
+      "then": "digest校验失败且不可创建sandbox",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T06-C02",
+      "task_id": "T06",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20"
+      ],
+      "given": "入口覆盖组合",
+      "when": "覆盖entrypoint/CMD/env并与Docker fixture比较",
+      "then": "argv、空参数、user和cwd一致",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T06-C03",
+      "task_id": "T06",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20"
+      ],
+      "given": "平台不匹配",
+      "when": "导入其他架构镜像但未配置执行支持",
+      "then": "提前报HOST_UNSUPPORTED，不到exec后伪造普通失败",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T06-C04",
+      "task_id": "T06",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20"
+      ],
+      "given": "并发同digest导入",
+      "when": "同时导入同一不可变产物",
+      "then": "仅一个完整可见对象，引用正确且无半文件",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T07-C01",
+      "task_id": "T07",
+      "requirements": [
+        "R05",
+        "R08",
+        "R15",
+        "R18",
+        "R20"
+      ],
+      "given": "恶意tar路径/链接",
+      "when": "解包含../和链接逃逸的fixture",
+      "then": "不写到data root外且导入失败",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T07-C02",
+      "task_id": "T07",
+      "requirements": [
+        "R05",
+        "R08",
+        "R15",
+        "R18",
+        "R20"
+      ],
+      "given": "层覆盖与whiteout",
+      "when": "多层fixture删除覆盖含符号/硬链接文件",
+      "then": "最终字节、类型、权限与Docker一致",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T07-C03",
+      "task_id": "T07",
+      "requirements": [
+        "R05",
+        "R08",
+        "R15",
+        "R18",
+        "R20"
+      ],
+      "given": "A修改共享文件",
+      "when": "两个sandbox从同digest启动并写同路径",
+      "then": "B和base不被更改",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T07-C04",
+      "task_id": "T07",
+      "requirements": [
+        "R05",
+        "R08",
+        "R15",
+        "R18",
+        "R20"
+      ],
+      "given": "创建与GC并发",
+      "when": "持有lease时触发GC并中断准备",
+      "then": "活动对象保留、半成品可清理、无mount泄漏",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T08-C01",
+      "task_id": "T08",
+      "requirements": [
+        "R02",
+        "R04",
+        "R05",
+        "R08",
+        "R15"
+      ],
+      "given": "最小真实执行",
+      "when": "通过API创建固定image并执行写文件后删除",
+      "then": "可读真实输出与退出码；无Docker/containerd调用",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T08-C02",
+      "task_id": "T08",
+      "requirements": [
+        "R02",
+        "R04",
+        "R05",
+        "R08",
+        "R15"
+      ],
+      "given": "入口立刻失败",
+      "when": "entrypoint exit 7",
+      "then": "报告真实终止而非Running永久成功",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T08-C03",
+      "task_id": "T08",
+      "requirements": [
+        "R02",
+        "R04",
+        "R05",
+        "R08",
+        "R15"
+      ],
+      "given": "创建中途故障",
+      "when": "在rootfs后/runc前/启动后注入错误",
+      "then": "回滚所有本实例资源且记录原因",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T08-C04",
+      "task_id": "T08",
+      "requirements": [
+        "R02",
+        "R04",
+        "R05",
+        "R08",
+        "R15"
+      ],
+      "given": "daemon重启后查询",
+      "when": "节点服务重启时sandbox仍存活",
+      "then": "核对owner/generation与内核状态，不凭DB虚构存在",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T09-C01",
+      "task_id": "T09",
+      "requirements": [
+        "R03",
+        "R10",
+        "R18"
+      ],
+      "given": "内存和PID压力",
+      "when": "受限程序尝试超额分配/fork",
+      "then": "实际限制生效且兄弟sandbox不受影响",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T09-C02",
+      "task_id": "T09",
+      "requirements": [
+        "R03",
+        "R10",
+        "R18"
+      ],
+      "given": "磁盘硬限制不支持",
+      "when": "请求required disk quota在无配额文件系统",
+      "then": "创建前拒绝，不能仅记录警告",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T09-C03",
+      "task_id": "T09",
+      "requirements": [
+        "R03",
+        "R10",
+        "R18"
+      ],
+      "given": "CPU配额读取",
+      "when": "负载运行并读取实际quota/period",
+      "then": "实测配置与请求一致，单位转换正确",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T09-C04",
+      "task_id": "T09",
+      "requirements": [
+        "R03",
+        "R10",
+        "R18"
+      ],
+      "given": "并发准入与取消",
+      "when": "争抢节点预算并取消部分请求",
+      "then": "不超售硬预算，无泄漏预留或永久饥饿",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T10-C01",
+      "task_id": "T10",
+      "requirements": [
+        "R07",
+        "R08",
+        "R16"
+      ],
+      "given": "环境与用户",
+      "when": "执行含空格参数、非root UID、cwd和env覆盖",
+      "then": "内容/权限/argv与参考一致",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T10-C02",
+      "task_id": "T10",
+      "requirements": [
+        "R07",
+        "R08",
+        "R16"
+      ],
+      "given": "stdout/stderr和非UTF8",
+      "when": "分别写原始字节并以非0退出",
+      "then": "原始日志保真，协议编码符合锁定规则",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T10-C03",
+      "task_id": "T10",
+      "requirements": [
+        "R07",
+        "R08",
+        "R16"
+      ],
+      "given": "相同请求重发",
+      "when": "同key提交写计数副作用的命令",
+      "then": "同一operation且计数仅增加一次",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T10-C04",
+      "task_id": "T10",
+      "requirements": [
+        "R07",
+        "R08",
+        "R16"
+      ],
+      "given": "开始失败与真实退出",
+      "when": "缺少binary、权限不足、SIGSEGV分别执行",
+      "then": "状态区分明确，退出码不凭文本猜测",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T11-C01",
+      "task_id": "T11",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "given": "脱离进程组后代",
+      "when": "命令doublefork/setsid产生后台程序后超时",
+      "then": "本命令后代清除，其他合法session进程存活",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T11-C02",
+      "task_id": "T11",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "given": "断线后后台执行",
+      "when": "客户断开但未取消",
+      "then": "命令继续并可查同一exec结果",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T11-C03",
+      "task_id": "T11",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "given": "副作用后回执丢失",
+      "when": "执行写计数后杀监督路径再重连",
+      "then": "不自动重复副作用；无法确认则ResultUnknown",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T11-C04",
+      "task_id": "T11",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "given": "取消与自然退出竞争",
+      "when": "同时超时/完成/重复cancel",
+      "then": "终态稳定，无PID复用误杀",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T12-C01",
+      "task_id": "T12",
+      "requirements": [
+        "R06",
+        "R07",
+        "R08",
+        "R10"
+      ],
+      "given": "输出突发超过内存预算",
+      "when": "多命令持续输出且一个客户不读",
+      "then": "节点内存/FD有界，按政策spool或终止并明确报告",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T12-C02",
+      "task_id": "T12",
+      "requirements": [
+        "R06",
+        "R07",
+        "R08",
+        "R10"
+      ],
+      "given": "断线cursor恢复",
+      "when": "输出中断后从记录cursor重连",
+      "then": "单流无重复遗漏，保留区间外明确gap",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T12-C03",
+      "task_id": "T12",
+      "requirements": [
+        "R06",
+        "R07",
+        "R08",
+        "R10"
+      ],
+      "given": "SSE特殊内容",
+      "when": "数据含换行、非UTF8、看似结束标记",
+      "then": "解析不误判伪造终态，编码符合参考",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T12-C04",
+      "task_id": "T12",
+      "requirements": [
+        "R06",
+        "R07",
+        "R08",
+        "R10"
+      ],
+      "given": "stdout/stderr并行",
+      "when": "双流交错写入",
+      "then": "各流顺序保留，不承诺不可实现跨流全序",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T13-C01",
+      "task_id": "T13",
+      "requirements": [
+        "R06",
+        "R07",
+        "R16"
+      ],
+      "given": "cwd/env持久",
+      "when": "先cd/export再发下一条命令",
+      "then": "看到新cwd/env，普通exec不被意外影响",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T13-C02",
+      "task_id": "T13",
+      "requirements": [
+        "R06",
+        "R07",
+        "R16"
+      ],
+      "given": "输出伪造结束标记",
+      "when": "命令输出所有已知delimiter",
+      "then": "不会提前结束或返回伪造退出码",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T13-C03",
+      "task_id": "T13",
+      "requirements": [
+        "R06",
+        "R07",
+        "R16"
+      ],
+      "given": "同session并发",
+      "when": "同时提交多条修改目录命令",
+      "then": "按登记顺序执行或明确冲突，不交叉污染",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T13-C04",
+      "task_id": "T13",
+      "requirements": [
+        "R06",
+        "R07",
+        "R16"
+      ],
+      "given": "shell退出/取消",
+      "when": "exit或Ctrl-C结束当前前台程序",
+      "then": "session状态符合参考，后续句柄处理明确",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T14-C01",
+      "task_id": "T14",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "given": "GDB与交互shell",
+      "when": "PTY运行断点、Ctrl-C、continue和resize",
+      "then": "交互和信号与参考一致",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T14-C02",
+      "task_id": "T14",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "given": "客户端/API重连",
+      "when": "命令运行中断开client并重启API",
+      "then": "同一broker/PTY继续且offset规则正确",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T14-C03",
+      "task_id": "T14",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "given": "broker被杀",
+      "when": "强制终止PTY拥有者再查询",
+      "then": "明确Lost/恢复限制，不伪造透明恢复",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T14-C04",
+      "task_id": "T14",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "given": "FD/半关闭压力",
+      "when": "多次open/attach/resize/close并查看FD",
+      "then": "无累积FD泄漏，不误关闭兄弟会话",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T15-C01",
+      "task_id": "T15",
+      "requirements": [
+        "R05",
+        "R07",
+        "R15",
+        "R16"
+      ],
+      "given": "symlink竞争逃逸",
+      "when": "持续替换链接并从API读写",
+      "then": "不读写宿主/其他sandbox，不靠一次realpath防护",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T15-C02",
+      "task_id": "T15",
+      "requirements": [
+        "R05",
+        "R07",
+        "R15",
+        "R16"
+      ],
+      "given": "UID/权限/链接",
+      "when": "非root用户访问模式/硬链接/符号链接fixture",
+      "then": "行为与参考一致并保留元数据",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T15-C03",
+      "task_id": "T15",
+      "requirements": [
+        "R05",
+        "R07",
+        "R15",
+        "R16"
+      ],
+      "given": "大二进制与中断",
+      "when": "上传包含零字节大文件并断开",
+      "then": "限额有界，不暴露半成品为完整成功",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T15-C04",
+      "task_id": "T15",
+      "requirements": [
+        "R05",
+        "R07",
+        "R15",
+        "R16"
+      ],
+      "given": "并发删除与旧引用",
+      "when": "sandbox删除时操作旧generation路径",
+      "then": "返回明确错误，无路径复用越权",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T16-C01",
+      "task_id": "T16",
+      "requirements": [
+        "R03",
+        "R09",
+        "R15"
+      ],
+      "given": "none模式",
+      "when": "TCP/UDP/DNS/IPv6尝试外连",
+      "then": "所有非允许通信实际失败",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T16-C02",
+      "task_id": "T16",
+      "requirements": [
+        "R03",
+        "R09",
+        "R15"
+      ],
+      "given": "跨任务隔离",
+      "when": "A扫描B/host管理与metadata",
+      "then": "访问被阻断，同组合法流量可用",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T16-C03",
+      "task_id": "T16",
+      "requirements": [
+        "R03",
+        "R09",
+        "R15"
+      ],
+      "given": "IP重用",
+      "when": "删除A后给B分配曾用地址",
+      "then": "A旧lease和路由不可访问B",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T16-C04",
+      "task_id": "T16",
+      "requirements": [
+        "R03",
+        "R09",
+        "R15"
+      ],
+      "given": "CNI中途失败",
+      "when": "ADD部分完成后失败/重启",
+      "then": "仅本实例资源回滚，IP不泄漏",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T17-C01",
+      "task_id": "T17",
+      "requirements": [
+        "R06",
+        "R09",
+        "R15"
+      ],
+      "given": "原版SDK访问",
+      "when": "只改变base URL/key使用固定原版SDK",
+      "then": "创建后command/files请求都能路由到正确sandbox",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T17-C02",
+      "task_id": "T17",
+      "requirements": [
+        "R06",
+        "R09",
+        "R15"
+      ],
+      "given": "旧token/越权",
+      "when": "A token访问B或重建后的A",
+      "then": "被拒绝且无数据流泄漏",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T17-C03",
+      "task_id": "T17",
+      "requirements": [
+        "R06",
+        "R09",
+        "R15"
+      ],
+      "given": "长流/WS",
+      "when": "通过代理传输SSE/PTY并断线",
+      "then": "协议不缓冲至结束，关闭资源可审计",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T17-C04",
+      "task_id": "T17",
+      "requirements": [
+        "R06",
+        "R09",
+        "R15"
+      ],
+      "given": "删除并重用端口",
+      "when": "delete后访问旧endpoint",
+      "then": "失败而非误路由新sandbox",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T18-C01",
+      "task_id": "T18",
+      "requirements": [
+        "R09",
+        "R15",
+        "R22"
+      ],
+      "given": "代理绕过",
+      "when": "直接IP、UDP、IPv6或删除proxy env外连",
+      "then": "被策略阻断或profile明确拒绝该能力组合",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T18-C02",
+      "task_id": "T18",
+      "requirements": [
+        "R09",
+        "R15",
+        "R22"
+      ],
+      "given": "DNS重绑定/重定向",
+      "when": "允许域名解析到metadata/host管理网",
+      "then": "内网敏感地址仍不可达",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T18-C03",
+      "task_id": "T18",
+      "requirements": [
+        "R09",
+        "R15",
+        "R22"
+      ],
+      "given": "已有连接规则收紧",
+      "when": "已建立流后切到deny",
+      "then": "按登记合同中止或明确不支持，不虚报已完全生效",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T18-C04",
+      "task_id": "T18",
+      "requirements": [
+        "R09",
+        "R15",
+        "R22"
+      ],
+      "given": "策略安装失败",
+      "when": "更新中触发工具失败",
+      "then": "保持先前安全策略，不临时全开放",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T19-C01",
+      "task_id": "T19",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20",
+        "R24"
+      ],
+      "given": "构建后无Docker运行",
+      "when": "用BuildKit导出OCI后停构建器/移除Docker endpoint",
+      "then": "候选仍可运行固定产物",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T19-C02",
+      "task_id": "T19",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20",
+        "R24"
+      ],
+      "given": "构建secret",
+      "when": "使用测试secret构建并检查layer/log",
+      "then": "secret不出现在产物和公开日志",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T19-C03",
+      "task_id": "T19",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20",
+        "R24"
+      ],
+      "given": "恶意构建context",
+      "when": "包含路径逃逸/额外宿主请求",
+      "then": "构建访问受控，不读取管理凭据",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T19-C04",
+      "task_id": "T19",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20",
+        "R24"
+      ],
+      "given": "缓存和可重复输入",
+      "when": "同锁定context配置重复构建",
+      "then": "产物差异可解释并记录，运行不依赖可变tag",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T20-C01",
+      "task_id": "T20",
+      "requirements": [
+        "R09",
+        "R12",
+        "R13",
+        "R17"
+      ],
+      "given": "sidecar依赖和健康",
+      "when": "数据库延迟就绪或永远失败",
+      "then": "应用顺序/错误与参考一致",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T20-C02",
+      "task_id": "T20",
+      "requirements": [
+        "R09",
+        "R12",
+        "R13",
+        "R17"
+      ],
+      "given": "named volume持久性",
+      "when": "两个service共享卷并切到verifier阶段",
+      "then": "预期数据和权限保留，跨组不可见",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T20-C03",
+      "task_id": "T20",
+      "requirements": [
+        "R09",
+        "R12",
+        "R13",
+        "R17"
+      ],
+      "given": "未知Compose字段",
+      "when": "输入完整集合中暂不支持字段",
+      "then": "提前结构错误并保留任务，不猜测忽略",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T20-C04",
+      "task_id": "T20",
+      "requirements": [
+        "R09",
+        "R12",
+        "R13",
+        "R17"
+      ],
+      "given": "局部组创建失败",
+      "when": "第二个service启动失败",
+      "then": "组内已创建资源可审计回滚，其他组无影响",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T21-C01",
+      "task_id": "T21",
+      "requirements": [
+        "R08",
+        "R10",
+        "R11",
+        "R15"
+      ],
+      "given": "pause与内存",
+      "when": "冻结有状态程序并读取资源",
+      "then": "程序停止前进但内存仍计费，resume继续",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T21-C02",
+      "task_id": "T21",
+      "requirements": [
+        "R08",
+        "R10",
+        "R11",
+        "R15"
+      ],
+      "given": "TTL与续期竞争",
+      "when": "到期瞬间renew/delete并发",
+      "then": "一套可追踪结果，超期进程最终回收",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T21-C03",
+      "task_id": "T21",
+      "requirements": [
+        "R08",
+        "R10",
+        "R11",
+        "R15"
+      ],
+      "given": "节点/API/broker分层重启",
+      "when": "分别注入三种故障",
+      "then": "仅承诺经过测试的恢复范围，broker丢失明确Lost",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T21-C04",
+      "task_id": "T21",
+      "requirements": [
+        "R08",
+        "R10",
+        "R11",
+        "R15"
+      ],
+      "given": "PID/资源名复用",
+      "when": "重启后原PID对应其他进程",
+      "then": "不误杀/不附着其他进程，cleanup标识准确",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T22-C01",
+      "task_id": "T22",
+      "requirements": [
+        "R05",
+        "R08",
+        "R11",
+        "R20"
+      ],
+      "given": "rootfs恢复",
+      "when": "安装包并修改/删除文件后snapshot再create",
+      "then": "字节/权限/whiteout一致，进程从入口重新启动",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T22-C02",
+      "task_id": "T22",
+      "requirements": [
+        "R05",
+        "R08",
+        "R11",
+        "R20"
+      ],
+      "given": "并发写快照",
+      "when": "snapshot期间后台修改文件",
+      "then": "结果符合登记一致性策略，否则操作失败不标Ready",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T22-C03",
+      "task_id": "T22",
+      "requirements": [
+        "R05",
+        "R08",
+        "R11",
+        "R20"
+      ],
+      "given": "外部卷",
+      "when": "卷内写数据后仅做rootfs snapshot",
+      "then": "明确卷不在范围，不声称已保存",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T22-C04",
+      "task_id": "T22",
+      "requirements": [
+        "R05",
+        "R08",
+        "R11",
+        "R20"
+      ],
+      "given": "创建中断或损坏",
+      "when": "写manifest前crash或修改snapshot字节",
+      "then": "不出现可恢复Ready对象，校验失败",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T23-C01",
+      "task_id": "T23",
+      "requirements": [
+        "R06",
+        "R07",
+        "R11",
+        "R16",
+        "R22"
+      ],
+      "given": "未修改SDK",
+      "when": "只替换配置URL/key完成实际工作流",
+      "then": "不需要import替换/monkeypatch，核心声明操作全部通过",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T23-C02",
+      "task_id": "T23",
+      "requirements": [
+        "R06",
+        "R07",
+        "R11",
+        "R16",
+        "R22"
+      ],
+      "given": "错误与超时边界",
+      "when": "无效参数、过期token、timeout millisecond输入",
+      "then": "错误结构和行为与固定参考一致",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T23-C03",
+      "task_id": "T23",
+      "requirements": [
+        "R06",
+        "R07",
+        "R11",
+        "R16",
+        "R22"
+      ],
+      "given": "协议清单漏项",
+      "when": "删除一个已声明支持operation测试",
+      "then": "覆盖门禁发现而非默认通过",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T23-C04",
+      "task_id": "T23",
+      "requirements": [
+        "R06",
+        "R07",
+        "R11",
+        "R16",
+        "R22"
+      ],
+      "given": "扩展API混入",
+      "when": "尝试将内部capability路由冒充上游路径",
+      "then": "协议检查拒绝，扩展命名空间独立",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T24-C01",
+      "task_id": "T24",
+      "requirements": [
+        "R13",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "given": "gold patch",
+      "when": "相同任务固定gold分别运行reference/candidate",
+      "then": "官方FAIL_TO_PASS/PASS_TO_PASS结果一致",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T24-C02",
+      "task_id": "T24",
+      "requirements": [
+        "R13",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "given": "错误patch/空测试",
+      "when": "运行负控并故意使测试未收集",
+      "then": "不能判成功，环境错误与测试失败分开",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T24-C03",
+      "task_id": "T24",
+      "requirements": [
+        "R13",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "given": "原判据哈希",
+      "when": "运行前后核对官方判据与scripts",
+      "then": "只存在运输适配差异，无断言/timeout放宽",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T24-C04",
+      "task_id": "T24",
+      "requirements": [
+        "R13",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "given": "全量ID覆盖",
+      "when": "分批中断后重启适配器",
+      "then": "每个task ID有记录，旧commit结果不能混为新commit",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T25-C01",
+      "task_id": "T25",
+      "requirements": [
+        "R07",
+        "R12",
+        "R13",
+        "R16",
+        "R17"
+      ],
+      "given": "共享verifier",
+      "when": "固定任务要求与agent同一环境验证",
+      "then": "状态按原合同保留，未擅自改成独立容器",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T25-C02",
+      "task_id": "T25",
+      "requirements": [
+        "R07",
+        "R12",
+        "R13",
+        "R16",
+        "R17"
+      ],
+      "given": "独立verifier+sidecar",
+      "when": "任务要求独立验证并共享指定卷",
+      "then": "仅指定制品正确传递，网络和权限一致",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T25-C03",
+      "task_id": "T25",
+      "requirements": [
+        "R07",
+        "R12",
+        "R13",
+        "R16",
+        "R17"
+      ],
+      "given": "PTY依赖任务",
+      "when": "Oracle经过终端交互/resize/Ctrl-C",
+      "then": "过程与官方验证结果匹配",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T25-C04",
+      "task_id": "T25",
+      "requirements": [
+        "R07",
+        "R12",
+        "R13",
+        "R16",
+        "R17"
+      ],
+      "given": "没有Oracle solution",
+      "when": "完整清单中标注无solution",
+      "then": "任务保留并报告缺口，不填造成功脚本",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T26-C01",
+      "task_id": "T26",
+      "requirements": [
+        "R07",
+        "R09",
+        "R13",
+        "R14",
+        "R16"
+      ],
+      "given": "编译调试与ASAN",
+      "when": "固定canary编译/GDB/触发有效PoC",
+      "then": "原验证成功一致且资源配置保留",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T26-C02",
+      "task_id": "T26",
+      "requirements": [
+        "R07",
+        "R09",
+        "R13",
+        "R14",
+        "R16"
+      ],
+      "given": "无效PoC",
+      "when": "提交不触发问题的固定输入",
+      "then": "原verifier拒绝，候选不能虚报成功",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T26-C03",
+      "task_id": "T26",
+      "requirements": [
+        "R07",
+        "R09",
+        "R13",
+        "R14",
+        "R16"
+      ],
+      "given": "受控提交网络",
+      "when": "只能到所属submission和授权服务",
+      "then": "外部/其他任务提交服务无法访问",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T26-C04",
+      "task_id": "T26",
+      "requirements": [
+        "R07",
+        "R09",
+        "R13",
+        "R14",
+        "R16"
+      ],
+      "given": "范围标注",
+      "when": "代理用候选而verifier仍Docker",
+      "then": "报告agent_only且full_stack gate仍阻塞",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T27-C01",
+      "task_id": "T27",
+      "requirements": [
+        "R04",
+        "R13",
+        "R14",
+        "R16",
+        "R17"
+      ],
+      "given": "完整有效PoC链路",
+      "when": "候选agent→官方submission→候选verification runner",
+      "then": "官方成功回执与参考一致且无Docker运输",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T27-C02",
+      "task_id": "T27",
+      "requirements": [
+        "R04",
+        "R13",
+        "R14",
+        "R16",
+        "R17"
+      ],
+      "given": "verification超时/崩溃",
+      "when": "注入runner超时而非目标漏洞",
+      "then": "归类infra与原合同一致，不能混算有效PoC",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T27-C03",
+      "task_id": "T27",
+      "requirements": [
+        "R04",
+        "R13",
+        "R14",
+        "R16",
+        "R17"
+      ],
+      "given": "验证器未修改",
+      "when": "核对官方代码/命令哈希和适配diff",
+      "then": "只有容器运输层改变",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T27-C04",
+      "task_id": "T27",
+      "requirements": [
+        "R04",
+        "R13",
+        "R14",
+        "R16",
+        "R17"
+      ],
+      "given": "隐藏Docker回退",
+      "when": "为candidate提供可检测Docker诱饵endpoint",
+      "then": "依赖审计发现任何调用，不能计为无Docker通过",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T28-C01",
+      "task_id": "T28",
+      "requirements": [
+        "R13",
+        "R14",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "given": "缺一条任务结果",
+      "when": "从汇总输入删除一个task ID",
+      "then": "全量门禁失败并显示缺失ID",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T28-C02",
+      "task_id": "T28",
+      "requirements": [
+        "R13",
+        "R14",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "given": "将参考故障从分母去除",
+      "when": "输入REFERENCE_INFRA_ERROR后计算报告",
+      "then": "完整分母不变，单列blocked而非100%",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T28-C03",
+      "task_id": "T28",
+      "requirements": [
+        "R13",
+        "R14",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "given": "混用commit/manifest",
+      "when": "合并两个候选版本结果",
+      "then": "拒绝一致性声明，显示版本冲突",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T28-C04",
+      "task_id": "T28",
+      "requirements": [
+        "R13",
+        "R14",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "given": "有负控通过但无正样本",
+      "when": "某task仅有negative等价证据",
+      "then": "环境/负向可记录，正向oracle与全量正向目标仍阻塞",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T29-C01",
+      "task_id": "T29",
+      "requirements": [
+        "R08",
+        "R10",
+        "R18"
+      ],
+      "given": "高resident低active",
+      "when": "逐步增大空闲环境数",
+      "then": "报告实际PSS/USS/节点内存/FD，不当作活跃吞吐",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T29-C02",
+      "task_id": "T29",
+      "requirements": [
+        "R08",
+        "R10",
+        "R18"
+      ],
+      "given": "编译/测试真实混合负载",
+      "when": "固定到达率执行真实任务",
+      "then": "有效任务每秒、错误率、p95/p99和排队可重算",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T29-C03",
+      "task_id": "T29",
+      "requirements": [
+        "R08",
+        "R10",
+        "R18"
+      ],
+      "given": "不同安全或缓存配置",
+      "when": "候选/参考配置不匹配",
+      "then": "拒绝速度胜出结论或分开报告",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T29-C04",
+      "task_id": "T29",
+      "requirements": [
+        "R08",
+        "R10",
+        "R18"
+      ],
+      "given": "优化后功能回归",
+      "when": "更换broker/cache/batching策略",
+      "then": "对应差分与完整发布回归无新差异",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T30-C01",
+      "task_id": "T30",
+      "requirements": [
+        "R03",
+        "R08",
+        "R09",
+        "R10",
+        "R15",
+        "R17"
+      ],
+      "given": "跨sandbox和宿主资源",
+      "when": "恶意链接/token/FD/namespace访问fixture",
+      "then": "无法访问非授权对象",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T30-C02",
+      "task_id": "T30",
+      "requirements": [
+        "R03",
+        "R08",
+        "R09",
+        "R10",
+        "R15",
+        "R17"
+      ],
+      "given": "磁盘/日志/FD耗尽",
+      "when": "限制某租户持续耗资源",
+      "then": "平台仍可控，安全拒绝且其他运行不中断失控",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T30-C03",
+      "task_id": "T30",
+      "requirements": [
+        "R03",
+        "R08",
+        "R09",
+        "R10",
+        "R15",
+        "R17"
+      ],
+      "given": "长循环+故障",
+      "when": "反复创建删除并随机终止组件",
+      "then": "本实例资源归属正确，无持续增长的僵尸/mount/netns",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T30-C04",
+      "task_id": "T30",
+      "requirements": [
+        "R03",
+        "R08",
+        "R09",
+        "R10",
+        "R15",
+        "R17"
+      ],
+      "given": "高危未关闭",
+      "when": "发行输入包含未修复权限绕过",
+      "then": "release gate拒绝而非降为备注",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T31-C01",
+      "task_id": "T31",
+      "requirements": [
+        "R01",
+        "R04",
+        "R20",
+        "R21",
+        "R23",
+        "R24"
+      ],
+      "given": "干净VM安装",
+      "when": "无Docker/KVM但必要原语具备",
+      "then": "可完成核心smoke，缺能力明确阻塞",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T31-C02",
+      "task_id": "T31",
+      "requirements": [
+        "R01",
+        "R04",
+        "R20",
+        "R21",
+        "R23",
+        "R24"
+      ],
+      "given": "升级失败回滚",
+      "when": "迁移中断或新binary启动失败",
+      "then": "旧数据可恢复且不误删运行资源",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T31-C03",
+      "task_id": "T31",
+      "requirements": [
+        "R01",
+        "R04",
+        "R20",
+        "R21",
+        "R23",
+        "R24"
+      ],
+      "given": "卸载有活动任务",
+      "when": "触发默认卸载",
+      "then": "要求明确处理策略，不全局清理/静默删数据",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T31-C04",
+      "task_id": "T31",
+      "requirements": [
+        "R01",
+        "R04",
+        "R20",
+        "R21",
+        "R23",
+        "R24"
+      ],
+      "given": "制品篡改/依赖缺失",
+      "when": "修改binary或删除必要helper",
+      "then": "校验/doctor报错，不报ready",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T32-C01",
+      "task_id": "T32",
+      "requirements": [
+        "R01",
+        "R06",
+        "R13",
+        "R14",
+        "R15",
+        "R17",
+        "R18",
+        "R20",
+        "R21"
+      ],
+      "given": "测试只有部分通过",
+      "when": "缺任何任务或required case证据",
+      "then": "发行被阻断，报告具体缺口",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T32-C02",
+      "task_id": "T32",
+      "requirements": [
+        "R01",
+        "R06",
+        "R13",
+        "R14",
+        "R15",
+        "R17",
+        "R18",
+        "R20",
+        "R21"
+      ],
+      "given": "旧版本报告",
+      "when": "候选commit/lock与证据不一致",
+      "then": "拒绝签发",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T32-C03",
+      "task_id": "T32",
+      "requirements": [
+        "R01",
+        "R06",
+        "R13",
+        "R14",
+        "R15",
+        "R17",
+        "R18",
+        "R20",
+        "R21"
+      ],
+      "given": "agent自报完成",
+      "when": "只有implemented状态无独立review/CI",
+      "then": "verified与release不可推进",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T32-C04",
+      "task_id": "T32",
+      "requirements": [
+        "R01",
+        "R06",
+        "R13",
+        "R14",
+        "R15",
+        "R17",
+        "R18",
+        "R20",
+        "R21"
+      ],
+      "given": "全部证据齐备",
+      "when": "受保护runner实际完整执行并独立复核",
+      "then": "生成可重算报告和精确范围，不扩展为任意内核保证",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T04-C05",
+      "task_id": "T04",
+      "requirements": [
+        "R03",
+        "R08",
+        "R15",
+        "R19",
+        "R22"
+      ],
+      "given": "非法资源/时间参数",
+      "when": "提交负数、溢出、NaN表达、未知枚举与空必需字段",
+      "then": "边界拒绝且无journal外部副作用，单位转换不会溢出",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T06-C05",
+      "task_id": "T06",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20"
+      ],
+      "given": "受认证镜像仓库",
+      "when": "用受控registry凭据解析tag并拉取固定digest",
+      "then": "digest/平台验证后缓存，凭据不写入image/exec/env/日志",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T09-C05",
+      "task_id": "T09",
+      "requirements": [
+        "R03",
+        "R10",
+        "R18"
+      ],
+      "given": "资源metrics语义",
+      "when": "产生可测CPU/内存负载并查询指标",
+      "then": "容量、配置limit、实际usage与采样窗口分别记录，不能拿limit伪装usage",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T15-C05",
+      "task_id": "T15",
+      "requirements": [
+        "R05",
+        "R07",
+        "R15",
+        "R16"
+      ],
+      "given": "完整文件接口面",
+      "when": "按固定spec执行stat/list/search/mkdir/move/chmod/remove及上传下载",
+      "then": "错误/编码/权限/二进制内容一致，未实现operation不计支持",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T16-C05",
+      "task_id": "T16",
+      "requirements": [
+        "R03",
+        "R09",
+        "R15"
+      ],
+      "given": "组内DNS与失效缓存",
+      "when": "sidecar地址变化及组删除后查询旧名称",
+      "then": "仅在所属group解析，失效映射不指向新租户",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T17-C05",
+      "task_id": "T17",
+      "requirements": [
+        "R06",
+        "R09",
+        "R15"
+      ],
+      "given": "自定义服务端口",
+      "when": "发布应用端口并用SDK get_endpoint访问",
+      "then": "端口协议/认证/TTL按锁定contract，超范围协议明确拒绝",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T19-C05",
+      "task_id": "T19",
+      "requirements": [
+        "R04",
+        "R05",
+        "R20",
+        "R24"
+      ],
+      "given": "Dockerfile全量字段",
+      "when": "使用T02实际出现的构建字段和多阶段context",
+      "then": "同样的构建语义或明确缺口，无静默删指令",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T20-C05",
+      "task_id": "T20",
+      "requirements": [
+        "R09",
+        "R12",
+        "R13",
+        "R17"
+      ],
+      "given": "实际运行配置字段",
+      "when": "fixture含shm、ulimits、只读mount与capabilities组合",
+      "then": "按受支持profile实际生效；不支持项提前拒绝并阻塞对应任务",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T21-C05",
+      "task_id": "T21",
+      "requirements": [
+        "R08",
+        "R10",
+        "R11",
+        "R15"
+      ],
+      "given": "重复删除和list一致性",
+      "when": "删除中重复DELETE/GET/list并跨过TTL",
+      "then": "对外状态与锁定reference一致，资源最终Complete可独立检查",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T22-C05",
+      "task_id": "T22",
+      "requirements": [
+        "R05",
+        "R08",
+        "R11",
+        "R20"
+      ],
+      "given": "快照CRUD与权限",
+      "when": "列举/读取/删除他人快照及并发从快照创建",
+      "then": "越权拒绝，引用中对象遵循租约，删除不破坏已有运行层",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T23-C05",
+      "task_id": "T23",
+      "requirements": [
+        "R06",
+        "R07",
+        "R11",
+        "R16",
+        "R22"
+      ],
+      "given": "生命周期完整接口",
+      "when": "原版SDK执行list过滤/分页、inspect、metadata patch与expiration renewal",
+      "then": "与固定上游状态/header/JSON/过滤语义一致，未知字段按contract处理",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T23-C06",
+      "task_id": "T23",
+      "requirements": [
+        "R06",
+        "R07",
+        "R11",
+        "R16",
+        "R22"
+      ],
+      "given": "创建缺省和互斥参数",
+      "when": "分别给image、snapshot、两者、缺entrypoint等边界组合",
+      "then": "固定spec/SDK/reference规定的默认值与错误均一致",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T23-C07",
+      "task_id": "T23",
+      "requirements": [
+        "R06",
+        "R07",
+        "R11",
+        "R16",
+        "R22"
+      ],
+      "given": "metrics与health接口",
+      "when": "原版SDK查询metrics及真实ready/不可用/关闭状态",
+      "then": "使用实际采样与就绪条件，鉴权和错误语义符合锁定合同",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T30-C05",
+      "task_id": "T30",
+      "requirements": [
+        "R03",
+        "R08",
+        "R09",
+        "R10",
+        "R15",
+        "R17"
+      ],
+      "given": "恶意输出与文件驱动的开发注入",
+      "when": "日志/仓库包含修改verifier或读取管理密钥的指令",
+      "then": "开发流程将其视为数据，可信runner核对判据未改",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T31-C05",
+      "task_id": "T31",
+      "requirements": [
+        "R01",
+        "R04",
+        "R20",
+        "R21",
+        "R23",
+        "R24"
+      ],
+      "given": "Python接口包干净安装",
+      "when": "干净venv安装release客户端并以固定配置运行官方SDK测试",
+      "then": "无需Evaluation依赖；版本/错误/API互操作报告完整",
+      "mode": "privileged",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T33-C01",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "网页main与实际wheel不同",
+      "when": "对安装包重算文件hash",
+      "then": "不接受版本字符串相同作为锁匹配",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T33-C02",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "缺方法或新安全字段",
+      "when": "运行契约探测与真实实例化",
+      "then": "明确定位变化并拒绝未审查版本",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T33-C03",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "原版Harbor CLI",
+      "when": "使用--env模块路径",
+      "then": "无需修改枚举即可加载provider",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T33-C04",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "独立Python工具环境",
+      "when": "启动真实harbor入口",
+      "then": "能够导入同一已锁定provider与客户端",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T33-C05",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "lock被改写",
+      "when": "独立CI核对来源",
+      "then": "发行门禁拒绝未审核锁变化",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T34-C01",
+      "task_id": "T34",
+      "requirements": [
+        "R26"
+      ],
+      "given": "image与Dockerfile同时存在",
+      "when": "切换force_build",
+      "then": "行为与固定官方选择函数一致",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T34-C02",
+      "task_id": "T34",
+      "requirements": [
+        "R26"
+      ],
+      "given": "image但无Dockerfile且有数据文件",
+      "when": "创建后调用上传流程",
+      "then": "workdir获得文件且不重复复制隐藏tests",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T34-C03",
+      "task_id": "T34",
+      "requirements": [
+        "R26"
+      ],
+      "given": "任务目录存在链接或越界引用",
+      "when": "准备artifact",
+      "then": "合法类型走安全路径；不支持项阻塞，逃逸拒绝",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T34-C04",
+      "task_id": "T34",
+      "requirements": [
+        "R26"
+      ],
+      "given": "独立verifier与多步配置",
+      "when": "使用官方Task解析",
+      "then": "来源/字段/默认值完整保留，不压平",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T34-C05",
+      "task_id": "T34",
+      "requirements": [
+        "R26"
+      ],
+      "given": "远端worker没有客户端路径",
+      "when": "从本地任务创建",
+      "then": "通过artifact传输成功，不依赖host bind",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T35-C01",
+      "task_id": "T35",
+      "requirements": [
+        "R27"
+      ],
+      "given": "多overlay及.env变量",
+      "when": "和参考生成规范化IR",
+      "then": "字段值、相对路径基准与来源一致",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T35-C02",
+      "task_id": "T35",
+      "requirements": [
+        "R27"
+      ],
+      "given": "依赖healthy或completed",
+      "when": "编译服务图",
+      "then": "依赖条件未退化成started",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T35-C03",
+      "task_id": "T35",
+      "requirements": [
+        "R27"
+      ],
+      "given": "未知/危险字段",
+      "when": "加载任务",
+      "then": "报告确切字段路径且不静默移除",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T35-C04",
+      "task_id": "T35",
+      "requirements": [
+        "R27"
+      ],
+      "given": "超大YAML与递归别名",
+      "when": "运行normalizer",
+      "then": "输入/时间/内存预算生效，管理服务不受影响",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T35-C05",
+      "task_id": "T35",
+      "requirements": [
+        "R27"
+      ],
+      "given": "host bind相对路径越界",
+      "when": "编译卷",
+      "then": "拒绝逃逸；合法托管卷正确映射",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T36-C01",
+      "task_id": "T36",
+      "requirements": [
+        "R28"
+      ],
+      "given": "当前seed无backend",
+      "when": "调用实际运行入口",
+      "then": "明确BLOCKED而非回退Docker",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T36-C02",
+      "task_id": "T36",
+      "requirements": [
+        "R28"
+      ],
+      "given": "真实单服务环境",
+      "when": "运行原Oracle与原verifier",
+      "then": "reward与制品匹配Docker参考",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T36-C03",
+      "task_id": "T36",
+      "requirements": [
+        "R28"
+      ],
+      "given": "并发env scope和UID0",
+      "when": "同时运行命令",
+      "then": "无变量/回调泄漏，身份一致",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T36-C04",
+      "task_id": "T36",
+      "requirements": [
+        "R28"
+      ],
+      "given": "大输出与断线",
+      "when": "流式执行后重连",
+      "then": "原字节与收据完整或明确不完整，不猜测成功",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T36-C05",
+      "task_id": "T36",
+      "requirements": [
+        "R28"
+      ],
+      "given": "远端文件符号链接和目录合并",
+      "when": "执行上传下载差分",
+      "then": "符合原语义且不能访问宿主目录",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T37-C01",
+      "task_id": "T37",
+      "requirements": [
+        "R29"
+      ],
+      "given": "main与sidecar",
+      "when": "单独停main再收集sidecar",
+      "then": "主进程不能干扰，其他服务仍可采集",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T37-C02",
+      "task_id": "T37",
+      "requirements": [
+        "R29"
+      ],
+      "given": "独立验证器带指定artifact",
+      "when": "结束agent后验证",
+      "then": "原路径与内容一致，未复制整个agent rootfs",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T37-C03",
+      "task_id": "T37",
+      "requirements": [
+        "R29"
+      ],
+      "given": "shared与separate混合多步",
+      "when": "运行原Harbor任务",
+      "then": "每步位置/状态/产物符合参考",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T37-C04",
+      "task_id": "T37",
+      "requirements": [
+        "R29"
+      ],
+      "given": "阶段网络由public转allowlist",
+      "when": "保持旧TCP连接并尝试直连",
+      "then": "符合预定撤销语义，绕过失败",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T37-C05",
+      "task_id": "T37",
+      "requirements": [
+        "R29"
+      ],
+      "given": "sidecar无bash与路径冲突",
+      "when": "执行collect与下载",
+      "then": "正确shell或明确拒绝，冲突按原语义披露",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T38-C01",
+      "task_id": "T38",
+      "requirements": [
+        "R30"
+      ],
+      "given": "旧轮次写tmp/home/卷并开后台服务",
+      "when": "reset后新轮次执行",
+      "then": "旧状态不出现，环境基线可复核",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T38-C02",
+      "task_id": "T38",
+      "requirements": [
+        "R30"
+      ],
+      "given": "旧请求延迟到达",
+      "when": "新代次运行时提交",
+      "then": "API和host均拒绝stale handle",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T38-C03",
+      "task_id": "T38",
+      "requirements": [
+        "R30"
+      ],
+      "given": "清理失败",
+      "when": "重复申请容量",
+      "then": "未清理资源仍计入预算，不能超售",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T38-C04",
+      "task_id": "T38",
+      "requirements": [
+        "R30"
+      ],
+      "given": "模型端断线与worker重启",
+      "when": "训练方重连或重建",
+      "then": "环境事实与算法状态分离；不伪造RAM恢复",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T38-C05",
+      "task_id": "T38",
+      "requirements": [
+        "R30"
+      ],
+      "given": "相同请求key重试",
+      "when": "acquire与release并发",
+      "then": "身份和资源唯一，无幽灵租约",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T39-C01",
+      "task_id": "T39",
+      "requirements": [
+        "R31"
+      ],
+      "given": "新安装客户端与已授权worker",
+      "when": "单命令运行本地Harbor任务",
+      "then": "构建/运行/验证/清理闭环，无手工改task",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T39-C02",
+      "task_id": "T39",
+      "requirements": [
+        "R31"
+      ],
+      "given": "固定registry dataset",
+      "when": "单命令启动",
+      "then": "来源可追溯，完整任务清单不被筛掉",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T39-C03",
+      "task_id": "T39",
+      "requirements": [
+        "R31"
+      ],
+      "given": "缺backend或SDK源码锁漂移",
+      "when": "运行启动器",
+      "then": "清楚错误且非零退出，不落回默认Docker",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T39-C04",
+      "task_id": "T39",
+      "requirements": [
+        "R31"
+      ],
+      "given": "只需环境的训练调用者",
+      "when": "调用独立SDK准备/获取/释放",
+      "then": "不执行solution/verifier，不依赖Evaluation项目",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T39-C05",
+      "task_id": "T39",
+      "requirements": [
+        "R31"
+      ],
+      "given": "参数含空格与shell字符",
+      "when": "调用CLI",
+      "then": "使用argv正确传递，不调用host shell",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T40-C01",
+      "task_id": "T40",
+      "requirements": [
+        "R32"
+      ],
+      "given": "只有seed/mocked日志",
+      "when": "提交发行审核",
+      "then": "拒绝Harbor/runtime/benchmark完成声明",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T40-C02",
+      "task_id": "T40",
+      "requirements": [
+        "R32"
+      ],
+      "given": "完整U有任务无PoC",
+      "when": "计算报告",
+      "then": "保留ORACLE_UNAVAILABLE，不宣称正控100%",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T40-C03",
+      "task_id": "T40",
+      "requirements": [
+        "R32"
+      ],
+      "given": "风险未关闭但capability=True",
+      "when": "生成发行制品",
+      "then": "检查失败并指向风险与测试",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T40-C04",
+      "task_id": "T40",
+      "requirements": [
+        "R32"
+      ],
+      "given": "同版本候选与不同锁参考",
+      "when": "合并结果",
+      "then": "拒绝混合来源形成兼容率",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T40-C05",
+      "task_id": "T40",
+      "requirements": [
+        "R32"
+      ],
+      "given": "全部真实门禁具备独立证据",
+      "when": "执行发行核验",
+      "then": "重算结果一致；报告实际支持host与版本范围",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T41-C01",
+      "task_id": "T41",
+      "requirements": [
+        "R01",
+        "R07",
+        "R08",
+        "R22"
+      ],
+      "given": "同一argv/shell/null/空值fixture",
+      "when": "Rust/Python/schema分别解析",
+      "then": "接受与拒绝结果一致；argv空字符串参数保留",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T41-C02",
+      "task_id": "T41",
+      "requirements": [
+        "R01",
+        "R07",
+        "R08",
+        "R22"
+      ],
+      "given": "HarborRecipe含verifier/reward",
+      "when": "尝试作为native EnvironmentSpec提交",
+      "then": "明确拒绝；adapter侧元数据可以保留",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T41-C03",
+      "task_id": "T41",
+      "requirements": [
+        "R01",
+        "R07",
+        "R08",
+        "R22"
+      ],
+      "given": "Operation/Execution/Sandbox状态",
+      "when": "枚举全部合法和非法迁移",
+      "then": "非零进程退出不等同operation失败；unknown只凭证据确认",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T41-C04",
+      "task_id": "T41",
+      "requirements": [
+        "R01",
+        "R07",
+        "R08",
+        "R22"
+      ],
+      "given": "同一ID不同generation与revision",
+      "when": "并发查询/更新/重连",
+      "then": "代次防串用，revision CAS冲突明确，API重启不递增generation",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T41-C05",
+      "task_id": "T41",
+      "requirements": [
+        "R01",
+        "R07",
+        "R08",
+        "R22"
+      ],
+      "given": "高级卷网络字段尚未实现",
+      "when": "调用本地plan和真实服务",
+      "then": "不静默丢弃；完整实现后以同一schema升级fixture",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T42-C01",
+      "task_id": "T42",
+      "requirements": [
+        "R07",
+        "R08",
+        "R21",
+        "R22",
+        "R31"
+      ],
+      "given": "相同CLI参数和SDK调用",
+      "when": "编译并发到真实server",
+      "then": "payload、请求身份、错误层、单位一致",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T42-C02",
+      "task_id": "T42",
+      "requirements": [
+        "R07",
+        "R08",
+        "R21",
+        "R22",
+        "R31"
+      ],
+      "given": "慢速分块或超大JSON响应",
+      "when": "sync/async wait到deadline",
+      "then": "时限和内存界限实测；不将客户端到期当guest超时",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T42-C03",
+      "task_id": "T42",
+      "requirements": [
+        "R07",
+        "R08",
+        "R21",
+        "R22",
+        "R31"
+      ],
+      "given": "写命令已生效但回执丢失",
+      "when": "断线并查原请求",
+      "then": "无自动换key重试；存在可恢复identity",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T42-C04",
+      "task_id": "T42",
+      "requirements": [
+        "R07",
+        "R08",
+        "R21",
+        "R22",
+        "R31"
+      ],
+      "given": "读取UTF-8分块和binary输出",
+      "when": "stream断线/重连/GC后读取",
+      "then": "字节顺序保持、输出缺口明确、退出收据独立",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T42-C05",
+      "task_id": "T42",
+      "requirements": [
+        "R07",
+        "R08",
+        "R21",
+        "R22",
+        "R31"
+      ],
+      "given": "命令行中的秘密和--边界",
+      "when": "dry-run/JSON/失败输出",
+      "then": "env值遮蔽，argv不shell解释，错误stderr可解析",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T42-C06",
+      "task_id": "T42",
+      "requirements": [
+        "R07",
+        "R08",
+        "R21",
+        "R22",
+        "R31"
+      ],
+      "given": "client context结束或await取消",
+      "when": "观察server沙盒与命令",
+      "then": "连接关闭不销毁；显式release/delete才启动清理",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T43-C01",
+      "task_id": "T43",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15",
+        "R18"
+      ],
+      "given": "PTY与后台命令运行",
+      "when": "杀API再重连",
+      "then": "同一终端与execution身份，单流输出不重复缺失",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T43-C02",
+      "task_id": "T43",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15",
+        "R18"
+      ],
+      "given": "supervisor存活但manager重启",
+      "when": "对账并重连",
+      "then": "不重新发起命令，SQLite只有manager写入",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T43-C03",
+      "task_id": "T43",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15",
+        "R18"
+      ],
+      "given": "supervisor丢失但guest可能存活",
+      "when": "执行查询/再次submit同key",
+      "then": "UNKNOWN/隔离且不重放，禁止错误PASS",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T43-C04",
+      "task_id": "T43",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15",
+        "R18"
+      ],
+      "given": "double-fork脱离进程组的程序",
+      "when": "取消tree和删除sandbox",
+      "then": "按能力实现子树边界；无法tree时拒绝，整sandbox删除无残留",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T43-C05",
+      "task_id": "T43",
+      "requirements": [
+        "R07",
+        "R08",
+        "R15",
+        "R18"
+      ],
+      "given": "相同驻留/活跃负载",
+      "when": "比较独立supervisor成本",
+      "then": "PSS/RSS、延迟、FD、退出正确性原始报告齐全",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T44-C01",
+      "task_id": "T44",
+      "requirements": [
+        "R06",
+        "R19",
+        "R20",
+        "R22",
+        "R32"
+      ],
+      "given": "上游接口新增一个必需参数",
+      "when": "运行漂移门禁",
+      "then": "失败并定位参数；不能修改baseline后当兼容",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T44-C02",
+      "task_id": "T44",
+      "requirements": [
+        "R06",
+        "R19",
+        "R20",
+        "R22",
+        "R32"
+      ],
+      "given": "文档宣称一个未实现命令",
+      "when": "运行examples/surface检查",
+      "then": "声明被阻断，不以文档校验替代功能",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T44-C03",
+      "task_id": "T44",
+      "requirements": [
+        "R06",
+        "R19",
+        "R20",
+        "R22",
+        "R32"
+      ],
+      "given": "oracle/benchmark集合被删改",
+      "when": "发行复算",
+      "then": "分母与原判据hash变化被指出并要求独立批准",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T44-C04",
+      "task_id": "T44",
+      "requirements": [
+        "R06",
+        "R19",
+        "R20",
+        "R22",
+        "R32"
+      ],
+      "given": "仅MockTransport和seed测试通过",
+      "when": "执行产品release check",
+      "then": "明确阻断运行时与互操作声明",
+      "mode": "runtime",
+      "status": "specified_not_implemented"
+    }
+  ]
+}

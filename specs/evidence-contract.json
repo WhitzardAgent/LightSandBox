@@ -1,0 +1,66 @@
+{
+  "schema_version": "2.0",
+  "status": "DESIGN_CONTRACT",
+  "trusted_source": "protected_ci_and_independent_review",
+  "note": "结构校验不等于可信签发；本包无产品测试证据。",
+  "task_evidence_required": [
+    "task_id",
+    "candidate_commit",
+    "source_lock_sha256",
+    "host_report_sha256",
+    "commands",
+    "test_ids",
+    "collected",
+    "passed",
+    "failed",
+    "blocked",
+    "raw_artifacts",
+    "review_id"
+  ],
+  "artifact_fields": [
+    "path",
+    "sha256"
+  ],
+  "command_fields": [
+    "argv",
+    "exit_code",
+    "started_at",
+    "finished_at"
+  ],
+  "benchmark_row_required": [
+    "benchmark",
+    "dataset_revision",
+    "manifest_sha256",
+    "task_id",
+    "input_sha256",
+    "verifier_sha256",
+    "candidate_commit",
+    "reference_lock_sha256",
+    "host_report_sha256",
+    "execution_status",
+    "comparison_status",
+    "oracle_status",
+    "scope",
+    "raw_artifacts"
+  ],
+  "comparison_statuses": [
+    "PASS_EQUIVALENT",
+    "CANDIDATE_MISMATCH",
+    "CANDIDATE_INFRA_ERROR",
+    "REFERENCE_INFRA_ERROR",
+    "ASSET_UNAVAILABLE",
+    "ORACLE_UNAVAILABLE",
+    "HOST_UNSUPPORTED",
+    "NONDETERMINISTIC_UNRESOLVED"
+  ],
+  "oracle_statuses": [
+    "POSITIVE_VERIFIED",
+    "NEGATIVE_ONLY",
+    "UNAVAILABLE",
+    "NOT_RUN"
+  ],
+  "cybergym_scopes": [
+    "agent_only",
+    "full_stack"
+  ]
+}

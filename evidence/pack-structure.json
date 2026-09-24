@@ -1,0 +1,6 @@
+{
+  "command": "validate",
+  "ok": true,
+  "errors": [],
+  "scope": "planning structure only; not runtime certification"
+}

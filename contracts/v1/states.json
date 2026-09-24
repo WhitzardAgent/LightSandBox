@@ -1,0 +1,109 @@
+{
+  "version": "v1",
+  "domains": {
+    "operation": {
+      "pending": [
+        "running",
+        "failed"
+      ],
+      "running": [
+        "succeeded",
+        "failed",
+        "unknown"
+      ],
+      "unknown": [],
+      "succeeded": [],
+      "failed": []
+    },
+    "execution": {
+      "accepted": [
+        "starting",
+        "start-failed"
+      ],
+      "starting": [
+        "running",
+        "start-failed",
+        "unknown"
+      ],
+      "running": [
+        "exited",
+        "unknown"
+      ],
+      "exited": [],
+      "start-failed": [],
+      "unknown": []
+    },
+    "sandbox": {
+      "requested": [
+        "preparing",
+        "failed"
+      ],
+      "preparing": [
+        "created",
+        "failed"
+      ],
+      "created": [
+        "starting",
+        "deleting"
+      ],
+      "starting": [
+        "running",
+        "stopped",
+        "failed"
+      ],
+      "running": [
+        "pausing",
+        "stopping",
+        "stopped"
+      ],
+      "pausing": [
+        "paused",
+        "failed"
+      ],
+      "paused": [
+        "resuming",
+        "stopping"
+      ],
+      "resuming": [
+        "running",
+        "failed"
+      ],
+      "stopping": [
+        "stopped",
+        "cleanup-required"
+      ],
+      "stopped": [
+        "deleting"
+      ],
+      "failed": [
+        "deleting"
+      ],
+      "deleting": [
+        "deleted",
+        "cleanup-required"
+      ],
+      "cleanup-required": [
+        "deleting"
+      ],
+      "deleted": []
+    }
+  },
+  "late_confirmation": {
+    "operation": {
+      "from": "unknown",
+      "to": [
+        "succeeded",
+        "failed"
+      ],
+      "requires": "authoritative evidence and audit event"
+    },
+    "execution": {
+      "from": "unknown",
+      "to": [
+        "exited",
+        "start-failed"
+      ],
+      "requires": "authoritative exit/start failure receipt"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": "2.0",
+  "status": "UNLOCKED",
+  "manifests": [],
+  "benchmarks": [
+    {
+      "id": "cybergym",
+      "dataset_revision": null,
+      "split": null,
+      "task_count": null,
+      "manifest_sha256": null,
+      "oracle_status": "NOT_ENUMERATED"
+    },
+    {
+      "id": "swebench",
+      "dataset_revision": null,
+      "split": null,
+      "task_count": null,
+      "manifest_sha256": null,
+      "oracle_status": "NOT_ENUMERATED"
+    },
+    {
+      "id": "terminalbench",
+      "dataset_revision": null,
+      "split": null,
+      "task_count": null,
+      "manifest_sha256": null,
+      "oracle_status": "NOT_ENUMERATED"
+    }
+  ],
+  "note": "T02枚举真实全量资产，不能按旧宣传数量预填。"
+}

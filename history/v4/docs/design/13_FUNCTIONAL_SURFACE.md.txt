@@ -1,0 +1,54 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 功能面与兼容范围
+
+下面固定产品能力责任，具体HTTP路径/字段由T01实际锁定上游spec生成。core是v1核心承诺；workload_required或when_requested在目标任务需要时同样必须兑现；optional_after_core不能出现在核心已支持声明中。inventory_decision由完整任务清单决定，不能删除任务绕过。
+
+| ID | 功能 | 范围 | 责任与验收 |
+|---|---|---|---|
+| F01 | 创建/查询/列举/删除 | core | T08 / T08-C01 |
+| F02 | list过滤/分页/metadata | core | T23 / T23-C05 |
+| F03 | TTL与续期 | core | T21 / T21-C02 |
+| F04 | 暂停/恢复 | core | T21 / T21-C01 |
+| F05 | OCI镜像导入/配置 | core | T06 / T06-C02 |
+| F06 | registry认证拉取 | core | T06 / T06-C05 |
+| F07 | Dockerfile构建 | workload_required | T19 / T19-C05 |
+| F08 | 前台shell/argv/退出码 | core | T10 / T10-C01 |
+| F09 | 后台/取消/timeout | core | T11 / T11-C01 |
+| F10 | SSE输出与logs cursor | core | T12 / T12-C02 |
+| F11 | 持久Shell session | core | T13 / T13-C01 |
+| F12 | PTY/resize/重接 | core | T14 / T14-C02 |
+| F13 | 文件操作完整面 | core | T15 / T15-C05 |
+| F14 | metrics/health/readiness | core | T23 / T23-C07 |
+| F15 | 实际CPU/memory/PID | core | T09 / T09-C01 |
+| F16 | 磁盘硬quota | when_requested | T09 / T09-C02 |
+| F17 | network none/task隔离 | core | T16 / T16-C02 |
+| F18 | endpoint与访问认证 | core | T17 / T17-C01 |
+| F19 | 出口allowlist/规则切换 | core | T18 / T18-C03 |
+| F20 | 服务组/DNS/volume | workload_required | T20 / T20-C02 |
+| F21 | 完整观察Compose字段 | workload_required | T20 / T20-C05 |
+| F22 | rootfs snapshot create/restore | core | T22 / T22-C01 |
+| F23 | snapshot list/get/delete | core | T22 / T22-C05 |
+| F24 | 故障协调与可靠回收 | core | T21 / T21-C03 |
+| F25 | 未修改OpenSandbox SDK | core | T23 / T23-C01 |
+| F26 | 独立Python辅助包 | core | T31 / T31-C05 |
+| F27 | Code Interpreter/Jupyter | optional_after_core | T23 / T23-C04 |
+| F28 | isolated commit/diff扩展 | optional_after_core | T23 / T23-C04 |
+| F29 | 任务声明设备/内核相关能力 | inventory_decision | T02 / T02-C01 |
+| F30 | 任务内Docker工具依赖 | inventory_decision | T02 / T02-C01 |
+
+metrics必须测实际值，health与ready分开。list/metadata/renew不应因“运行时已经能exec”被遗漏。基础core OpenSandbox兼容与全部OpenSandbox产品功能兼容分别声明。Code Interpreter/Jupyter和上游隔离提交类接口只有经过专项实现才可标支持。
+
+## 无Docker依赖的精确边界
+
+本产品不得在自己的create/exec/delete、网络编排或Cyber verification环境准备路径中秘密调用Docker/containerd。允许独立BuildKit构建与Docker/OpenSandbox参考测试，二者在依赖报告单列。
+
+若某个目标任务本身要求运行Docker命令、守护进程或容器相关软件，它属于**被测工作负载的依赖**，应由T02登记。不能将这种需求自动误判为产品偷偷回退Docker，也不能因此悄悄删除该任务。需要哪些嵌套容器/权限/网络能力，使用专门profile、专用worker和安全审查决定；当前宿主不满足时全量目标保留阻塞。产品不允许把host Docker socket直接交给工作负载。
+
+## 可观察兼容与环境差异
+
+同宿主/平台/镜像/资源条件下测试约定的系统调用效果、进程、文件、网络和验证结果。PID、inode、动态端口、并行日志顺序和时间本就可能变化，按提前登记的规范化处理。不能承诺与任何Docker部署逐位完全相同，也不能借此豁免任务真实依赖的行为。
+
+## 首版支持配置
+
+一套rootful Linux/amd64实测profile先贯通全部目标路径。rootless、不同架构、不同文件系统驱动是独立认证组合，不因为某项存在fallback就自动继承全部结果。任何profile选择都必须满足任务声明的required能力。

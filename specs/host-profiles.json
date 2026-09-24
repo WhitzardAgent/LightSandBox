@@ -1,0 +1,43 @@
+{
+  "schema_version": "2.0",
+  "state": "NOT_PROBED",
+  "profiles": [
+    {
+      "id": "vm-rootful-parity",
+      "intent": "first complete conformance profile",
+      "required": [
+        "namespaces_effective",
+        "cgroup_limits_effective",
+        "resource_ownership",
+        "seccomp_policy_effective",
+        "network_policy_effective",
+        "rootfs_driver_verified"
+      ],
+      "conditional": [
+        "filesystem_hard_quota_when_requested",
+        "ptrace_when_task_requires",
+        "raw_socket_when_task_requires"
+      ],
+      "policy": "fail_closed",
+      "observed": false
+    },
+    {
+      "id": "vm-rootless-tested",
+      "intent": "separate certification, not inherited",
+      "required": [
+        "delegated_namespaces_effective",
+        "delegated_limits_effective",
+        "network_policy_effective",
+        "rootfs_driver_verified"
+      ],
+      "policy": "fail_closed",
+      "observed": false
+    },
+    {
+      "id": "development-no-runtime",
+      "intent": "only local tooling, no sandbox claim",
+      "required": [],
+      "observed": false
+    }
+  ]
+}

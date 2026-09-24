@@ -1,0 +1,111 @@
+{
+  "status": "OBSERVED_NOT_LOCKED",
+  "observed_at": "2026-09-23",
+  "sources": [
+    {
+      "id": "S01",
+      "title": "Harbor自定义环境工厂",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/src/harbor/environments/factory.py"
+    },
+    {
+      "id": "S02",
+      "title": "Harbor BaseEnvironment与服务级接口",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/src/harbor/environments/base.py"
+    },
+    {
+      "id": "S03",
+      "title": "Harbor环境定义与镜像优先级",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/src/harbor/environments/definition.py"
+    },
+    {
+      "id": "S04",
+      "title": "Harbor任务结构与独立验证",
+      "url": "https://www.harborframework.com/docs/tasks"
+    },
+    {
+      "id": "S05",
+      "title": "Harbor CLI自定义--env",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/src/harbor/cli/jobs.py"
+    },
+    {
+      "id": "S06",
+      "title": "Harbor项目元数据",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/pyproject.toml"
+    },
+    {
+      "id": "S07",
+      "title": "Compose官方参考解析库",
+      "url": "https://github.com/compose-spec/compose-go"
+    },
+    {
+      "id": "S08",
+      "title": "Axum",
+      "url": "https://docs.rs/axum/latest/axum/"
+    },
+    {
+      "id": "S09",
+      "title": "rustix",
+      "url": "https://docs.rs/rustix/latest/rustix/"
+    },
+    {
+      "id": "S10",
+      "title": "rusqlite",
+      "url": "https://docs.rs/rusqlite/latest/rusqlite/"
+    },
+    {
+      "id": "S11",
+      "title": "oci-spec",
+      "url": "https://docs.rs/oci-spec/latest/oci_spec/"
+    },
+    {
+      "id": "S12",
+      "title": "runc终端生命周期",
+      "url": "https://raw.githubusercontent.com/opencontainers/runc/main/docs/terminals.md"
+    },
+    {
+      "id": "S13",
+      "title": "BuildKit rootless限制与snapshotter",
+      "url": "https://github.com/moby/buildkit/blob/master/docs/rootless.md"
+    },
+    {
+      "id": "S14",
+      "title": "OCI运行时",
+      "url": "https://github.com/opencontainers/runc"
+    },
+    {
+      "id": "S15",
+      "title": "Harbor能力声明",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/src/harbor/environments/capabilities.py"
+    },
+    {
+      "id": "S16",
+      "title": "Docker OverlayFS与页缓存",
+      "url": "https://docs.docker.com/engine/storage/drivers/overlayfs-driver/"
+    },
+    {
+      "id": "S17",
+      "title": "OpenSandbox生命周期协议",
+      "url": "https://github.com/opensandbox-group/OpenSandbox/blob/main/specs/sandbox-lifecycle.yml"
+    },
+    {
+      "id": "S18",
+      "title": "OpenAI Harness Engineering",
+      "url": "https://openai.com/index/harness-engineering/"
+    },
+    {
+      "id": "S19",
+      "title": "OpenAI执行计划",
+      "url": "https://developers.openai.com/cookbook/articles/codex_exec_plans"
+    },
+    {
+      "id": "S20",
+      "title": "Harbor TaskConfig",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/src/harbor/models/task/config.py"
+    },
+    {
+      "id": "S21",
+      "title": "Anthropic长程开发代理harness",
+      "url": "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents"
+    }
+  ]
+}

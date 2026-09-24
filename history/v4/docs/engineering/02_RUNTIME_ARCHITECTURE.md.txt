@@ -1,0 +1,120 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 整体架构与关键协议
+
+本文是v3对原[基础架构](../design/02_ARCHITECTURE.md)的细化。产品是独立沙盒服务；Harbor是可选客户端集成，原版OpenSandbox SDK是兼容入口。
+
+```mermaid
+flowchart TB
+  A[原版 OpenSandbox SDK] --> B[ls-api 兼容路由与认证]
+  C[Harbor Trial / Agent / Verifier] --> D[Python Harbor provider]
+  E[独立环境加载 / 训练调用方] --> F[Python 原生客户端]
+  D --> F --> B
+  B --> G[类型化管理协议 / UDS peer credentials]
+  G --> H[ls-host 生命周期与准入]
+  H --> I[SQLite 操作日志 / 制品索引]
+  H --> J[OCI 镜像与 rootfs]
+  H --> K[网络与卷 / EnvironmentGroup]
+  H --> L[执行与PTY broker]
+  L --> M[runc]
+  M --> N[沙盒 namespace / cgroup / tiny init]
+  J --> N
+  K --> N
+  O[隔离 BuildKit + Compose normalizer] --> J
+```
+
+## 1. 进程与权限
+
+`ls-api`鉴权并把外部协议转换为受限命令，不持有mount、防火墙或宿主root文件访问能力。`ls-host`只接受operator部署时固定的UDS对端，校验peer credentials、操作类别、对象所有权及代次。客户端传递镜像引用、制品ID、沙盒ID与参数，不传任意宿主路径给特权服务。
+
+执行broker独立于API进程，拥有控制终端、管道、子进程观察与退出收据。节点管理进程重启后重连broker并对账。broker自身失效时，无法恢复的输出或退出状态标记UNKNOWN。一个稳定broker不代表任何进程都能崩溃后无损恢复。
+
+沙盒运行tiny init负责子进程回收和信号行为。文件助手在目标mount/PID/user边界内按需运行。它必须按接口约定操作用户指定guest路径；guest路径不能在宿主通过字符串拼接直接打开。
+
+## 2. 稳定核心对象
+
+| 对象 | 必须字段 | 语义 |
+|---|---|---|
+| ArtifactRef | digest、size、media_type、owner | 不可变文件/构建上下文；不能代替磁盘权限 |
+| ImageRef | manifest digest、platform、config digest | 不使用可变tag作为执行证据 |
+| EnvironmentSpec | services、volumes、networks、startup_profile、limits | 与Harbor任务/评测分离的通用执行需求 |
+| SandboxHandle | sandbox_id、generation | 活动身份；旧代请求必须被拒绝 |
+| Lease | owner、request_key、resources、state、cleanup receipt | 容量与使用权；清理前不释放预算 |
+| Execution | execution_id、request digest、status、sequence、result ref | 重连同一次执行，不能重新发起副作用 |
+| Operation | operation_id、revision、phase、intent、receipts | 有持久化副作用的管理操作 |
+| Group | service→handle、volume refs、network refs、dependency graph | 组的状态是实际成员状态，不是一个布尔值 |
+
+原生模型示例放在[schemas](../../schemas)中；它们是内部/原生协议草案，**不冒充OpenSandbox的官方HTTP字段**。官方协议单独做映射并以原版SDK验证。
+
+## 3. 创建与补偿
+
+```mermaid
+sequenceDiagram
+  participant U as SDK
+  participant A as API
+  participant H as Host
+  participant B as Build/Image
+  participant R as Runtime
+  U->>A: create(spec, idempotency_key)
+  A->>H: owner + validated intent
+  H->>H: durably record PREPARED and reserve resources
+  H->>B: materialize immutable image / rootfs
+  B-->>H: artifact receipts
+  H->>R: network + volume + runc create/start
+  R-->>H: observed state and health evidence
+  H->>H: commit READY + generation
+  H-->>A: handle or operation reference
+  A-->>U: awaitable result
+```
+
+每个副作用有归属和补偿入口，调用成功但记录前宕机也能根据标签/目录/运行时状态找到它。删除按进程→端点/网络→挂载→卷→引用计数的实际依赖顺序执行，失败保留CLEANUP_REQUIRED；禁止数据库先删干净后让worker留下孤儿资源。
+
+创建接收与可用分开。HTTP202/操作ID不等于READY。镜像构建超时、准入失败、服务健康失败分别返回错误。异常回滚不能掩盖原始错误，原错误和清理错误都保存。
+
+## 4. 执行与重连
+
+客户端先建立execution_id和不可变请求摘要。服务把PREPARED落盘，再提交执行。只要可能已经发生副作用，客户端不能自动生成新ID重试。相同ID/摘要可查询原执行；相同ID/不同摘要返回冲突。
+
+输出是有序的每流字节，事件序列用于重放去重。终端输出合流与非终端stdout/stderr分别建模。UTF-8字符跨块不能破坏；Harbor文本转换发生在适配层，原始字节作为制品保留。完成判定必须有退出收据；HTTP连接正常关闭、空输出、CLI启动成功都不能当退出码0。
+
+```mermaid
+stateDiagram-v2
+  [*] --> PREPARED
+  PREPARED --> RUNNING
+  PREPARED --> FAILED
+  RUNNING --> SUCCEEDED
+  RUNNING --> FAILED
+  RUNNING --> UNKNOWN
+```
+
+UNKNOWN不得自动回到PREPARED。先检查broker、运行时、PID身份和收据；确认无法判断时把不确定性传给调用方。它与“任务解答错误”不同。
+
+## 5. 终端与取消
+
+PTY master FD归broker所有。重连token绑定owner、sandbox、generation、session和输出cursor。Ctrl-C送到终端前台进程组，resize作用到同一个PTY。普通exec、持久shell、PTY是三种不同会话，不能用每次新开`bash -lc`冒充后两者。
+
+杀runc调用进程不保证杀掉guest进程树；双重fork/setsid能逃离简单进程组。执行取消的强保证依赖受支持的执行作用域及cgroup方案，必须实测。无法提供某种细粒度取消时，报告限制或按预先约定销毁整个沙盒；不能为兼容悄悄漏掉后台进程。
+
+API重启、Host重启、broker死亡、worker重启四个故障域分别验收。worker重启不恢复原内存。broker分片只在可观测数据证明需要后引入。
+
+## 6. 网络与端点
+
+首发rootful网络用CNI分配命名空间、地址和基础连通；策略管理器单独管理本产品拥有的规则链。DNS、IPv4、IPv6、UDP、外部代理和元数据地址都纳入矩阵。`endpoint(port)`返回认证反向代理地址，不能返回无法从调用方访问的容器私网IP。
+
+动态放行/收回需原子更新并处理已有连接。仅在API里检查hostname、或仅设置HTTP_PROXY，不能阻止任意二进制直连。声明支持allowlist前必须通过绕过测试。对无权创建netns或规则的VM，应在准入前拒绝，不降级成host网络。
+
+## 7. 数据与构建
+
+内容寻址镜像仓库与snapshot存储按实际引用租约回收。租约覆盖构建中/创建中/运行中/导出中，GC不能只看数据库中READY对象。BuildKit独立处理Dockerfile语义；执行服务只导入已验证OCI制品。
+
+原生OCI启动保持ENTRYPOINT/CMD等配置；Harbor兼容配置按固定上游provider的实际启动行为编译。不同配置通过`startup_profile`显式表达并测试。别用统一`sleep infinity`覆盖全部图像，也别让镜像短命入口令所有Harbor环境立即退出。
+
+文件系统snapshot只承诺所定义的持久化文件和卷一致点。默认暂停不会释放全部RAM；跨多个服务的快照需要协调写入与应用状态，不能靠依次复制目录承诺一致性。
+
+## 8. 控制面容量
+
+每沙盒至少占用一些PID、namespace、cgroup、挂载、网络状态和磁盘对象；高密度意味着这些固定成本可控，不代表空沙盒零成本。使用有界执行队列、连接池、输出流预算和主动准入。编译/浏览器/测试等实际负载的工作集仍然决定活跃数量。
+
+优先优化小请求路径、重复镜像准备、日志复制和broker固定成本。Docker同样共享只读层与页缓存，因此优化结论必须来自同镜像、同资源、同工作负载的公平比较。[S16]
+
+来源：[S02/S03/S12–S16](../research/04_V3_SOURCES.md)。

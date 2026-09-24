@@ -1,0 +1,265 @@
+{
+  "version": "v1",
+  "http": [
+    {
+      "operation_id": "createSandbox",
+      "method": "POST",
+      "path": "/v1/sandboxes",
+      "request_schema": "SandboxCreate",
+      "response_schema": "Operation",
+      "response_status": 202,
+      "requires_generation": false,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "getSandbox",
+      "method": "GET",
+      "path": "/v1/sandboxes/{id}",
+      "request_schema": null,
+      "response_schema": "SandboxInfo",
+      "response_status": 200,
+      "requires_generation": true,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "deleteSandbox",
+      "method": "DELETE",
+      "path": "/v1/sandboxes/{id}",
+      "request_schema": null,
+      "response_schema": "Operation",
+      "response_status": 202,
+      "requires_generation": true,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "startExecution",
+      "method": "POST",
+      "path": "/v1/sandboxes/{id}/executions",
+      "request_schema": "ExecutionSpec",
+      "response_schema": "ExecutionInfo",
+      "response_status": 202,
+      "requires_generation": true,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "getExecution",
+      "method": "GET",
+      "path": "/v1/executions/{id}",
+      "request_schema": null,
+      "response_schema": "ExecutionInfo",
+      "response_status": 200,
+      "requires_generation": false,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "cancelExecution",
+      "method": "POST",
+      "path": "/v1/executions/{id}:cancel",
+      "request_schema": "CancelRequest",
+      "response_schema": "Operation",
+      "response_status": 202,
+      "requires_generation": false,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "getOperation",
+      "method": "GET",
+      "path": "/v1/operations/{id}",
+      "request_schema": null,
+      "response_schema": "Operation",
+      "response_status": 200,
+      "requires_generation": false,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "prepareTemplate",
+      "method": "POST",
+      "path": "/v1/templates:prepare",
+      "request_schema": "Plan",
+      "response_schema": "Operation",
+      "response_status": 202,
+      "requires_generation": false,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "createEnvironment",
+      "method": "POST",
+      "path": "/v1/environments",
+      "request_schema": "EnvironmentCreate",
+      "response_schema": "Operation",
+      "response_status": 202,
+      "requires_generation": false,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "getEnvironment",
+      "method": "GET",
+      "path": "/v1/environments/{id}",
+      "request_schema": null,
+      "response_schema": "EnvironmentInfo",
+      "response_status": 200,
+      "requires_generation": true,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    },
+    {
+      "operation_id": "deleteEnvironment",
+      "method": "DELETE",
+      "path": "/v1/environments/{id}",
+      "request_schema": null,
+      "response_schema": "Operation",
+      "response_status": 202,
+      "requires_generation": true,
+      "client_status": "reference-implemented",
+      "server_status": "not-implemented"
+    }
+  ],
+  "cli": [
+    {
+      "command": "version",
+      "status": "offline-implemented"
+    },
+    {
+      "command": "env plan",
+      "status": "offline-subset-implemented"
+    },
+    {
+      "command": "sandbox create",
+      "status": "http-client-reference"
+    },
+    {
+      "command": "sandbox get",
+      "status": "http-client-reference"
+    },
+    {
+      "command": "sandbox delete",
+      "status": "http-client-reference"
+    },
+    {
+      "command": "exec",
+      "status": "http-client-reference"
+    },
+    {
+      "command": "op get",
+      "status": "http-client-reference"
+    },
+    {
+      "command": "op wait",
+      "status": "http-client-reference"
+    },
+    {
+      "command": "env up --from harbor",
+      "status": "planned"
+    },
+    {
+      "command": "env get",
+      "status": "planned"
+    },
+    {
+      "command": "env delete",
+      "status": "planned"
+    },
+    {
+      "command": "image pull",
+      "status": "planned"
+    },
+    {
+      "command": "image import",
+      "status": "planned"
+    },
+    {
+      "command": "image build",
+      "status": "planned"
+    },
+    {
+      "command": "files upload",
+      "status": "planned"
+    },
+    {
+      "command": "files download",
+      "status": "planned"
+    },
+    {
+      "command": "execution wait",
+      "status": "planned"
+    },
+    {
+      "command": "execution logs",
+      "status": "planned"
+    },
+    {
+      "command": "execution cancel",
+      "status": "planned"
+    },
+    {
+      "command": "session open",
+      "status": "planned"
+    },
+    {
+      "command": "session attach",
+      "status": "planned"
+    },
+    {
+      "command": "session resize",
+      "status": "planned"
+    },
+    {
+      "command": "session close",
+      "status": "planned"
+    },
+    {
+      "command": "lease acquire",
+      "status": "planned"
+    },
+    {
+      "command": "lease renew",
+      "status": "planned"
+    },
+    {
+      "command": "lease release",
+      "status": "planned"
+    },
+    {
+      "command": "doctor",
+      "status": "planned"
+    },
+    {
+      "command": "gc plan",
+      "status": "planned"
+    },
+    {
+      "command": "gc apply",
+      "status": "planned"
+    },
+    {
+      "command": "execution get",
+      "status": "planned"
+    }
+  ],
+  "reserved_http_groups": [
+    "artifacts",
+    "images",
+    "sessions",
+    "stream-subscriptions",
+    "endpoints",
+    "leases",
+    "capabilities",
+    "pagination"
+  ],
+  "unsupported_core_concepts": [
+    "verifier",
+    "reward",
+    "agent",
+    "benchmark_id"
+  ],
+  "claim": "The server and complete product CLI are not implemented."
+}

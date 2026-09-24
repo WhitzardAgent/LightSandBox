@@ -1,0 +1,49 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 09 网络、服务组与端点
+
+## 基础网络模式
+
+`none`：只提供必要loopback，无外部路由。
+
+`task-isolated`：同一授权Group按声明拓扑互通，其他Group及宿主管理面不可达。
+
+`egress-restricted`：所有出口经过可强制执行的规则，不只设置HTTP_PROXY环境变量。
+
+`public`：允许规定的公网访问，但保留管理面、metadata与基础设施凭据保护。任何宿主服务例外都必须是明确授权的端点。
+
+## 拓扑与权限
+
+每个sandbox独立network namespace。Group共享授权网络或通过受控服务网络连接，持有独立IPAM租约和DNS命名域。没有Group授权的两个sandbox即使使用同一bridge也不可直接通信；CNI连接功能本身不保证这一点。
+
+避免每次sandbox创建都改动无界数量的全局iptables链。先正确实现隔离，再测量每sandbox规则、共享set和代理路径的成本。所有网络对象绑定实例ID/测试run ID；删除只清理本实例资源。
+
+## DNS与出口策略
+
+域名allowlist涉及DNS重绑定、CNAME、IPv4/IPv6、IP literal、CONNECT、代理绕过和长期连接。默认拒绝下必须覆盖UDP、直接TCP与IPv6路径；无法控制的协议不能默认放行。
+
+记录规则revision和实际生效时刻。动态收紧规则时，已建立连接采用“立即终止”或“仅影响新连接”的明确语义，按参考行为验证并公开。客户端看到规则更新成功前，必须满足声明的生效保证。
+
+## 管理面隔离
+
+阻止云metadata、宿主管理端口、节点RPC、数据库、制品凭据以及其他实例的私网段。目标服务需要宿主网关时，按具体服务端口开例外，不能放行整个宿主地址段。
+
+模型或源码下载服务可以经专用网关授权。网关是部署组件，本项目不实现评测器或模型编排。
+
+## 入口代理
+
+入口路由必须绑定sandbox generation与过期时间，鉴权成功后才连接服务。应用endpoint与控制/exec通道分开授权。撤销或删除后旧URL不得访问复用IP的新sandbox。
+
+检查HTTP、SSE、WebSocket、上传、超时、半关闭与背压。SDK需要的特殊端口由兼容层实现路由，不要求每个sandbox真的常驻HTTP守护进程。
+
+## 通用Group与Compose子集
+
+内部Group声明services、images/build产物、commands、env、volumes、ports、networks、dependencies和healthchecks。任务适配器在核心外解析固定Compose版本。
+
+必须扫描全量任务使用的Compose字段，而非只实现几个示例字段。每个被使用字段都有`支持/未支持/待验证`结果；未知字段拒绝并报告原文件位置。不要忽略`user/working_dir/entrypoint/command/ulimits/shm_size/cap_add/read_only/tmpfs/stop_grace_period`等会改变运行语义的字段。
+
+## 卷与服务产物
+
+named volume、只读bind、共享卷和tmpfs分别保留生命周期。健康检查成功才能启动依赖服务；单个服务失败要给出可定位状态。删除Group要处理部分创建与部分失败。
+
+独立verifier模式的产物收集、sidecar dump和最终销毁次序由锁定任务协议确定。[S17] 不能提前销毁数据库再假装收集了完整证据；也不能把测试文件提前放入agent可见路径来提高通过率。

@@ -1,0 +1,39 @@
+test_bad_internal_link_is_rejected (test_packctl.PackTests.test_bad_internal_link_is_rejected) ... ok
+test_blueprint_is_not_releasable (test_packctl.PackTests.test_blueprint_is_not_releasable) ... ok
+test_context_is_bounded_to_one_task (test_packctl.PackTests.test_context_is_bounded_to_one_task) ... ok
+test_dependency_cycle_is_rejected (test_packctl.PackTests.test_dependency_cycle_is_rejected) ... ok
+test_duplicate_task_is_rejected (test_packctl.PackTests.test_duplicate_task_is_rejected) ... ok
+test_evidence_path_cannot_escape_pack (test_packctl.PackTests.test_evidence_path_cannot_escape_pack) ... ok
+test_feature_case_mapping_is_rejected (test_packctl.PackTests.test_feature_case_mapping_is_rejected) ... ok
+test_invalid_json_is_clear_failure (test_packctl.PackTests.test_invalid_json_is_clear_failure) ... ok
+test_manifest_detects_extra_file (test_packctl.PackTests.test_manifest_detects_extra_file) ... ok
+test_manifest_detects_modified_file (test_packctl.PackTests.test_manifest_detects_modified_file) ... ok
+test_manifest_is_required (test_packctl.PackTests.test_manifest_is_required) ... ok
+test_manifest_round_trip (test_packctl.PackTests.test_manifest_round_trip) ... ok
+test_missing_design_reference_is_rejected (test_packctl.PackTests.test_missing_design_reference_is_rejected) ... ok
+test_missing_task_state_is_rejected (test_packctl.PackTests.test_missing_task_state_is_rejected) ... ok
+test_missing_test_case_is_rejected (test_packctl.PackTests.test_missing_test_case_is_rejected) ... ok
+test_next_is_initial_task_only (test_packctl.PackTests.test_next_is_initial_task_only) ... ok
+test_orphan_test_case_is_rejected (test_packctl.PackTests.test_orphan_test_case_is_rejected) ... ok
+test_pristine_pack_validates (test_packctl.PackTests.test_pristine_pack_validates) ... ok
+test_raw_evidence_hash_is_checked (test_packctl.PackTests.test_raw_evidence_hash_is_checked) ... ok
+test_requirement_mapping_is_checked (test_packctl.PackTests.test_requirement_mapping_is_checked) ... ok
+test_unknown_dependency_is_rejected (test_packctl.PackTests.test_unknown_dependency_is_rejected) ... ok
+test_unknown_feature_owner_is_rejected (test_packctl.PackTests.test_unknown_feature_owner_is_rejected) ... ok
+test_unknown_status_is_rejected (test_packctl.PackTests.test_unknown_status_is_rejected) ... ok
+test_unknown_task_is_error (test_packctl.PackTests.test_unknown_task_is_error) ... ok
+test_verified_without_evidence_is_rejected (test_packctl.PackTests.test_verified_without_evidence_is_rejected) ... ok
+test_zero_tests_cannot_verify_task (test_packctl.PackTests.test_zero_tests_cannot_verify_task) ... ok
+test_doctor_never_claims_active_probe (test_readonly_tools.DoctorTests.test_doctor_never_claims_active_probe) ... ok
+test_output_refuses_overwrite (test_readonly_tools.DoctorTests.test_output_refuses_overwrite) ... ok
+test_clean_clone_produces_actual_hash (test_readonly_tools.SourceLockTests.test_clean_clone_produces_actual_hash) ... ok
+test_dirty_source_is_rejected (test_readonly_tools.SourceLockTests.test_dirty_source_is_rejected) ... ok
+test_missing_required_source_is_rejected (test_readonly_tools.SourceLockTests.test_missing_required_source_is_rejected) ... ok
+test_require_all_rejects_partial_lock (test_readonly_tools.SourceLockTests.test_require_all_rejects_partial_lock) ... ok
+test_unknown_repo_is_rejected (test_readonly_tools.SourceLockTests.test_unknown_repo_is_rejected) ... ok
+test_wrong_origin_is_rejected (test_readonly_tools.SourceLockTests.test_wrong_origin_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 34 tests in 25.676s
+
+OK

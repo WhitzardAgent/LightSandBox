@@ -1,0 +1,52 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# Harbor Provider真实接口映射
+
+本轮按官方`BaseEnvironment`、capabilities、factory和CLI源码观察编制。[S01/S02/S05] **字段/方法的最终契约以T33的不可变源码锁为准。** 本包代码未在真实Harbor环境运行。
+
+## 1. 对接边界
+
+| Harbor侧 | LightSandbox侧 | 必須保持 |
+|---|---|---|
+| `type()` | `lightsandbox`类型标识 | 自定义import path；不修改上游枚举 |
+| `_validate_definition()` | 已解析任务的来源/能力预检查 | 缺能力应在启动前失败，未知字段可定位 |
+| `start(force_build)` | import/build/create/wait-ready | 入口配置、构建优先级、启动后environment文件上传 |
+| `stop(delete)` | stop/retain或销毁与资源回收 | 请求与实际终态分离；失败保留身份 |
+| `exec(command,cwd,env,timeout_sec,user)` | execution请求及事件/收据 | 合法非零退出码、文本/字节映射、取消和超时 |
+| `upload_file/dir` | 客户端打包上传+guest文件助手 | 文件权限、链接、合并目录行为须与参考一致 |
+| `download_file/dir` | guest打包+客户端受限解包 | 本地路径由调用方掌控；防tar越界 |
+| `_merge_env` / `_resolve_user` | provider调用上游helper | persistent < per-exec < scoped；数字UID 0保留 |
+| `_output_callback` | 增量解码+scope回调 | 不能跨并发asyncio task泄漏回调或环境 |
+| `service_exec/copy/stop` | Group中的指定service | 非main服务不得静默路由到main |
+| `set_network_policy` | generation绑定的策略原子更新 | 真正生效后才更新控制状态 |
+| `capabilities` | 已实现协议能力+启动时宿主准入 | 不能全填True；mounted只有真实host挂载才True |
+| `resource_capabilities` | CPU/内存request/limit支持 | reservation和hard ceiling分别实现 |
+| `run_healthcheck` | 继承或严格保持上游时序 | 健康失败不能直接忽略 |
+
+上游在构造期间查询capabilities，实例相关状态要在`super().__init__()`之前准备。不能在同步属性里临时发异步网络请求。采用已验证的后端能力profile进行构造检查，start时服务端再核对实际host能力；陈旧profile必须导致拒绝，不导致静默退化。
+
+## 2. 本包代码
+
+- `seed/python/src/lightsandbox_harbor/provider.py`：真实Harbor import-path入口。
+- `provider_core.py`：具体生命周期/执行/文件转发实现，通过依赖注入连接`SandboxBackend`。
+- `bridge.py`：执行事件校验、UTF-8跨块处理、取消/超时传播。
+- `launcher.py`：构造固定provider命令，检查backend配置和本地契约hash。
+- `contract_probe.py`：只读AST漂移探测，不导入或执行给定源码。
+
+`SandboxBackend`是明确的客户端接口：`start/stop/transfer/events/cancel`。**本包没有实现远端Rust服务或网络传输后端。** 真实运行需要完成T36；不能把测试里的Backend替身投入正式使用。
+
+seed provider支持单服务接口，显式不宣称Compose、动态allowlist、GPU/TPU、Windows和host挂载。它声明可表达no-network以及CPU/内存硬限制，真实backend必须实际实现或拒绝。构造函数的True是协议承诺，不是目标VM测试报告。
+
+原生StartRequest包含本地environment_dir；此路径仅在客户端用于受控打包。传输后端应上传bytes/artifact，再把artifact ID送到server，**禁止把该路径当成远端host bind path**。
+
+## 3. 先补哪些差分测试
+
+最先验证真实上游构造与工厂导入、配置默认值、startup上传、命令超时与返回码、numeric user0、scoped env/callback、日志回收。随后验证共享/独立verifier和Compose服务级操作。每次Harbor升级重新生成契约观察和差分报告。
+
+mock证明本地转发逻辑；AST证明结构；真实SDK测试证明接口；worker测试证明执行。四者不可互相替代。
+
+## 4. OpenSandbox入口并行保持
+
+Harbor provider不必经由所有OpenSandbox特有端点才能运行；它可调用原生客户端。两条入口共用同一核心状态与执行逻辑。外部OpenSandbox原版SDK对路径、body、SSE、分页、TTL、endpoint和错误码另做固定版本互操作。禁止复制两套生命周期状态机。
+
+来源：[S01/S02/S05/S17](../research/04_V3_SOURCES.md)。

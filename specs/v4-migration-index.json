@@ -1,0 +1,219 @@
+{
+  "meaning": "Exact v4 source bytes hashed; archive text has an added non-normative header. Current docs are linked replacements.",
+  "documents": [
+    {
+      "original_path": "docs/design/01_CHARTER.md",
+      "original_sha256": "b7d7f106f6af6271633986cbea58bb8c3ca6c11f907b3345cb6df029284da420",
+      "archive_path": "history/v4/docs/design/01_CHARTER.md.txt",
+      "replaced_by": [
+        "docs/v5/00_PRODUCT.md",
+        "docs/v5/03_DOMAIN.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/02_ARCHITECTURE.md",
+      "original_sha256": "16a9f8bfa2788c2adde0c0a4dd11a2122bbc3cf2980ad0becb09768307370d84",
+      "archive_path": "history/v4/docs/design/02_ARCHITECTURE.md.txt",
+      "replaced_by": [
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/10_TECH_STACK.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/03_INTERNAL_CONTRACTS.md",
+      "original_sha256": "ac94ba5d745ce8d3707ed8d2e51b030b8e288259affecb962ceaaab37a3fb417",
+      "archive_path": "history/v4/docs/design/03_INTERNAL_CONTRACTS.md.txt",
+      "replaced_by": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/04_HOST_CAPABILITIES.md",
+      "original_sha256": "526f644fc1342514746d51002a051bd1e99738a43cfe8928f71f7d834c2c973f",
+      "archive_path": "history/v4/docs/design/04_HOST_CAPABILITIES.md.txt",
+      "replaced_by": [
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/12_TESTING.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/05_OPENSANDBOX_COMPATIBILITY.md",
+      "original_sha256": "f8ffdae1dc71b626020c6a1de78ebf12511ff40742550dcf0ae2ae64a13e8fd6",
+      "archive_path": "history/v4/docs/design/05_OPENSANDBOX_COMPATIBILITY.md.txt",
+      "replaced_by": [
+        "docs/v5/06_HTTP.md",
+        "docs/v5/12_TESTING.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/06_LIFECYCLE_AND_RECOVERY.md",
+      "original_sha256": "aa8037ad3cbf650578e662af4078a390d42d046041bd9c497e18ad8c202599cb",
+      "archive_path": "history/v4/docs/design/06_LIFECYCLE_AND_RECOVERY.md.txt",
+      "replaced_by": [
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/03_DOMAIN.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/07_EXEC_SESSIONS_FILES.md",
+      "original_sha256": "9e9d8d4973d8e741bd738af7333750be536ff753c8243d01519a5c85800eda2d",
+      "archive_path": "history/v4/docs/design/07_EXEC_SESSIONS_FILES.md.txt",
+      "replaced_by": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/08_IMAGES_ROOTFS_BUILD_SNAPSHOT.md",
+      "original_sha256": "beee75f8c385ed43d120df4e8b4babcf43036dcda2843f1213f496e57aa8627c",
+      "archive_path": "history/v4/docs/design/08_IMAGES_ROOTFS_BUILD_SNAPSHOT.md.txt",
+      "replaced_by": [
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/09_NETWORK_GROUPS_ENDPOINTS.md",
+      "original_sha256": "ee448d4eddb21c9019869fb4db3996ced769072c6aa761a77a4f01bbf9be0e9f",
+      "archive_path": "history/v4/docs/design/09_NETWORK_GROUPS_ENDPOINTS.md.txt",
+      "replaced_by": [
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/07_HARBOR.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/10_SECURITY_AND_PRIVILEGES.md",
+      "original_sha256": "8810517403a1ff8385c535d87b1952ee3b40c7fe2c3f5840350d4660bc60fe91",
+      "archive_path": "history/v4/docs/design/10_SECURITY_AND_PRIVILEGES.md.txt",
+      "replaced_by": [
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/11_PACKAGING_AND_OPERATIONS.md",
+      "original_sha256": "8162d0ab94c5b60535b1ea0ff6b6048bea65ef539f8c5afe4d017c884f1b3d99",
+      "archive_path": "history/v4/docs/design/11_PACKAGING_AND_OPERATIONS.md.txt",
+      "replaced_by": [
+        "docs/v5/10_TECH_STACK.md",
+        "docs/v5/11_DELIVERY.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/12_SEQUENCE_EXAMPLES.md",
+      "original_sha256": "b68772faf324c9afdf4609119e4a94ef73dba8af212e991bedfb62a333b232ae",
+      "archive_path": "history/v4/docs/design/12_SEQUENCE_EXAMPLES.md.txt",
+      "replaced_by": [
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/05_SDK.md",
+        "docs/v5/07_HARBOR.md"
+      ]
+    },
+    {
+      "original_path": "docs/design/13_FUNCTIONAL_SURFACE.md",
+      "original_sha256": "6a7c3ea54817964f051bcee2bafac8ee22d8edfcd981c31ad47c754ac94cc2c9",
+      "archive_path": "history/v4/docs/design/13_FUNCTIONAL_SURFACE.md.txt",
+      "replaced_by": [
+        "docs/v5/04_CLI.md",
+        "docs/v5/05_SDK.md",
+        "docs/v5/06_HTTP.md"
+      ]
+    },
+    {
+      "original_path": "docs/engineering/01_TECH_STACK.md",
+      "original_sha256": "2fafb8c5cde3b35500f7442cdba707f68c2e1a3196949fb969558d0fca218736",
+      "archive_path": "history/v4/docs/engineering/01_TECH_STACK.md.txt",
+      "replaced_by": [
+        "docs/v5/10_TECH_STACK.md"
+      ]
+    },
+    {
+      "original_path": "docs/engineering/02_RUNTIME_ARCHITECTURE.md",
+      "original_sha256": "d87a5d67864a4b8d5f5b2cd6d31e65eb046f24f3b62bfcacc63b621ca68078dd",
+      "archive_path": "history/v4/docs/engineering/02_RUNTIME_ARCHITECTURE.md.txt",
+      "replaced_by": [
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/08_FAILURES.md"
+      ]
+    },
+    {
+      "original_path": "docs/engineering/04_CODE_STATUS.md",
+      "original_sha256": "9a3166d4911b7a1c2dbb7c6f8b756fc69862f23d58e4c12b8ffcb63369466e5a",
+      "archive_path": "history/v4/docs/engineering/04_CODE_STATUS.md.txt",
+      "replaced_by": [
+        "docs/v5/14_STATUS.md"
+      ]
+    },
+    {
+      "original_path": "docs/engineering/05_DEVELOPMENT_STRATEGY.md",
+      "original_sha256": "647119a8d69589a8398fb54f4e8841a14d36f5d7357c5a7b2522483a0217c779",
+      "archive_path": "history/v4/docs/engineering/05_DEVELOPMENT_STRATEGY.md.txt",
+      "replaced_by": [
+        "docs/v5/11_DELIVERY.md"
+      ]
+    },
+    {
+      "original_path": "docs/engineering/06_DOCKERFILE_TO_RUNTIME_MECHANISM.md",
+      "original_sha256": "7b79b2aa18e68f979dc6d98774a7d1666cd9e87b4e0552a35debd9c23e824202",
+      "archive_path": "history/v4/docs/engineering/06_DOCKERFILE_TO_RUNTIME_MECHANISM.md.txt",
+      "replaced_by": [
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/03_DOMAIN.md"
+      ]
+    },
+    {
+      "original_path": "docs/harbor/01_INTEGRATION_CONTRACT.md",
+      "original_sha256": "cd22906ae1b072758271eede39bf975916777a048450d6deaa975fc78efcedc4",
+      "archive_path": "history/v4/docs/harbor/01_INTEGRATION_CONTRACT.md.txt",
+      "replaced_by": [
+        "docs/v5/07_HARBOR.md"
+      ]
+    },
+    {
+      "original_path": "docs/harbor/02_LOADING_AND_COMPOSE.md",
+      "original_sha256": "96a4226bf59772e2397103d5efe5f824b6192b83020153d6986635ae7501d2bc",
+      "archive_path": "history/v4/docs/harbor/02_LOADING_AND_COMPOSE.md.txt",
+      "replaced_by": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ]
+    },
+    {
+      "original_path": "docs/harbor/03_PROVIDER_MAPPING.md",
+      "original_sha256": "6c4b001de6f6e6c88cfee9b74a9ae6e0b3475c1c09653df4d766de346a998ae9",
+      "archive_path": "history/v4/docs/harbor/03_PROVIDER_MAPPING.md.txt",
+      "replaced_by": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/05_SDK.md"
+      ]
+    },
+    {
+      "original_path": "docs/harbor/04_TRAINING_LEASES.md",
+      "original_sha256": "819748e4ae198edad33a68a00f3809c99bb1aead8af1ad69283ae9ec3ff45e5b",
+      "archive_path": "history/v4/docs/harbor/04_TRAINING_LEASES.md.txt",
+      "replaced_by": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/08_FAILURES.md"
+      ]
+    },
+    {
+      "original_path": "docs/harbor/05_ONE_COMMAND_ACCEPTANCE.md",
+      "original_sha256": "88dd83580aa25fb34449f77d4afbeb4945c04b785825eda9170f256f143a907b",
+      "archive_path": "history/v4/docs/harbor/05_ONE_COMMAND_ACCEPTANCE.md.txt",
+      "replaced_by": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/12_TESTING.md"
+      ]
+    },
+    {
+      "original_path": "docs/harbor/06_END_TO_END_ONE_CLICK_FLOW.md",
+      "original_sha256": "d2320077f65362f08f4ee7f8e780ed7e3ba79da6503460603a88a9277eb32fa4",
+      "archive_path": "history/v4/docs/harbor/06_END_TO_END_ONE_CLICK_FLOW.md.txt",
+      "replaced_by": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/04_CLI.md"
+      ]
+    }
+  ]
+}

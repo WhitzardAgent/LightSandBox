@@ -1,0 +1,1973 @@
+{
+  "schema_version": "5.0",
+  "tasks": [
+    {
+      "id": "T00",
+      "title": "仓库骨架与可信开发入口",
+      "depends_on": [],
+      "requirements": [
+        "R01",
+        "R19",
+        "R21"
+      ],
+      "read": [
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/10_TECH_STACK.md",
+        "docs/harness/04_TEST_RUNNER_AND_EVIDENCE.md"
+      ],
+      "allowed_paths": [
+        "Cargo.toml",
+        "crates/*/Cargo.toml",
+        "crates/*/src/lib.rs",
+        "python/pyproject.toml",
+        "dev/",
+        "tests/harness/",
+        ".github/workflows/"
+      ],
+      "consumes": "本包AGENTS、四crate依赖方向与task/test catalog；不需要root权限。",
+      "produces": "可构建的最小workspace；dev/check命令合同；独立unit/fast测试入口；CI失败传播与结构检查。",
+      "implementation": [
+        "创建四个职责边界明确的crate和最小Python测试项目，pin工具链与依赖，不生成未实现功能空桩。",
+        "实现dev/check的suite参数和测试选择，使用argv，不shell拼接；未知命令、零测试或缺工具均非零退出。",
+        "建立依赖方向、禁止Evaluation导入、官方判据保护检查；CI先限无特权测试，runtime明确需授权worker。"
+      ],
+      "review_focus": "不能用echo PASS脚本或全部#[ignore]实现绿色；不要改动现有用户工作树。",
+      "kind": "local",
+      "doc": "plans/tasks/T00.md",
+      "status": "planned",
+      "test_ids": [
+        "T00-C01",
+        "T00-C02",
+        "T00-C03",
+        "T00-C04"
+      ]
+    },
+    {
+      "id": "T01",
+      "title": "冻结上游源码、SDK与协议清单",
+      "depends_on": [
+        "T00"
+      ],
+      "requirements": [
+        "R06",
+        "R20",
+        "R22"
+      ],
+      "read": [
+        "docs/v5/06_HTTP.md",
+        "docs/v5/12_TESTING.md",
+        "docs/harness/04_TEST_RUNNER_AND_EVIDENCE.md"
+      ],
+      "allowed_paths": [
+        "specs/upstream-lock.json",
+        "specs/protocol-inventory.json",
+        "specs/sdk-lock.json",
+        "tools/lock_*",
+        "tests/contracts/"
+      ],
+      "consumes": "具备获准网络访问的开发环境或干净本地上游clone；source-observations只作查找入口。",
+      "produces": "不可变完整commit、关键spec哈希、SDK分发版本/哈希、reference server+execd digest；自动提取的协议清单和例外表。",
+      "implementation": [
+        "读取固定上游spec/SDK代码，记录所有operation/path/auth/header/schema/default与SSE/WS行为；禁止手写猜测。",
+        "从干净clone和制品计算完整哈希；SDK包名、实际配置方式与实际参考启动方式从该版本提取。",
+        "分别标记spec声明、reference实现、SDK暴露与候选计划，冻结为协议基线；原始授权材料按许可证保留。"
+      ],
+      "review_focus": "哈希必须来自实际字节；未获得来源保留UNLOCKED。检查源码读取不会执行上游代码。",
+      "kind": "local",
+      "doc": "plans/tasks/T01.md",
+      "status": "planned",
+      "test_ids": [
+        "T01-C01",
+        "T01-C02",
+        "T01-C03",
+        "T01-C04"
+      ]
+    },
+    {
+      "id": "T02",
+      "title": "全量任务清单与能力需求普查",
+      "depends_on": [
+        "T01"
+      ],
+      "requirements": [
+        "R12",
+        "R13",
+        "R14",
+        "R17",
+        "R20"
+      ],
+      "read": [
+        "docs/acceptance/01_PARITY_CONTRACT.md",
+        "docs/acceptance/02_BENCHMARK_PROTOCOLS.md"
+      ],
+      "allowed_paths": [
+        "conformance/inventory/",
+        "specs/benchmark-lock.json",
+        "specs/benchmark-manifest.jsonl",
+        "specs/task-feature-census.json",
+        "tests/inventory/"
+      ],
+      "consumes": "T01固定harness/任务源和用户目标三类基准；运行前确定集合。",
+      "produces": "完整task manifest、每类字段需求、oracle资产状态、canary字段覆盖及manifest哈希。",
+      "implementation": [
+        "枚举全部发布/split/task ID并保存原始总数；明确SWE各子集关系和TerminalBench发布，不采用记忆中的数量。",
+        "解析Dockerfile/Compose/任务配置，逐项登记capability、volume、网络、verifier形态和设备；未知字段显式保留。",
+        "区分oracle可用/缺失/尚未验证，Cyber代理与verifier分列；生成字段覆盖canary并写选择理由。"
+      ],
+      "review_focus": "不能排除当前宿主跑不了的任务；发现范围冲突交给负责人，禁止把100%缩成可运行子集。",
+      "kind": "local",
+      "doc": "plans/tasks/T02.md",
+      "status": "planned",
+      "test_ids": [
+        "T02-C01",
+        "T02-C02",
+        "T02-C03",
+        "T02-C04"
+      ]
+    },
+    {
+      "id": "T03",
+      "title": "宿主能力主动探测与准入报告",
+      "depends_on": [
+        "T00"
+      ],
+      "requirements": [
+        "R02",
+        "R03",
+        "R10",
+        "R15",
+        "R23"
+      ],
+      "read": [
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/12_TESTING.md",
+        "docs/v5/02_ARCHITECTURE.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/capabilities/",
+        "tests/runtime/capabilities/",
+        "specs/host-profiles.json"
+      ],
+      "consumes": "管理员授权的测试VM、明确instance/data root/IPAM范围；被动doctor仅是前置观察。",
+      "produces": "HostReport与vm-rootful-parity证据；真实isolation/controller/quota/network检查；NOT_PROBED不转true。",
+      "implementation": [
+        "在受控资源范围运行namespaces/cgroup/LSM/seccomp/挂载和网络小型真实探测，记录effect与cleanup。",
+        "区分rootful服务权限与普通用户权限，不修改内核/sysctl/LSM；缺少必需能力返回结构错误。",
+        "记录二进制/libc/架构与host fingerprint，为受支持driver配置逐项生成证据。"
+      ],
+      "review_focus": "文件存在、uname和root身份都不能替代实际效果；普通用户profile不可继承rootful测试结论。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T03.md",
+      "status": "planned",
+      "test_ids": [
+        "T03-C01",
+        "T03-C02",
+        "T03-C03",
+        "T03-C04"
+      ]
+    },
+    {
+      "id": "T04",
+      "title": "核心类型、身份、状态与特权边界",
+      "depends_on": [
+        "T01",
+        "T03",
+        "T41"
+      ],
+      "requirements": [
+        "R03",
+        "R08",
+        "R15",
+        "R19",
+        "R22"
+      ],
+      "read": [
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/10_TECH_STACK.md",
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-core/src/",
+        "crates/ls-host/src/control/",
+        "crates/ls-api/src/auth/",
+        "tests/unit/contracts/",
+        "tests/security/control/"
+      ],
+      "consumes": "T01外部契约；T03 HostReport；内部Owner/SandboxRef/OperationKey定义。",
+      "produces": "强类型CreateSpec/ExecSpec/ResourceRequest与错误；owner+generation校验；SQLite意图/租约schema；类型化UDS协议。",
+      "implementation": [
+        "建立内部类型与显式转换边界，未知输入拒绝；数据库迁移版本与不变量测试同时添加。",
+        "API到host使用受认证peer的受限请求，禁止任意shell、任意host path或跨owner引用。",
+        "定义幂等key/request hash冲突与外部副作用journal；每个模块通过接口访问状态。"
+      ],
+      "review_focus": "RPC鉴权和业务owner校验两者都需实现；不要让API层直接操作root filesystem。",
+      "kind": "runtime",
+      "doc": "plans/tasks/T04.md",
+      "status": "planned",
+      "test_ids": [
+        "T04-C01",
+        "T04-C02",
+        "T04-C03",
+        "T04-C04",
+        "T04-C05"
+      ]
+    },
+    {
+      "id": "T05",
+      "title": "独立参考环境、差分工具与初始性能测量",
+      "depends_on": [
+        "T01",
+        "T02",
+        "T03"
+      ],
+      "requirements": [
+        "R16",
+        "R17",
+        "R18",
+        "R20"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/acceptance/01_PARITY_CONTRACT.md",
+        "docs/acceptance/03_TEST_MATRIX.md",
+        "docs/acceptance/04_PERFORMANCE.md"
+      ],
+      "allowed_paths": [
+        "conformance/reference/",
+        "conformance/comparators/",
+        "conformance/performance/",
+        "tests/conformance/"
+      ],
+      "consumes": "固定Docker/OpenSandbox reference lock、完整manifest和授权测试节点。",
+      "produces": "双参考执行器、原始证据格式、预声明比较器、负控和phase计时器；初始baseline报告。",
+      "implementation": [
+        "分别运行Docker和固定OpenSandbox，记录同一输入的原始结果，先确认参考自身可用。",
+        "比较器只规范化登记的非语义字段；官方结果输出和独立解析交叉验证。",
+        "建立冷/warm/create/exec/cleanup阶段测量，保留CPU/RAM/cache/safety/日志条件。"
+      ],
+      "review_focus": "测试reference允许Docker不等于candidate可回退Docker；预先锁定规范化范围。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T05.md",
+      "status": "planned",
+      "test_ids": [
+        "T05-C01",
+        "T05-C02",
+        "T05-C03",
+        "T05-C04"
+      ]
+    },
+    {
+      "id": "T06",
+      "title": "OCI导入、仓库拉取与镜像进程配置",
+      "depends_on": [
+        "T04"
+      ],
+      "requirements": [
+        "R04",
+        "R05",
+        "R20"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/images/",
+        "tests/images/"
+      ],
+      "consumes": "固定OCI layout/registry产物与T04类型；无需运行镜像内容。",
+      "produces": "ImageRef(digest,platform,config_digest)；image config到CreateSpec的确定性转换。",
+      "implementation": [
+        "验证manifest/config/layer摘要与平台；镜像tag只用于解析，运行引用使用digest。",
+        "精确保留entrypoint/CMD/env/workingdir/user/stop signal与explicit override的组合语义。",
+        "导入操作原子提交并记录租约，失败的digest进入隔离而非可运行列表。",
+        "通过成熟镜像传输工具完成受认证registry拉取，固定digest后再导入；凭据仅用于受控host拉取路径。"
+      ],
+      "review_focus": "空字符串和未设置字段语义不同；不得默认把真实entrypoint替换成tail。",
+      "kind": "runtime",
+      "doc": "plans/tasks/T06.md",
+      "status": "planned",
+      "test_ids": [
+        "T06-C01",
+        "T06-C02",
+        "T06-C03",
+        "T06-C04",
+        "T06-C05"
+      ]
+    },
+    {
+      "id": "T07",
+      "title": "安全rootfs准备、共享和租约回收",
+      "depends_on": [
+        "T06"
+      ],
+      "requirements": [
+        "R05",
+        "R08",
+        "R15",
+        "R18",
+        "R20"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/02_ARCHITECTURE.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/rootfs/",
+        "crates/ls-host/src/images/unpack.rs",
+        "tests/rootfs/"
+      ],
+      "consumes": "ImageRef、固定成熟OCI解包器、T03实测driver能力。",
+      "produces": "RootfsLease与driver选择；每sandbox独立可写层；GC仅处理无有效租约的对象。",
+      "implementation": [
+        "封装成熟解包流程，拒绝路径逃逸并验证whiteout/权限/硬链接等OCI语义。",
+        "实现首个已实测driver，后续fallback独立测试；全rootfs可写能力不能由只写workspace替代。",
+        "维护mount/写层/镜像租约，异常中断后核对实际状态；GC不触及活动引用。"
+      ],
+      "review_focus": "同inode共享优点Docker也有；full copy不是相同内存成本，需如实报告。",
+      "kind": "runtime",
+      "doc": "plans/tasks/T07.md",
+      "status": "planned",
+      "test_ids": [
+        "T07-C01",
+        "T07-C02",
+        "T07-C03",
+        "T07-C04"
+      ]
+    },
+    {
+      "id": "T08",
+      "title": "runc生命周期和第一条API纵向链路",
+      "depends_on": [
+        "T07",
+        "T04",
+        "T03"
+      ],
+      "requirements": [
+        "R02",
+        "R04",
+        "R05",
+        "R08",
+        "R15"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/10_TECH_STACK.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/runtime/",
+        "crates/ls-guest/src/init/",
+        "crates/ls-api/src/lifecycle/",
+        "tests/runtime/lifecycle/"
+      ],
+      "consumes": "CreateSpec、RootfsLease、HostReport与runc固定binary。",
+      "produces": "create/inspect/delete最小API→真实runc；tiny init/实际entrypoint；真实CleanupInfo。",
+      "implementation": [
+        "构建OCI bundle并固定namespace/capability/seccomp约束；命令通过argv传入。",
+        "tiny init处理reap和signal，运行image entrypoint及其退出状态；服务就绪以真实状态为准。",
+        "实现journal反向回滚与资源所有权；API接受删除和最终回收完成分开记录。"
+      ],
+      "review_focus": "T08必须有真实运行纵向结果；无权限时BLOCKED，不能用mock交差。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T08.md",
+      "status": "planned",
+      "test_ids": [
+        "T08-C01",
+        "T08-C02",
+        "T08-C03",
+        "T08-C04"
+      ]
+    },
+    {
+      "id": "T09",
+      "title": "资源硬限制、容量准入与公平预算",
+      "depends_on": [
+        "T08"
+      ],
+      "requirements": [
+        "R03",
+        "R10",
+        "R18"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/12_TESTING.md",
+        "docs/acceptance/04_PERFORMANCE.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/resources/",
+        "crates/ls-core/src/admission/",
+        "tests/runtime/resources/"
+      ],
+      "consumes": "HostReport有效controller/quota能力与ResourceRequest。",
+      "produces": "实测CPU/memory/PID/disk限额、Admission拒绝原因和节点预算。",
+      "implementation": [
+        "写入并读取实际生效cgroup约束；区分OOM、quota rejection和普通进程失败。",
+        "磁盘硬上限必须使用可执行配额/受限卷方案；仅定时du不能承诺硬quota。",
+        "建立有界准入/队列、资源预留和释放，防止突发create/log/build耗尽宿主。"
+      ],
+      "review_focus": "没有某控制器时不能静默丢字段；ASAN虚拟地址限制与物理内存计费需区分。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T09.md",
+      "status": "planned",
+      "test_ids": [
+        "T09-C01",
+        "T09-C02",
+        "T09-C03",
+        "T09-C04",
+        "T09-C05"
+      ]
+    },
+    {
+      "id": "T10",
+      "title": "前台执行、幂等身份与真实退出结果",
+      "depends_on": [
+        "T08",
+        "T09"
+      ],
+      "requirements": [
+        "R07",
+        "R08",
+        "R16"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/exec/",
+        "crates/ls-api/src/commands/",
+        "tests/runtime/exec/"
+      ],
+      "consumes": "SandboxRef、ExecSpec、OperationKey与有效资源预算。",
+      "produces": "start_exec/inspect_exec；字节级stdout/stderr；真实exit/signal状态。",
+      "implementation": [
+        "执行路径区分argv与显式shell命令；preserve cwd/env/uid/gid，不在host shell解释。",
+        "监督通道持有实际退出信息，建立exec identity和查询；重复key同请求返回同operation。",
+        "边界编码与流事件遵循固定OpenSandbox协议，内部额外状态仅在明确扩展暴露。"
+      ],
+      "review_focus": "runc process返回值和被执行进程退出语义需核对；不声称任意故障exactly-once。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T10.md",
+      "status": "planned",
+      "test_ids": [
+        "T10-C01",
+        "T10-C02",
+        "T10-C03",
+        "T10-C04"
+      ]
+    },
+    {
+      "id": "T11",
+      "title": "后台命令、取消、超时与不确定窗口",
+      "depends_on": [
+        "T10"
+      ],
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/exec/",
+        "tests/runtime/cancellation/"
+      ],
+      "consumes": "ExecRef与真实supervision；journal/lease状态。",
+      "produces": "cancel_exec、background exec与TimedOut/ResultUnknown语义；有范围的后代清理。",
+      "implementation": [
+        "定义command级取消与sandbox级取消范围；使用cgroup/监督机制覆盖doublefork/setsid，不依赖一棵易失PID树。",
+        "区分断开客户与取消任务；后台命令脱离客户仍可查询。",
+        "在副作用发生但状态持久化前注入故障，返回不确定状态并阻止自动重跑。"
+      ],
+      "review_focus": "清理范围不能扩大到整个VM；不确定状态不是普通可重试失败。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T11.md",
+      "status": "planned",
+      "test_ids": [
+        "T11-C01",
+        "T11-C02",
+        "T11-C03",
+        "T11-C04"
+      ]
+    },
+    {
+      "id": "T12",
+      "title": "流式输出、日志留存与背压",
+      "depends_on": [
+        "T11"
+      ],
+      "requirements": [
+        "R06",
+        "R07",
+        "R08",
+        "R10"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/12_TESTING.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/streams/",
+        "crates/ls-api/src/streams/",
+        "tests/runtime/streams/"
+      ],
+      "consumes": "ExecRef、日志原始字节、锁定SSE协议与资源预算。",
+      "produces": "有界spool、按流cursor查询、slow-client背压与断线恢复语义。",
+      "implementation": [
+        "按上游协议实现SSE事件、日志tail cursor和结束事件；内部byte offset与上游line cursor明确转换。",
+        "流缓存和磁盘spool设硬预算；慢客户不阻塞整个node，不悄悄丢字节。",
+        "日志截断/过期返回gap和可用区间；断线重接不重新执行命令。"
+      ],
+      "review_focus": "日志tail和PTY offset并非同一种cursor；JSON字符串不能截断原始字节证据。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T12.md",
+      "status": "planned",
+      "test_ids": [
+        "T12-C01",
+        "T12-C02",
+        "T12-C03",
+        "T12-C04"
+      ]
+    },
+    {
+      "id": "T13",
+      "title": "持久Shell及命令边界",
+      "depends_on": [
+        "T12"
+      ],
+      "requirements": [
+        "R06",
+        "R07",
+        "R16"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/12_TESTING.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/sessions/",
+        "crates/ls-api/src/sessions/",
+        "tests/runtime/sessions/"
+      ],
+      "consumes": "create_session/run_in_session内部契约，固定upstream session spec。",
+      "produces": "SessionRef及cwd/env持久；控制通道独立于用户stdout。",
+      "implementation": [
+        "维护真正Shell进程状态，不靠重新exec拼接历史命令模拟。",
+        "使用隔离控制通道/可验证frame管理命令结束和退出码，恶意输出不能伪造控制结果。",
+        "定义同session并发排队/拒绝行为，shell退出后失效句柄与明确清理。"
+      ],
+      "review_focus": "shell injection只有用户显式shell操作可发生在sandbox内，host路径不能被同一shell解释。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T13.md",
+      "status": "planned",
+      "test_ids": [
+        "T13-C01",
+        "T13-C02",
+        "T13-C03",
+        "T13-C04"
+      ]
+    },
+    {
+      "id": "T14",
+      "title": "PTY、终端控制与FD生命周期",
+      "depends_on": [
+        "T12"
+      ],
+      "requirements": [
+        "R07",
+        "R08",
+        "R15"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/pty/",
+        "crates/ls-host/src/broker/",
+        "tests/runtime/pty/"
+      ],
+      "consumes": "runc console-socket固定语义，PtyRef、generation和有界streams。",
+      "produces": "open/attach/resize/signal；termios可控；客户端/API重连与broker死亡的真实边界。",
+      "implementation": [
+        "由明确持有PTY master的broker管理FD与输出；Unix socket身份校验，FD泄漏测试。",
+        "实现resize、Ctrl-C、stdin半关闭、窗口变化与client detach；TTY字节单独处理。",
+        "API重启向存活broker重新attach；broker死亡无法恢复原PTY时显式Lost，不从DB整数伪造FD。"
+      ],
+      "review_focus": "这是架构风险优先实验，不可用重开shell代替会话恢复。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T14.md",
+      "status": "planned",
+      "test_ids": [
+        "T14-C01",
+        "T14-C02",
+        "T14-C03",
+        "T14-C04"
+      ]
+    },
+    {
+      "id": "T15",
+      "title": "文件操作与跨边界安全",
+      "depends_on": [
+        "T10",
+        "T07"
+      ],
+      "requirements": [
+        "R05",
+        "R07",
+        "R15",
+        "R16"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/02_ARCHITECTURE.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-guest/src/files/",
+        "crates/ls-host/src/files/",
+        "crates/ls-api/src/files/",
+        "tests/runtime/files/"
+      ],
+      "consumes": "FileRequest、SandboxRef、实际namespace执行和rootfs lease。",
+      "produces": "read/write/upload/download/stat/list/move/remove/chmod接口与路径安全。",
+      "implementation": [
+        "文件操作在目标namespace内由按需最小helper执行，限定用户/权限；禁止host root+字符串路径直读。",
+        "处理二进制、大文件、原子替换、链接与目录遍历；上游multipart/错误码语义按锁定spec。",
+        "并发删除、重命名和symlink切换不越过授权边界；限流和资源预算生效。"
+      ],
+      "review_focus": "helper可读文件权限与用户shell一致；openat2缺失时需要成熟安全fallback或拒绝相应路径。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T15.md",
+      "status": "planned",
+      "test_ids": [
+        "T15-C01",
+        "T15-C02",
+        "T15-C03",
+        "T15-C04",
+        "T15-C05"
+      ]
+    },
+    {
+      "id": "T16",
+      "title": "网络命名空间、地址管理与基础服务发现",
+      "depends_on": [
+        "T08"
+      ],
+      "requirements": [
+        "R03",
+        "R09",
+        "R15"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/02_ARCHITECTURE.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/network/",
+        "tests/runtime/network/"
+      ],
+      "consumes": "NetworkSpec、HostReport实际网络权限、实例IPAM范围、固定CNI工具。",
+      "produces": "none/task-isolated模式、受控地址租约、DNS服务与清理。",
+      "implementation": [
+        "通过CNI建立网络但自行明确隔离策略、DNS和lease责任；未装策略时不启动workload。",
+        "阻断宿主管理/云metadata/兄弟任务网络；同组服务发现按声明启用。",
+        "IP/接口名绑定owner+generation；创建失败和重启后核对并清理。"
+      ],
+      "review_focus": "CNI本身不自动等于安全策略；DNS/IPv6及管理网络必须真实测试。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T16.md",
+      "status": "planned",
+      "test_ids": [
+        "T16-C01",
+        "T16-C02",
+        "T16-C03",
+        "T16-C04",
+        "T16-C05"
+      ]
+    },
+    {
+      "id": "T17",
+      "title": "端点代理、认证与SDK发现",
+      "depends_on": [
+        "T16",
+        "T04"
+      ],
+      "requirements": [
+        "R06",
+        "R09",
+        "R15"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/12_TESTING.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/07_HARBOR.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-api/src/endpoints/",
+        "crates/ls-host/src/network/endpoint.rs",
+        "tests/contracts/endpoints/"
+      ],
+      "consumes": "锁定endpoint API/SDK访问方式，SandboxRef、route lease和认证机制。",
+      "produces": "固定SDK可发现并访问exec/file端点；流式和WS透传；owner/generation权限。",
+      "implementation": [
+        "实现实际SDK调用所需endpoint返回结构、auth header和proxy路径，不假设只有单一URL。",
+        "路由与过期token绑定sandbox identity，不直接裸露私网IP给无认证外部。",
+        "连接升级、超时和大响应遵循上游实际语义，并限制入口资源。"
+      ],
+      "review_focus": "入口代理必须是可信边界；SDK兼容不能靠monkeypatch。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T17.md",
+      "status": "planned",
+      "test_ids": [
+        "T17-C01",
+        "T17-C02",
+        "T17-C03",
+        "T17-C04",
+        "T17-C05"
+      ]
+    },
+    {
+      "id": "T18",
+      "title": "出口策略与运行中规则切换",
+      "depends_on": [
+        "T16",
+        "T17"
+      ],
+      "requirements": [
+        "R09",
+        "R15",
+        "R22"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/12_TESTING.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/network/policy/",
+        "tests/security/egress/"
+      ],
+      "consumes": "NetworkSpec策略、DNS/代理控制点、PolicyRevision。",
+      "produces": "实际enforced allow/deny、版本化规则更新、unsupported规则拒绝。",
+      "implementation": [
+        "建立出口控制点，域名规则与IP/DNS/重定向结合，不只HTTP环境变量。",
+        "明确TCP/UDP/IPv6/raw socket与现有连接的规则语义；不能兑现时拒绝相应承诺。",
+        "更新policy采用预验证与原子切换；保留应用revision和失败回滚证据。"
+      ],
+      "review_focus": "raw socket支持与严格egress组合冲突需提前显式处理，不以便利放开网络。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T18.md",
+      "status": "planned",
+      "test_ids": [
+        "T18-C01",
+        "T18-C02",
+        "T18-C03",
+        "T18-C04"
+      ]
+    },
+    {
+      "id": "T19",
+      "title": "独立BuildKit构建与产物导入",
+      "depends_on": [
+        "T06",
+        "T03",
+        "T02"
+      ],
+      "requirements": [
+        "R04",
+        "R05",
+        "R20",
+        "R24"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/10_TECH_STACK.md",
+        "docs/v5/11_DELIVERY.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/build/",
+        "tools/build_adapter/",
+        "tests/build/"
+      ],
+      "consumes": "固定BuildKit、Dockerfile/context和平台；构建worker与执行worker权限隔离。",
+      "produces": "build(context,config)→固定OCI产物；cache/secret/日志与依赖报告。",
+      "implementation": [
+        "使用独立BuildKit原语，不在执行sandbox暴露Docker socket。",
+        "记录Dockerfile/context digest、build args、secret不入层和目标平台；Build与Run依赖分开。",
+        "构建并发和缓存租约受控，失败产物不进入可运行镜像集。"
+      ],
+      "review_focus": "可复现并非默认逐字节一致，时间戳/包源必须锁定或披露；不能运行任意特权构建。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T19.md",
+      "status": "planned",
+      "test_ids": [
+        "T19-C01",
+        "T19-C02",
+        "T19-C03",
+        "T19-C04",
+        "T19-C05"
+      ]
+    },
+    {
+      "id": "T20",
+      "title": "多服务组、卷与目标Compose语义",
+      "depends_on": [
+        "T16",
+        "T19",
+        "T15",
+        "T35"
+      ],
+      "requirements": [
+        "R09",
+        "R12",
+        "R13",
+        "R17"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/07_HARBOR.md",
+        "docs/acceptance/02_BENCHMARK_PROTOCOLS.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/groups/",
+        "crates/ls-host/src/volumes/",
+        "conformance/compose/",
+        "tests/runtime/groups/"
+      ],
+      "consumes": "T02真实字段清单、GroupSpec、网络lease、VolumeRef与健康检查合同。",
+      "produces": "组级创建/顺序/健康/清理、卷生命周期、完整已观察Compose字段适配。",
+      "implementation": [
+        "按实际任务字段实现通用转换器；未知字段拒绝并报告缺口，不静默剔除。",
+        "健康/启动/失败语义与参考一致，named volume和service DNS保留。",
+        "agent与verifier阶段按原任务共享或分离，制品转移有hash和权限记录。"
+      ],
+      "review_focus": "完整字段集合由T02决定；计划尚未证明所有benchmark都只需当前字段。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T20.md",
+      "status": "planned",
+      "test_ids": [
+        "T20-C01",
+        "T20-C02",
+        "T20-C03",
+        "T20-C04",
+        "T20-C05"
+      ]
+    },
+    {
+      "id": "T21",
+      "title": "TTL、暂停、恢复与节点重启协调",
+      "depends_on": [
+        "T08",
+        "T09",
+        "T11",
+        "T14",
+        "T43"
+      ],
+      "requirements": [
+        "R08",
+        "R10",
+        "R11",
+        "R15"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/08_FAILURES.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/reconcile/",
+        "crates/ls-host/src/lifecycle/",
+        "tests/runtime/recovery/"
+      ],
+      "consumes": "完整resource journal、broker identity、freezer实际能力。",
+      "produces": "TTL/renew、pause/resume、reconciliation和审计cleanup；每层恢复声明。",
+      "implementation": [
+        "使用单调时钟预算与持久过期时间协调，定义暂停期间TTL，不假定freeze释放内存。",
+        "恢复根据内核实际状态/boot ID/generation，不复活旧PID句柄或重跑不确定exec。",
+        "重复delete/过期/重启竞争一致，垃圾收集只移除确认失去lease的本实例资源。"
+      ],
+      "review_focus": "runc/SQLite不能自动持久化PTY FD；guest reboot不是会话恢复。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T21.md",
+      "status": "planned",
+      "test_ids": [
+        "T21-C01",
+        "T21-C02",
+        "T21-C03",
+        "T21-C04",
+        "T21-C05"
+      ]
+    },
+    {
+      "id": "T22",
+      "title": "文件系统快照与显式卷策略",
+      "depends_on": [
+        "T07",
+        "T15",
+        "T21"
+      ],
+      "requirements": [
+        "R05",
+        "R08",
+        "R11",
+        "R20"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/12_TESTING.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/snapshots/",
+        "crates/ls-api/src/snapshots/",
+        "tests/runtime/snapshots/"
+      ],
+      "consumes": "RootfsLease、SnapshotSpec、上游snapshot生命周期与pause能力。",
+      "produces": "不可变SnapshotRef、原子Ready与rootfs恢复；外部卷策略显式。",
+      "implementation": [
+        "定义freeze/flush或一致性策略并计算内容manifest，不保存RAM/FD/TCP；metadata披露范围。",
+        "rootfs可写层转固定OCI产物，保留whiteout/权限/user/config。",
+        "卷默认不隐式打入rootfs快照；如需卷checkpoint，独立manifest和一致性合同。"
+      ],
+      "review_focus": "恢复必须验证config与数据，不将目录tar称完整进程恢复。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T22.md",
+      "status": "planned",
+      "test_ids": [
+        "T22-C01",
+        "T22-C02",
+        "T22-C03",
+        "T22-C04",
+        "T22-C05"
+      ]
+    },
+    {
+      "id": "T23",
+      "title": "固定OpenSandbox协议与原版SDK全链路验收",
+      "depends_on": [
+        "T01",
+        "T17",
+        "T10",
+        "T12",
+        "T13",
+        "T14",
+        "T15",
+        "T21",
+        "T22",
+        "T42"
+      ],
+      "requirements": [
+        "R06",
+        "R07",
+        "R11",
+        "R16",
+        "R22"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/12_TESTING.md",
+        "docs/acceptance/03_TEST_MATRIX.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-api/src/",
+        "python/lightsandbox/",
+        "conformance/opensandbox/",
+        "tests/contracts/"
+      ],
+      "consumes": "T01完整协议inventory、固定原版SDK、已实现runtime模块。",
+      "produces": "逐operation wire/sdk/semantic报告、稳定Python辅助包、明确扩展/未支持清单。",
+      "implementation": [
+        "生成SDK黑盒合同测试与参考请求fixture，真实调用核心生命周期/command/files/session/endpoint/snapshot。",
+        "核对status/header/JSON默认值/errors/timeout单位和stream闭合，不只方法名称。",
+        "上游可选Code Interpreter/isolated API单列；不实现的返回与能力披露一致，不能将核心profile写成全部上游。"
+      ],
+      "review_focus": "上游spec与参考行为冲突需ADR，不强行“修正”参考再证明一致。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T23.md",
+      "status": "planned",
+      "test_ids": [
+        "T23-C01",
+        "T23-C02",
+        "T23-C03",
+        "T23-C04",
+        "T23-C05",
+        "T23-C06",
+        "T23-C07"
+      ]
+    },
+    {
+      "id": "T24",
+      "title": "SWE-bench全流程适配与正负向验证",
+      "depends_on": [
+        "T05",
+        "T15",
+        "T19",
+        "T10"
+      ],
+      "requirements": [
+        "R13",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/acceptance/01_PARITY_CONTRACT.md",
+        "docs/acceptance/02_BENCHMARK_PROTOCOLS.md"
+      ],
+      "allowed_paths": [
+        "conformance/adapters/swebench/",
+        "conformance/fixtures/swebench/",
+        "tests/conformance/swebench/"
+      ],
+      "consumes": "固定SWE官方harness、task manifest、gold patch、候选image/exec/files。",
+      "produces": "只替换容器传输的SWE适配器、gold/negative canary报告与全量执行入口。",
+      "implementation": [
+        "梳理官方Docker操作并经通用sandbox接口适配，保持测试脚本和判据；diff提交独立审查。",
+        "记录gold patch与错误patch的完整测试结果及执行测试数量。",
+        "将每条任务数据、镜像、资源与测试输出绑定manifest，支持分批续跑但不丢ID。"
+      ],
+      "review_focus": "训练模型不参与一致性门禁，模型没解出来不等于沙盒不兼容。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T24.md",
+      "status": "planned",
+      "test_ids": [
+        "T24-C01",
+        "T24-C02",
+        "T24-C03",
+        "T24-C04"
+      ]
+    },
+    {
+      "id": "T25",
+      "title": "Terminal-Bench与Harbor任务拓扑适配",
+      "depends_on": [
+        "T05",
+        "T20",
+        "T13",
+        "T14",
+        "T18",
+        "T37"
+      ],
+      "requirements": [
+        "R07",
+        "R12",
+        "R13",
+        "R16",
+        "R17"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/acceptance/01_PARITY_CONTRACT.md",
+        "docs/acceptance/02_BENCHMARK_PROTOCOLS.md"
+      ],
+      "allowed_paths": [
+        "conformance/adapters/terminalbench/",
+        "tests/conformance/terminalbench/"
+      ],
+      "consumes": "固定task format/full manifest、Oracle资产状态、groups/session/PTY。",
+      "produces": "官方task编排传输适配、共享/独立verifier一致性、Oracle与缺口报告。",
+      "implementation": [
+        "按原任务转换完整环境配置，保留sidecar/volume/network/health和verifier时序。",
+        "官方solution可用时固定执行；缺失时运行环境与负控并保留oracle gap。",
+        "terminal交互事件与制品路径逐项比较，verifier结果按官方格式保存。"
+      ],
+      "review_focus": "镜像/schema支持不等于实际任务支持，所有观察字段必须有真实测试。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T25.md",
+      "status": "planned",
+      "test_ids": [
+        "T25-C01",
+        "T25-C02",
+        "T25-C03",
+        "T25-C04"
+      ]
+    },
+    {
+      "id": "T26",
+      "title": "CyberGym代理环境与提交路径",
+      "depends_on": [
+        "T05",
+        "T16",
+        "T15",
+        "T11",
+        "T14"
+      ],
+      "requirements": [
+        "R07",
+        "R09",
+        "R13",
+        "R14",
+        "R16"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/acceptance/02_BENCHMARK_PROTOCOLS.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "conformance/adapters/cybergym/agent/",
+        "tests/conformance/cybergym/"
+      ],
+      "consumes": "固定Cyber任务资产与可验证PoC、授权submission地址、候选编译调试能力。",
+      "produces": "代理侧create/compile/debug/submit适配；原回执证据；agent_only范围报告。",
+      "implementation": [
+        "按官方任务工作区准备repo/工具/输入，保留真实编译和调试语义。",
+        "按原协议提交固定有效/无效PoC，记录原回执而非让agent自报成功。",
+        "明确记录submission/verifier是否仍调用Docker，报告scope不得扩大。"
+      ],
+      "review_focus": "SYS_PTRACE等能力按具体任务需要启用，不把所有Cyber任务默认privileged。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T26.md",
+      "status": "planned",
+      "test_ids": [
+        "T26-C01",
+        "T26-C02",
+        "T26-C03",
+        "T26-C04"
+      ]
+    },
+    {
+      "id": "T27",
+      "title": "CyberGym验证runner的无Docker执行适配",
+      "depends_on": [
+        "T26",
+        "T20",
+        "T19"
+      ],
+      "requirements": [
+        "R04",
+        "R13",
+        "R14",
+        "R16",
+        "R17"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/acceptance/02_BENCHMARK_PROTOCOLS.md",
+        "docs/acceptance/01_PARITY_CONTRACT.md"
+      ],
+      "allowed_paths": [
+        "conformance/adapters/cybergym/verifier/",
+        "tests/conformance/cybergym_verifier/"
+      ],
+      "consumes": "已固定官方验证器、runner调用与二进制/完整数据模式；候选通用group/build能力。",
+      "produces": "不改判据的runner传输适配；agent与verifier全执行路径依赖审计。",
+      "implementation": [
+        "枚举实际verification Docker操作，替换create/exec/copy/network运输，保持官方验证命令和结果处理。",
+        "验证有效/无效PoC与crash、timeout、missing binary等分类一致。",
+        "审计进程、环境、API连接证明候选runner不经Docker/containerd；不能通过HTTP隐藏回退。"
+      ],
+      "review_focus": "这张卡独立于T26，防止完成代理侧就误宣称全栈兼容。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T27.md",
+      "status": "planned",
+      "test_ids": [
+        "T27-C01",
+        "T27-C02",
+        "T27-C03",
+        "T27-C04"
+      ]
+    },
+    {
+      "id": "T28",
+      "title": "全量任务台账与差异闭环",
+      "depends_on": [
+        "T23",
+        "T24",
+        "T25",
+        "T27"
+      ],
+      "requirements": [
+        "R13",
+        "R14",
+        "R16",
+        "R17",
+        "R20"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/acceptance/01_PARITY_CONTRACT.md",
+        "docs/acceptance/05_RELEASE_GATES.md"
+      ],
+      "allowed_paths": [
+        "conformance/full_suite/",
+        "conformance/reports/",
+        "tests/conformance/reporting/"
+      ],
+      "consumes": "三个完整固定manifest、三方runner与固定输入/Oracle台账。",
+      "produces": "逐任务JSONL、完整分母汇总、所有阻塞/差异最小复现与正式兼容报告。",
+      "implementation": [
+        "分批跑全量，绑定每条task+input+verifier+candidate/reference commit，损坏/缺失结果不补零。",
+        "差异先生成最小通用复现，归属对应runtime模块修复，不按task ID打补丁。",
+        "正向oracle缺口/参考故障保留；版本变更触发旧证据失效和必要重跑。"
+      ],
+      "review_focus": "任何完整100%声明必须可由逐任务原始证据重算，不能凭绿表。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T28.md",
+      "status": "planned",
+      "test_ids": [
+        "T28-C01",
+        "T28-C02",
+        "T28-C03",
+        "T28-C04"
+      ]
+    },
+    {
+      "id": "T29",
+      "title": "高密度、延迟与有效吞吐优化",
+      "depends_on": [
+        "T05",
+        "T08",
+        "T28",
+        "T38"
+      ],
+      "requirements": [
+        "R08",
+        "R10",
+        "R18"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/acceptance/04_PERFORMANCE.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/10_TECH_STACK.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/",
+        "conformance/performance/",
+        "tests/performance/"
+      ],
+      "consumes": "正确性稳定版本、早期T05/T08baseline、固定安全/日志/cache配置。",
+      "produces": "可重复同条件三方性能报告、登记SLO、每项优化前后结果与回归。",
+      "implementation": [
+        "分别测resident/active、tiny init/broker/host开销、FD与spool预算，不加总共享RSS。",
+        "定位fork/CLI/DB/cache瓶颈，逐项优化并保留相同输入/网络/限额/日志。",
+        "饱和负载验证公平、拒绝、长尾和cleanup；完成优化后重新执行相关与全量发行回归。"
+      ],
+      "review_focus": "不能通过削减日志、改变预算或限制工作负载获取未披露收益。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T29.md",
+      "status": "planned",
+      "test_ids": [
+        "T29-C01",
+        "T29-C02",
+        "T29-C03",
+        "T29-C04"
+      ]
+    },
+    {
+      "id": "T30",
+      "title": "安全、故障与资源泄漏专项审查",
+      "depends_on": [
+        "T20",
+        "T21",
+        "T22",
+        "T23"
+      ],
+      "requirements": [
+        "R03",
+        "R08",
+        "R09",
+        "R10",
+        "R15",
+        "R17"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/acceptance/03_TEST_MATRIX.md"
+      ],
+      "allowed_paths": [
+        "tests/security/",
+        "tests/chaos/",
+        "conformance/leak_audit/",
+        "docs/security_findings/"
+      ],
+      "consumes": "完整核心功能、受控worker、外部参考安全profile和独立审查者。",
+      "produces": "风险分级结果、修复回归、跨层故障矩阵、长时间资源残留报告。",
+      "implementation": [
+        "按身份/路径/FD/网络/限额/镜像/特权边界分组测试，记录真实隔离效果。",
+        "反复创建销毁并注入服务死亡、磁盘满、挂载失败和争用；核对内核资源而非只看数据库。",
+        "对高危缺陷建立最小回归与独立复测，未修复blocker阻止发行。"
+      ],
+      "review_focus": "无漏洞发现不等于无漏洞；明确共享内核风险和实测范围。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T30.md",
+      "status": "planned",
+      "test_ids": [
+        "T30-C01",
+        "T30-C02",
+        "T30-C03",
+        "T30-C04",
+        "T30-C05"
+      ]
+    },
+    {
+      "id": "T31",
+      "title": "独立安装、升级、回滚与供应链制品",
+      "depends_on": [
+        "T23",
+        "T30"
+      ],
+      "requirements": [
+        "R01",
+        "R04",
+        "R20",
+        "R21",
+        "R23",
+        "R24"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/10_TECH_STACK.md",
+        "docs/v5/11_DELIVERY.md",
+        "docs/acceptance/05_RELEASE_GATES.md"
+      ],
+      "allowed_paths": [
+        "packaging/",
+        "python/lightsandbox/",
+        "docs/operations/",
+        "tests/install/"
+      ],
+      "consumes": "固定二进制依赖、兼容profile、安全审查和数据库schema。",
+      "produces": "独立发行包、Python客户端、安装doctor、SBOM/哈希、升级卸载协议。",
+      "implementation": [
+        "在声明支持的干净VM完成安装/启动与SDK smoke，列出runc/CNI/FS helper/BuildKit实际依赖。",
+        "默认保留数据，升级备份迁移与失败回滚；旧会话是否保留以真实测试为准。",
+        "发行内容不携带管理token/数据集私有资产；许可证归属和制品校验齐备。"
+      ],
+      "review_focus": "静态Rust binary不能消除所有系统依赖；rootless声明仅列实测组合。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T31.md",
+      "status": "planned",
+      "test_ids": [
+        "T31-C01",
+        "T31-C02",
+        "T31-C03",
+        "T31-C04",
+        "T31-C05"
+      ]
+    },
+    {
+      "id": "T32",
+      "title": "独立发行核验与最终兼容声明",
+      "depends_on": [
+        "T28",
+        "T29",
+        "T30",
+        "T31",
+        "T40",
+        "T44"
+      ],
+      "requirements": [
+        "R01",
+        "R06",
+        "R13",
+        "R14",
+        "R15",
+        "R17",
+        "R18",
+        "R20",
+        "R21"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/acceptance/05_RELEASE_GATES.md",
+        "docs/harness/03_PARALLEL_AND_REVIEW.md"
+      ],
+      "allowed_paths": [
+        "release/",
+        "conformance/reports/",
+        "state/project-status.json",
+        "docs/release_notes/"
+      ],
+      "consumes": "候选release commit、受保护CI证据、完整任务ledger、性能与安全/安装报告。",
+      "produces": "独立审查通过的发行报告、精确支持范围、可追溯签发/制品与全部门禁。",
+      "implementation": [
+        "在发行commit重验锁与任务manifest，运行完整目标套件和负控；确认host/API版本支持范围。",
+        "从原始证据重算全量执行、正向oracle与一致性比例；保留所有未解决项。",
+        "只有无阻塞且SLO/安全/安装满足才签发，文档不得暗示未测平台/版本也100%。"
+      ],
+      "review_focus": "本任务由集成/审查角色执行，不能由实施者单方面修改状态后宣布成功。",
+      "kind": "privileged",
+      "doc": "plans/tasks/T32.md",
+      "status": "planned",
+      "test_ids": [
+        "T32-C01",
+        "T32-C02",
+        "T32-C03",
+        "T32-C04"
+      ]
+    },
+    {
+      "id": "T33",
+      "title": "Harbor源码锁与原始接口验证",
+      "depends_on": [
+        "T01"
+      ],
+      "requirements": [
+        "R25"
+      ],
+      "read": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/05_SDK.md",
+        "docs/v5/10_TECH_STACK.md"
+      ],
+      "allowed_paths": [
+        "specs/harbor-contract-lock.json",
+        "python/src/lightsandbox_harbor/contract.py",
+        "tests/harbor_contract/"
+      ],
+      "consumes": "实际Harbor源码、安装包、T01来源锁；seed AST探测只是辅助。",
+      "produces": "完整契约文件hash、真实Factory加载测试、版本漂移拒绝与安装清单。",
+      "implementation": [
+        "在干净开发环境安装固定Harbor，记录revision、wheel/源码哈希与Python依赖；不使用网页版本猜测。",
+        "枚举BaseEnvironment构造、能力、方法、CLI及TaskConfig迁移；保存最小实际调用fixture。",
+        "以官方Factory导入真实provider，检查签名、默认值、unknown字段和真实异常类型。"
+      ],
+      "review_focus": "保持原始Harbor/OCI/验证语义；真实worker证据不能由seed或contract double代替。",
+      "kind": "worker",
+      "doc": "plans/tasks/T33.md",
+      "status": "planned",
+      "test_ids": [
+        "T33-C01",
+        "T33-C02",
+        "T33-C03",
+        "T33-C04",
+        "T33-C05"
+      ]
+    },
+    {
+      "id": "T34",
+      "title": "Harbor环境加载与构建来源编译",
+      "depends_on": [
+        "T02",
+        "T04",
+        "T33"
+      ],
+      "requirements": [
+        "R26"
+      ],
+      "read": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/08_FAILURES.md"
+      ],
+      "allowed_paths": [
+        "python/src/lightsandbox_harbor/loading.py",
+        "python/src/lightsandbox_harbor/assets.py",
+        "tests/harbor_loading/"
+      ],
+      "consumes": "固定Task/TaskConfig、完整任务清单、ArtifactRef和EnvironmentSpec。",
+      "produces": "生产load_harbor_environment与只读inventory；来源、角色与能力需求可追溯。",
+      "implementation": [
+        "复用官方任务模型加载/迁移；按原source resolution分离agent与verifier定义。",
+        "编译image/build/force_build/启动后文件上传、资源/变量/步骤引用；source role保留。",
+        "构建上下文通过托管artifact上传，测试/solution只由原Harbor流程在明确阶段提供。"
+      ],
+      "review_focus": "保持原始Harbor/OCI/验证语义；真实worker证据不能由seed或contract double代替。",
+      "kind": "worker",
+      "doc": "plans/tasks/T34.md",
+      "status": "planned",
+      "test_ids": [
+        "T34-C01",
+        "T34-C02",
+        "T34-C03",
+        "T34-C04",
+        "T34-C05"
+      ]
+    },
+    {
+      "id": "T35",
+      "title": "Compose参考规范化与字段覆盖检查",
+      "depends_on": [
+        "T04",
+        "T19",
+        "T34"
+      ],
+      "requirements": [
+        "R27"
+      ],
+      "read": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/10_TECH_STACK.md"
+      ],
+      "allowed_paths": [
+        "helpers/compose-normalizer/",
+        "crates/ls-host/src/group/compile.rs",
+        "tests/compose_normalization/"
+      ],
+      "consumes": "固定compose-go、Harbor实际叠加文件、EnvironmentGroup类型。",
+      "produces": "隔离normalizer二进制、带来源的JSON IR和未知字段报告。",
+      "implementation": [
+        "用compose-go封装CLI，在禁网、最小环境变量和有界输入环境中运行。",
+        "保持合并、变量、路径与healthcheck/depends_on语义；拒绝未经授权的remote include。",
+        "编译IR并逐字段核对运行时能力；不支持的devices/privileged等保留全量阻塞。"
+      ],
+      "review_focus": "保持原始Harbor/OCI/验证语义；真实worker证据不能由seed或contract double代替。",
+      "kind": "worker",
+      "doc": "plans/tasks/T35.md",
+      "status": "planned",
+      "test_ids": [
+        "T35-C01",
+        "T35-C02",
+        "T35-C03",
+        "T35-C04",
+        "T35-C05"
+      ]
+    },
+    {
+      "id": "T36",
+      "title": "原生客户端与Harbor单服务后端",
+      "depends_on": [
+        "T08",
+        "T09",
+        "T10",
+        "T12",
+        "T15",
+        "T17",
+        "T19",
+        "T34",
+        "T42"
+      ],
+      "requirements": [
+        "R28"
+      ],
+      "read": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/05_SDK.md",
+        "docs/v5/14_STATUS.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/12_TESTING.md"
+      ],
+      "allowed_paths": [
+        "python/src/lightsandbox/harbor_backend.py",
+        "python/src/lightsandbox_harbor/provider.py",
+        "tests/harbor_runtime/"
+      ],
+      "consumes": "READY/Execution/Artifact协议与真实runtime；seed provider和bridge测试。",
+      "produces": "实现SandboxBackend传输，无测试替身依赖；真实Harbor最小Oracle闭环。",
+      "implementation": [
+        "实现托管artifact上传、等待READY、执行流、结束收据及安全文件传输；认证默认安全、无隐式副作用重试。",
+        "对接原BaseEnvironment helper，保留scoped env、UID0、callback和startup上传；关闭未验收capability。",
+        "用独立worker跑原Harbor单任务：构建、agent/oracle、verifier、reward、制品与清理全部留证。"
+      ],
+      "review_focus": "保持原始Harbor/OCI/验证语义；真实worker证据不能由seed或contract double代替。",
+      "kind": "worker",
+      "doc": "plans/tasks/T36.md",
+      "status": "planned",
+      "test_ids": [
+        "T36-C01",
+        "T36-C02",
+        "T36-C03",
+        "T36-C04",
+        "T36-C05"
+      ]
+    },
+    {
+      "id": "T37",
+      "title": "Harbor多服务、独立验证和阶段网络",
+      "depends_on": [
+        "T20",
+        "T18",
+        "T36"
+      ],
+      "requirements": [
+        "R29"
+      ],
+      "read": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/09_RUNTIME_DETAILS.md",
+        "docs/v5/05_SDK.md",
+        "docs/acceptance/01_PARITY_CONTRACT.md"
+      ],
+      "allowed_paths": [
+        "python/src/lightsandbox_harbor/provider.py",
+        "tests/harbor_advanced/",
+        "examples/harbor/"
+      ],
+      "consumes": "已验证单服务、EnvironmentGroup、动态网络策略、固定Harbor流程。",
+      "produces": "Compose/service操作、shared/separate verifier、多步骤和artifact传递的真实差分。",
+      "implementation": [
+        "实现service_exec/download/stop及卷网络路由，sidecar使用正确shell，不假定镜像都有bash。",
+        "保留Harbor独立verifier源选择、收集与原绝对路径重物化，不修改reward解析。",
+        "完成网络阶段切换及现有连接处理；仅完成能力的profile可广告True。"
+      ],
+      "review_focus": "保持原始Harbor/OCI/验证语义；真实worker证据不能由seed或contract double代替。",
+      "kind": "worker",
+      "doc": "plans/tasks/T37.md",
+      "status": "planned",
+      "test_ids": [
+        "T37-C01",
+        "T37-C02",
+        "T37-C03",
+        "T37-C04",
+        "T37-C05"
+      ]
+    },
+    {
+      "id": "T38",
+      "title": "训练租约、重置和轮次隔离",
+      "depends_on": [
+        "T09",
+        "T21",
+        "T36"
+      ],
+      "requirements": [
+        "R30"
+      ],
+      "read": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/14_STATUS.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-core/src/lease.rs",
+        "crates/ls-host/src/reset/",
+        "python/src/lightsandbox/leases.py",
+        "tests/rollout_lifecycle/"
+      ],
+      "consumes": "资源账本、操作日志、完整销毁/基线恢复；LeasePool reference。",
+      "produces": "持久化lease与generation接口，prepare/acquire/release/reset实际实现。",
+      "implementation": [
+        "将容量与租约状态迁入事务边界；DRAINING不释放预算，generation在API/host两侧检查。",
+        "默认新实例或完整基线恢复；丢弃所有episode可变层、撤销端点/秘密，保留只读缓存。",
+        "在真实反复rollout下验证污染、取消、worker中断和失败分类；不引入训练算法。",
+        "首发使用prepared template销毁后重建，按新ID/代次fencing；不阻塞于文件快照或进程checkpoint。"
+      ],
+      "review_focus": "保持原始Harbor/OCI/验证语义；真实worker证据不能由seed或contract double代替。",
+      "kind": "worker",
+      "doc": "plans/tasks/T38.md",
+      "status": "planned",
+      "test_ids": [
+        "T38-C01",
+        "T38-C02",
+        "T38-C03",
+        "T38-C04",
+        "T38-C05"
+      ]
+    },
+    {
+      "id": "T39",
+      "title": "一键Harbor启动与独立环境SDK",
+      "depends_on": [
+        "T36",
+        "T37",
+        "T38"
+      ],
+      "requirements": [
+        "R31"
+      ],
+      "read": [
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/12_TESTING.md"
+      ],
+      "allowed_paths": [
+        "python/src/lightsandbox_harbor/launcher.py",
+        "python/src/lightsandbox_harbor/loading.py",
+        "tests/harbor_cli/",
+        "docs/user/"
+      ],
+      "consumes": "已验证Harbor backend、完整特性、租约，以及固定registry/SDK契约。",
+      "produces": "安装后单命令运行原Harbor任务；独立load_harbor_environment返回可用受控对象。",
+      "implementation": [
+        "替换seed工厂配置为正式客户端安装路径，保留无backend/锁不匹配的失败行为。",
+        "实现task与dataset两入口，源解析和任务计划交给固定Harbor；只添加明确测试过的CLI参数。",
+        "用真实远端worker执行一键命令及训练调用样例，核验候选无Docker执行路径。",
+        "不提供核心harbor verify或自行执行Trial步骤；一键评测委托原Harbor，独立env up只处理通用环境。"
+      ],
+      "review_focus": "保持原始Harbor/OCI/验证语义；真实worker证据不能由seed或contract double代替。",
+      "kind": "worker",
+      "doc": "plans/tasks/T39.md",
+      "status": "planned",
+      "test_ids": [
+        "T39-C01",
+        "T39-C02",
+        "T39-C03",
+        "T39-C04",
+        "T39-C05"
+      ]
+    },
+    {
+      "id": "T40",
+      "title": "Harbor与风险关闭的发行证据",
+      "depends_on": [
+        "T28",
+        "T30",
+        "T39"
+      ],
+      "requirements": [
+        "R32"
+      ],
+      "read": [
+        "docs/engineering/03_PITFALLS_AND_RISKS.md",
+        "docs/v5/07_HARBOR.md",
+        "docs/v5/12_TESTING.md",
+        "docs/acceptance/05_RELEASE_GATES.md"
+      ],
+      "allowed_paths": [
+        "release/",
+        "tests/release/",
+        "specs/risk-register.json",
+        "docs/acceptance/"
+      ],
+      "consumes": "完整三基准台账、Harbor真实报告、风险专项测试和独立审查。",
+      "produces": "兼容声明矩阵、风险关闭记录与完整可重算发行证据。",
+      "implementation": [
+        "逐项检查32个风险关闭证据，标记适用范围；任何未实现能力不得广告True。",
+        "汇总三方差分与Harbor真实结果，保留缺PoC/镜像/宿主能力的阻塞，禁止调整分母。",
+        "由受保护CI核对candidate/source/SDK/host/artifact锁与审核者，输出可复核发行决策。"
+      ],
+      "review_focus": "保持原始Harbor/OCI/验证语义；真实worker证据不能由seed或contract double代替。",
+      "kind": "worker",
+      "doc": "plans/tasks/T40.md",
+      "status": "planned",
+      "test_ids": [
+        "T40-C01",
+        "T40-C02",
+        "T40-C03",
+        "T40-C04",
+        "T40-C05"
+      ]
+    },
+    {
+      "id": "T41",
+      "title": "原生协议、状态机与跨语言契约冻结",
+      "depends_on": [
+        "T01",
+        "T03"
+      ],
+      "requirements": [
+        "R01",
+        "R07",
+        "R08",
+        "R22"
+      ],
+      "read": [
+        "docs/v5/03_DOMAIN.md",
+        "docs/v5/06_HTTP.md",
+        "docs/v5/12_TESTING.md"
+      ],
+      "allowed_paths": [
+        "contracts/v1/",
+        "tests/contracts/",
+        "crates/ls-core/src/contracts/"
+      ],
+      "consumes": "v5合同草案、已锁OpenSandbox/Harbor接口；native参考输入与行为测试。",
+      "produces": "权威JSON schema/OpenAPI、Rust/Python一致的命令与数量类型、ID/代次/修订区分；完整高级字段显式纳入版本化合同。",
+      "implementation": [
+        "以contracts/v1为唯一native入口，保持command联合及统一毫秒/bytes，记录上游字段到native的单向映射。",
+        "实现跨语言输入/输出fixture：null/缺失/空数组、bool数值、NUL、未知字段、状态迁移和错误结构；失败样例不得通过宽松反序列化绕过。",
+        "锁定兼容扩展流程；旧schemas/native-objects仅保留seed用途，Rust代码不得直接导入。"
+      ],
+      "review_focus": "核对原始证据、失败边界、权限与契约，不因reference测试绿色而声称真实runtime完成。",
+      "kind": "local",
+      "doc": "plans/tasks/T41.md",
+      "status": "planned",
+      "test_ids": [
+        "T41-C01",
+        "T41-C02",
+        "T41-C03",
+        "T41-C04",
+        "T41-C05"
+      ]
+    },
+    {
+      "id": "T42",
+      "title": "CLI与同步异步SDK核心链路生产化",
+      "depends_on": [
+        "T10",
+        "T12",
+        "T15",
+        "T17",
+        "T41"
+      ],
+      "requirements": [
+        "R07",
+        "R08",
+        "R21",
+        "R22",
+        "R31"
+      ],
+      "read": [
+        "docs/v5/04_CLI.md",
+        "docs/v5/05_SDK.md",
+        "docs/v5/06_HTTP.md"
+      ],
+      "allowed_paths": [
+        "client/python/",
+        "crates/ls-api/",
+        "tests/cli/",
+        "tests/sdk/",
+        "contracts/v1/surface.json"
+      ],
+      "consumes": "原生server和T41合同；本包HTTPX参考客户端及真实服务fixture。",
+      "produces": "native API基础入口与类型化结果；create/exec/get/delete/op wait在CLI/SDK同语义；响应预算、时限、错误与身份可恢复。高级sessions/files/leases分别随其原产品任务扩展。",
+      "implementation": [
+        "先用真实服务重放参考请求；用故障代理丢回执/慢速分块/重定向，确保无隐式重放写操作。",
+        "实现bounded body和真正端到端wait deadline；不同层timeout分类，取消等待不杀guest，超时异常携带原ID和key。",
+        "建立ls-api的native入口及CLI/SDK核心链路，exec为提交入口，execution为查询/等待/日志/取消；高级分页、文件、session、lease由对应功能任务在同一contract扩展，不阻塞Harbor最小链路。"
+      ],
+      "review_focus": "核对原始证据、失败边界、权限与契约，不因reference测试绿色而声称真实runtime完成。",
+      "kind": "runtime",
+      "doc": "plans/tasks/T42.md",
+      "status": "planned",
+      "test_ids": [
+        "T42-C01",
+        "T42-C02",
+        "T42-C03",
+        "T42-C04",
+        "T42-C05",
+        "T42-C06"
+      ]
+    },
+    {
+      "id": "T43",
+      "title": "轻量supervisor及故障域实测",
+      "depends_on": [
+        "T08",
+        "T11",
+        "T14"
+      ],
+      "requirements": [
+        "R07",
+        "R08",
+        "R15",
+        "R18"
+      ],
+      "read": [
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/08_FAILURES.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/supervisor/",
+        "crates/ls-host/src/receipts/",
+        "tests/chaos/",
+        "tests/runtime/pty/"
+      ],
+      "consumes": "真实runc、PTY、exec及授权worker；管理与guest权限边界。",
+      "produces": "首发每sandbox轻量supervisor，持有FD、输出和退出收据；管理重启可连接，supervisor丢失明确隔离；记录PSS与故障范围。",
+      "implementation": [
+        "把supervisor从API/manager生命周期分离，操作目录由manager创建；使用受限UDS与可信peer凭据，外部不能注入任意FD或host PID。",
+        "用真实PTY、非TTY、double-fork和后台输出测试启动与回收；receipt写入需要原子替换及持久化顺序。",
+        "分别杀API、manager、supervisor和重启worker，验证存活边界；supervisor死亡不声称恢复已经丢失的PTY/exit记录。"
+      ],
+      "review_focus": "核对原始证据、失败边界、权限与契约，不因reference测试绿色而声称真实runtime完成。",
+      "kind": "runtime",
+      "doc": "plans/tasks/T43.md",
+      "status": "planned",
+      "test_ids": [
+        "T43-C01",
+        "T43-C02",
+        "T43-C03",
+        "T43-C04",
+        "T43-C05"
+      ]
+    },
+    {
+      "id": "T44",
+      "title": "接口漂移和产品声明门禁",
+      "depends_on": [
+        "T33",
+        "T23",
+        "T37",
+        "T42"
+      ],
+      "requirements": [
+        "R06",
+        "R19",
+        "R20",
+        "R22",
+        "R32"
+      ],
+      "read": [
+        "docs/v5/11_DELIVERY.md",
+        "docs/v5/12_TESTING.md",
+        "docs/v5/14_STATUS.md"
+      ],
+      "allowed_paths": [
+        "tools/check_contract_drift.py",
+        "tests/contracts/",
+        "contracts/v1/surface.json",
+        "specs/",
+        "evidence/"
+      ],
+      "consumes": "已锁Harbor/OpenSandbox版本、真实候选功能和CLI/SDK；受保护CI。",
+      "produces": "源码/spec/SDK/行为矩阵一致；文档示例自动测试；真实benchmark报告逐任务复算；发行声明与证据一致。",
+      "implementation": [
+        "提取已锁Harbor方法签名及能力隐含关系，与provider和实际host能力对照；不能用AST相似性替代导入与运行测试。",
+        "遍历surface和OpenAPI，对已宣称命令执行正/负样例；未实现项不能存在返回成功的stub。",
+        "在独立CI中核查锁、完整任务manifest、逐条验证制品和review；策略更新不能由产品实现代理自行批准。"
+      ],
+      "review_focus": "核对原始证据、失败边界、权限与契约，不因reference测试绿色而声称真实runtime完成。",
+      "kind": "runtime",
+      "doc": "plans/tasks/T44.md",
+      "status": "planned",
+      "test_ids": [
+        "T44-C01",
+        "T44-C02",
+        "T44-C03",
+        "T44-C04"
+      ]
+    }
+  ]
+}

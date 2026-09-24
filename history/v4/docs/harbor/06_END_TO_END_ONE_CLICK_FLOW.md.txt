@@ -1,0 +1,195 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# Harbor 一键环境加载：端到端实现规范
+
+**目标：** 一个 Harbor task/package 能直接由 LightSandbox materialize、运行 Agent、执行原始 verifier，并在训练场景重复创建/reset，而不调用 Docker daemon。
+
+## 1. 用户体验目标
+
+### Harbor 原生模式
+
+```bash
+harbor run \
+  -p ./tasks/example \
+  --env lightsandbox_harbor.provider:LightSandboxEnvironment \
+  -a <agent>
+```
+
+### LightSandbox 独立模式
+
+```bash
+lightsandbox harbor load ./tasks/example --name run-001
+lightsandbox harbor inspect run-001
+lightsandbox harbor exec run-001 -- bash
+lightsandbox harbor verify run-001
+lightsandbox harbor destroy run-001
+```
+
+训练侧 Python：
+
+```python
+from lightsandbox.harbor import HarborEnvironment
+
+env = await HarborEnvironment.create("./tasks/example")
+try:
+    handle = await env.agent_handle()
+    # rollout ...
+    result = await env.verify()
+finally:
+    await env.close()
+```
+
+这些命令是目标 API，只有真实后端完成并通过端到端测试后才能标记 implemented。
+
+## 2. Loader pipeline
+
+```text
+Harbor task path
+   ↓
+validate task layout
+   ↓
+load task config + compose + environment metadata
+   ↓
+compose-go normalization
+   ↓
+EnvironmentSpec
+   ↓
+resolve image/build for every service
+   ↓
+BuildKit / registry pull
+   ↓
+create networks and volumes
+   ↓
+materialize rootfs for every service
+   ↓
+runc create services
+   ↓
+attach network / DNS / endpoints
+   ↓
+runc start dependencies
+   ↓
+health/readiness gates
+   ↓
+start agent target
+   ↓
+READY
+```
+
+## 3. EnvironmentSpec
+
+```text
+EnvironmentSpec
+├── id
+├── services[]
+│   ├── name
+│   ├── image | build
+│   ├── command
+│   ├── entrypoint
+│   ├── env
+│   ├── workdir
+│   ├── user
+│   ├── mounts
+│   ├── networks
+│   ├── healthcheck
+│   ├── depends_on
+│   └── resources
+├── networks[]
+├── volumes[]
+├── agent_service
+├── verifier
+├── artifact_rules[]
+└── reset_policy
+```
+
+这应是 Harbor adapter 与 runtime core 的唯一边界。runtime core 不允许依赖 Harbor task ID 或 Harbor Python objects。
+
+## 4. Compose 兼容策略
+
+不自行重写 Compose parser。使用 compose-go/v2 归一化：
+
+- `${VAR}` interpolation；
+- `.env` / `env_file`；
+- 多 compose 文件 merge；
+- relative path；
+- build context；
+- command / entrypoint；
+- services；
+- volumes；
+- networks；
+- depends_on；
+- healthcheck；
+- extra_hosts / DNS 等实际任务使用项。
+
+归一化后生成一个机器可读 IR 给 Rust runtime。
+
+每次 benchmark inventory 都统计字段使用频率。出现未知字段时：
+
+- 明确证明其不影响目标任务语义，才允许标记 `ignored-with-proof`；
+- 其他情况 fail closed。
+
+## 5. Verifier 路径
+
+Verifier 必须保持 Harbor 原始判据。
+
+```text
+Agent Environment
+   │
+   ├── agent modifies allowed state
+   │
+   └── declared artifact extraction
+            ↓
+Verifier Environment / verifier phase
+            ↓
+original verifier
+            ↓
+structured result
+```
+
+禁止把 verifier 逻辑搬到 runtime core。
+
+## 6. Training reset
+
+优先策略：immutable template + disposable rollout instance。
+
+```text
+Prepared Environment Template
+        │
+        ├── rollout A writable state
+        ├── rollout B writable state
+        └── rollout C writable state
+```
+
+reset = destroy mutable runtime state + recreate from prepared image/rootfs/network spec。
+
+理由：通用应用没有可靠的“清空所有状态”操作。销毁重建更容易证明隔离。
+
+## 7. 一键加载的性能优化顺序
+
+1. build once by content digest；
+2. pull layers once；
+3. retain immutable unpacked snapshot；
+4. fast create writable layer；
+5. pool network allocations；
+6. parallel create independent services；
+7. start based on dependency DAG；
+8. only then optimize custom snapshotter/runtime internals。
+
+## 8. 必须有的端到端测试
+
+- single-service Harbor task；
+- build-from-Dockerfile task；
+- registry-image task；
+- multi-service task；
+- shared volume task；
+- healthcheck/depends_on task；
+- service-DNS task；
+- network restricted task；
+- separate verifier task；
+- artifact transfer task；
+- failed service startup cleanup；
+- API crash during provisioning；
+- node daemon restart reconciliation；
+- repeated training reset without state leakage；
+- Docker reference differential run。
+
+最终才运行固定版本 Terminal-Bench/Harbor 全量 manifest。

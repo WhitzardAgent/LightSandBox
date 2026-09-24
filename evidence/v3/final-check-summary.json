@@ -1,0 +1,201 @@
+{
+  "date": "2026-09-23",
+  "scope": "planning + offline reference code; NOT sandbox certification",
+  "syntax_counts": {
+    ".py": 30,
+    ".json": 19,
+    ".toml": 5,
+    ".yaml": 1,
+    ".yml": 0
+  },
+  "commands": [
+    {
+      "name": "syntax-examples-harbor-minimal-solution-solve.sh",
+      "argv": [
+        "bash",
+        "-n",
+        "/mnt/data/lightsandbox_v3_harbor_2026-09-23/examples/harbor/minimal/solution/solve.sh"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "syntax-examples-harbor-minimal-tests-test.sh",
+      "argv": [
+        "bash",
+        "-n",
+        "/mnt/data/lightsandbox_v3_harbor_2026-09-23/examples/harbor/minimal/tests/test.sh"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "syntax-examples-harbor-multiservice-solution-solve.sh",
+      "argv": [
+        "bash",
+        "-n",
+        "/mnt/data/lightsandbox_v3_harbor_2026-09-23/examples/harbor/multiservice/solution/solve.sh"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "syntax-examples-harbor-multiservice-tests-test.sh",
+      "argv": [
+        "bash",
+        "-n",
+        "/mnt/data/lightsandbox_v3_harbor_2026-09-23/examples/harbor/multiservice/tests/test.sh"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "syntax-examples-harbor-separate-verifier-solution-solve.sh",
+      "argv": [
+        "bash",
+        "-n",
+        "/mnt/data/lightsandbox_v3_harbor_2026-09-23/examples/harbor/separate-verifier/solution/solve.sh"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "syntax-examples-harbor-separate-verifier-tests-test.sh",
+      "argv": [
+        "bash",
+        "-n",
+        "/mnt/data/lightsandbox_v3_harbor_2026-09-23/examples/harbor/separate-verifier/tests/test.sh"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "inspect-minimal",
+      "argv": [
+        "/opt/pyvenv/bin/python",
+        "tools/harbor_inspect.py",
+        "inspect-harbor",
+        "examples/harbor/minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "inspect-multiservice",
+      "argv": [
+        "/opt/pyvenv/bin/python",
+        "tools/harbor_inspect.py",
+        "inspect-harbor",
+        "examples/harbor/multiservice"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "inspect-separate-verifier",
+      "argv": [
+        "/opt/pyvenv/bin/python",
+        "tools/harbor_inspect.py",
+        "inspect-harbor",
+        "examples/harbor/separate-verifier"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "harbor-dry-run",
+      "argv": [
+        "/opt/pyvenv/bin/python",
+        "tools/harbor_run.py",
+        "--task",
+        "examples/harbor/minimal",
+        "--agent",
+        "oracle",
+        "--dry-run"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "harbor-blocked",
+      "argv": [
+        "/opt/pyvenv/bin/python",
+        "tools/harbor_run.py",
+        "--task",
+        "examples/harbor/minimal"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "ok": true
+    },
+    {
+      "name": "structure",
+      "argv": [
+        "/opt/pyvenv/bin/python",
+        "tools/packctl.py",
+        "validate"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "next",
+      "argv": [
+        "/opt/pyvenv/bin/python",
+        "tools/packctl.py",
+        "next"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "t33-context",
+      "argv": [
+        "/opt/pyvenv/bin/python",
+        "tools/packctl.py",
+        "context",
+        "T33"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "ok": true
+    },
+    {
+      "name": "release-blocked",
+      "argv": [
+        "/opt/pyvenv/bin/python",
+        "tools/packctl.py",
+        "release-check"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "ok": true
+    }
+  ],
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "tool_availability": {
+    "rustc": null,
+    "cargo": null,
+    "runc": null,
+    "docker": null,
+    "harbor": null
+  },
+  "test_counts": {
+    "seed_passed": 109,
+    "pack_tools_passed": 34,
+    "rust_not_run": 6,
+    "product_acceptance_not_run": 187
+  }
+}

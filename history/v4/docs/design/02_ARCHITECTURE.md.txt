@@ -1,0 +1,68 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 02 架构与组件职责
+
+## 主要路线
+
+复用runc维护的OCI执行边界，在上层实现轻量沙盒服务。[S10] Rust用于宿主控制、协议与进程管理；Python用于薄客户端/CLI、互操作和兼容测试。首先证明未修改OpenSandbox Python SDK能访问兼容服务，再决定是否需要自有SDK；不先复制整个SDK。
+
+```mermaid
+flowchart TD
+  C[OpenSandbox SDK / LightSandbox CLI] --> A[ls-api 非特权HTTP服务]
+  A --> P[租户/资源授权与协议转换]
+  P --> H[ls-host 节点服务 / 受限Unix socket]
+  H --> D[(SQLite意图日志与租约)]
+  H --> R[runc]
+  H --> I[OCI内容仓库与rootfs驱动]
+  H --> N[CNI / DNS / 出口策略]
+  H --> B[宿主执行与PTY broker]
+  R --> G[ls-guest tiny init / 按需文件helper]
+  G --> W[工作负载进程]
+  I --> W
+  N --> W
+  B --> W
+  K[可选独立BuildKit] --> I
+```
+
+## 安全与进程边界
+
+`ls-api`不持有任意宿主命令执行权限。节点Unix socket只接受固定类型的请求和已授权逻辑资源ID，校验peer credentials与消息大小。`ls-host`掌握必须的挂载、网络与cgroup操作，重新检查资源归属；它不能接受客户端指定的宿主可执行文件路径。
+
+默认一个API进程、一个节点服务以及按需要创建的宿主I/O broker。每个沙盒有必要的init/entrypoint进程，不强制附带Python或大型HTTP服务。**broker的数量与生命周期由测试决定，不把“零常驻辅助进程”设成高于正确性的硬约束。**
+
+安全敏感输入包括OCI层、路径、网络规则、命令参数和日志。镜像解包、文件读取与PTY控制不能由于Rust实现就自动视为安全。
+
+## 初始代码布局
+
+保留四个主要Rust crate，内部按职责划分模块；避免第一天拆成十几个空crate。
+
+```text
+crates/ls-core/    类型、身份、状态机、资源租约、错误、协议内核
+crates/ls-host/    OCI、镜像、rootfs、执行broker、网络、资源、恢复
+crates/ls-api/     OpenSandbox映射、认证、路由、流式传输
+crates/ls-guest/   tiny init、按需文件helper、受控会话辅助
+python/lightsandbox/   CLI与轻量连接配置，不复制上游SDK
+conformance/      OpenSandbox、Docker、任务基准的独立差分测试
+```
+
+依赖方向：`ls-core`无上层依赖；`ls-host`与`ls-api`依赖`ls-core`；API通过节点协议调用宿主能力；`ls-guest`保持最小可审计依赖。任何生产crate禁止依赖`conformance`或基准包。
+
+## 执行与入口语义
+
+原生OCI运行模式保留image `ENTRYPOINT/CMD/USER/WORKDIR/ENV`语义。OpenSandbox兼容模式遵守锁定版本的请求参数和默认规则。tiny init监督目标entrypoint，转发信号并记录真实退出码；entrypoint退出时不能用永不退出的sleep掩盖。
+
+把`runc exec`作为最初可验证的进入路径。吞吐不足时才考察长驻轻量helper；两条路径必须走相同差分测试。通过Shell执行用户命令发生在沙盒内部，禁止在宿主拼接Shell命令。
+
+## 存储与网络
+
+镜像由digest定址，解包结果不可变，运行层与卷有独立租约。优先使用通过当前宿主测试的OverlayFS；FUSE、reflink和完整复制逐个认证，不能默认具有相同语义。
+
+网络按沙盒或授权Group隔离。CNI仅负责连接与地址配置的一部分，DNS、策略、端点授权和防绕过由产品补齐。Group是通用多服务能力，runtime不认识CyberGym等任务名称。
+
+## 性能假设
+
+共享镜像层与页缓存已存在于Docker中。[S12] 本项目的候选优势是减少常驻服务、缩短协议路径、共享控制资源以及减少重复准备。它们必须通过冷/热镜像、活跃/空闲、相同隔离配置的实验验证。
+
+## 设计决策的修改方式
+
+默认路线已确定。只在出现真实不兼容、不可接受成本或安全问题时提出ADR，附最小复现与替代方案。不能因某轮代理偏好改变语言、底层runtime或协议方向。

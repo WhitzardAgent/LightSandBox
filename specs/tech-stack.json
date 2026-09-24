@@ -1,0 +1,56 @@
+{
+  "status": "SELECTED_NOT_RESOLVED",
+  "runtime_language": "Rust",
+  "integration_language": "Python: standalone SDK/CLI >=3.11; Harbor extra follows pinned upstream package metadata",
+  "compose_helper": "Go + compose-go/v2 (environment preparation only; not per-sandbox resident)",
+  "rust_crates": [
+    "tokio",
+    "axum",
+    "tower",
+    "tower-http",
+    "serde",
+    "serde_json",
+    "thiserror",
+    "rustix",
+    "oci-spec",
+    "rusqlite",
+    "tracing",
+    "tracing-subscriber",
+    "reqwest",
+    "rustls",
+    "uuid",
+    "sha2",
+    "clap"
+  ],
+  "development_crates": [
+    "proptest",
+    "tempfile"
+  ],
+  "runtime_helpers": [
+    "runc",
+    "CNI plugins",
+    "nft policy adapter"
+  ],
+  "build_helpers": [
+    "BuildKit OCI worker",
+    "skopeo",
+    "umoci",
+    "compose-go normalizer"
+  ],
+  "required_locks": [
+    "Cargo.lock",
+    "rust-toolchain.toml",
+    "uv.lock",
+    "go.sum",
+    "helper-artifacts-lock.json",
+    "harbor-contract-lock.json"
+  ],
+  "missing_locks_are_release_blockers": true,
+  "version": "5.0",
+  "user_cli": "Python argparse, shares native HTTPX SDK; no parallel Rust user CLI in v1",
+  "daemon_arg_parser": "clap optional for operator-facing Rust daemon commands only",
+  "native_client_dependency": "httpx==0.28.1 (tested here; full dependency lock pending)",
+  "native_schema_test_dependency": "jsonschema==4.26.0 (tested here)",
+  "reference_test_python": "3.13.5",
+  "selected_not_locked": true
+}

@@ -1,0 +1,1626 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LightSandbox Native API Reference Contract",
+    "version": "1.0.0-draft.5",
+    "description": "Planning and client subset. Not an OpenSandbox wire contract, not a running server. UDS uses OS peer authentication; remote HTTPS requires bearer authentication. Prepare recomputes user plans under server policy."
+  },
+  "x-implementation-status": "CLIENT_REFERENCE_ONLY",
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/v1/sandboxes": {
+      "post": {
+        "operationId": "createSandbox",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\r\\n\\u0000]+$"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted, not completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SandboxCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sandboxes/{id}": {
+      "get": {
+        "operationId": "getSandbox",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+            }
+          },
+          {
+            "name": "X-LS-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed resource state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SandboxInfo"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSandbox",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\r\\n\\u0000]+$"
+            }
+          },
+          {
+            "name": "X-LS-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted, not completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sandboxes/{id}/executions": {
+      "post": {
+        "operationId": "startExecution",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\r\\n\\u0000]+$"
+            }
+          },
+          {
+            "name": "X-LS-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted, not completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionInfo"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutionSpec"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/executions/{id}": {
+      "get": {
+        "operationId": "getExecution",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed resource state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionInfo"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/executions/{id}:cancel": {
+      "post": {
+        "operationId": "cancelExecution",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\r\\n\\u0000]+$"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted, not completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/operations/{id}": {
+      "get": {
+        "operationId": "getOperation",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed resource state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/templates:prepare": {
+      "post": {
+        "operationId": "prepareTemplate",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\r\\n\\u0000]+$"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted, not completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Plan"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/environments": {
+      "post": {
+        "operationId": "createEnvironment",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\r\\n\\u0000]+$"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted, not completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnvironmentCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/environments/{id}": {
+      "get": {
+        "operationId": "getEnvironment",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+            }
+          },
+          {
+            "name": "X-LS-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed resource state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentInfo"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteEnvironment",
+        "x-client-status": "reference-implemented",
+        "x-server-status": "NOT_IMPLEMENTED",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\r\\n\\u0000]+$"
+            }
+          },
+          {
+            "name": "X-LS-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted, not completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured error; non-2xx responses never mean guest success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "SandboxCreate": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string",
+            "pattern": "^[^\\u0000]*$",
+            "minLength": 1
+          },
+          "launch_mode": {
+            "enum": [
+              "image",
+              "idle-agent"
+            ],
+            "default": "image"
+          },
+          "entrypoint": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$"
+            },
+            "prefixItems": [
+              {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$",
+                "minLength": 1
+              }
+            ]
+          },
+          "command": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$"
+            },
+            "prefixItems": [
+              {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$",
+                "minLength": 1
+              }
+            ]
+          },
+          "env": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^=\\u0000]+$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$"
+            }
+          },
+          "cwd": {
+            "type": "string",
+            "pattern": "^/[^\\u0000]*$"
+          },
+          "user": {
+            "type": "string",
+            "pattern": "^[^\\u0000]*$",
+            "minLength": 1
+          },
+          "resources": {
+            "type": "object",
+            "properties": {
+              "cpu_millis": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "memory_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "storage_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "pids": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "mounts": {
+            "oneOf": [
+              {
+                "type": "array",
+                "maxItems": 0
+              },
+              {
+                "type": "object",
+                "maxProperties": 0
+              }
+            ]
+          },
+          "networks": {
+            "oneOf": [
+              {
+                "type": "array",
+                "maxItems": 0
+              },
+              {
+                "type": "object",
+                "maxProperties": 0
+              }
+            ]
+          },
+          "depends_on": {
+            "oneOf": [
+              {
+                "type": "array",
+                "maxItems": 0
+              },
+              {
+                "type": "object",
+                "maxProperties": 0
+              }
+            ]
+          }
+        },
+        "required": [
+          "image"
+        ],
+        "additionalProperties": false
+      },
+      "ExecutionSpec": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "argv"
+                  },
+                  "argv": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[^\\u0000]*$"
+                    },
+                    "prefixItems": [
+                      {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$",
+                        "minLength": 1
+                      }
+                    ],
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "kind",
+                  "argv"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "shell"
+                  },
+                  "executable": {
+                    "type": "string",
+                    "pattern": "^/[^\\u0000]*$"
+                  },
+                  "script": {
+                    "type": "string",
+                    "pattern": "^[^\\u0000]*$"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "executable",
+                  "script"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "cwd": {
+            "type": "string",
+            "pattern": "^/[^\\u0000]*$"
+          },
+          "env": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^=\\u0000]+$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$"
+            }
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "user": {
+            "type": "string",
+            "pattern": "^[^\\u0000]*$",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "command"
+        ],
+        "additionalProperties": false
+      },
+      "EnvironmentSpec": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": "v1"
+          },
+          "services": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "image": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$",
+                  "minLength": 1
+                },
+                "launch_mode": {
+                  "enum": [
+                    "image",
+                    "idle-agent"
+                  ],
+                  "default": "image"
+                },
+                "entrypoint": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^\\u0000]*$"
+                  },
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "pattern": "^[^\\u0000]*$",
+                      "minLength": 1
+                    }
+                  ]
+                },
+                "command": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^\\u0000]*$"
+                  },
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "pattern": "^[^\\u0000]*$",
+                      "minLength": 1
+                    }
+                  ]
+                },
+                "env": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^[^=\\u0000]+$"
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "pattern": "^[^\\u0000]*$"
+                  }
+                },
+                "cwd": {
+                  "type": "string",
+                  "pattern": "^/[^\\u0000]*$"
+                },
+                "user": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$",
+                  "minLength": 1
+                },
+                "resources": {
+                  "type": "object",
+                  "properties": {
+                    "cpu_millis": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "memory_bytes": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "storage_bytes": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "pids": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                },
+                "mounts": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "maxItems": 0
+                    },
+                    {
+                      "type": "object",
+                      "maxProperties": 0
+                    }
+                  ]
+                },
+                "networks": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "maxItems": 0
+                    },
+                    {
+                      "type": "object",
+                      "maxProperties": 0
+                    }
+                  ]
+                },
+                "depends_on": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "maxItems": 0
+                    },
+                    {
+                      "type": "object",
+                      "maxProperties": 0
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "image"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "networks": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "volumes": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "labels": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^=\\u0000]+$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$"
+            }
+          }
+        },
+        "required": [
+          "services"
+        ],
+        "additionalProperties": false
+      },
+      "Plan": {
+        "type": "object",
+        "properties": {
+          "plan_version": {
+            "const": "v1"
+          },
+          "spec": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "const": "v1"
+              },
+              "services": {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "image": {
+                      "type": "string",
+                      "pattern": "^[^\\u0000]*$",
+                      "minLength": 1
+                    },
+                    "launch_mode": {
+                      "enum": [
+                        "image",
+                        "idle-agent"
+                      ],
+                      "default": "image"
+                    },
+                    "entrypoint": {
+                      "type": [
+                        "array",
+                        "null"
+                      ],
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      },
+                      "prefixItems": [
+                        {
+                          "type": "string",
+                          "pattern": "^[^\\u0000]*$",
+                          "minLength": 1
+                        }
+                      ]
+                    },
+                    "command": {
+                      "type": [
+                        "array",
+                        "null"
+                      ],
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      },
+                      "prefixItems": [
+                        {
+                          "type": "string",
+                          "pattern": "^[^\\u0000]*$",
+                          "minLength": 1
+                        }
+                      ]
+                    },
+                    "env": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[^=\\u0000]+$"
+                      },
+                      "additionalProperties": {
+                        "type": "string",
+                        "pattern": "^[^\\u0000]*$"
+                      }
+                    },
+                    "cwd": {
+                      "type": "string",
+                      "pattern": "^/[^\\u0000]*$"
+                    },
+                    "user": {
+                      "type": "string",
+                      "pattern": "^[^\\u0000]*$",
+                      "minLength": 1
+                    },
+                    "resources": {
+                      "type": "object",
+                      "properties": {
+                        "cpu_millis": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "memory_bytes": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "storage_bytes": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "pids": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    },
+                    "mounts": {
+                      "oneOf": [
+                        {
+                          "type": "array",
+                          "maxItems": 0
+                        },
+                        {
+                          "type": "object",
+                          "maxProperties": 0
+                        }
+                      ]
+                    },
+                    "networks": {
+                      "oneOf": [
+                        {
+                          "type": "array",
+                          "maxItems": 0
+                        },
+                        {
+                          "type": "object",
+                          "maxProperties": 0
+                        }
+                      ]
+                    },
+                    "depends_on": {
+                      "oneOf": [
+                        {
+                          "type": "array",
+                          "maxItems": 0
+                        },
+                        {
+                          "type": "object",
+                          "maxProperties": 0
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "image"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "networks": {
+                "type": "object",
+                "maxProperties": 0
+              },
+              "volumes": {
+                "type": "object",
+                "maxProperties": 0
+              },
+              "labels": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^=\\u0000]+$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "pattern": "^[^\\u0000]*$"
+                }
+              }
+            },
+            "required": [
+              "services"
+            ],
+            "additionalProperties": false
+          },
+          "plan_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "execution_ready": {
+            "const": false
+          },
+          "unresolved": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$",
+              "minLength": 1
+            }
+          },
+          "executed": {
+            "const": false
+          }
+        },
+        "required": [
+          "plan_version",
+          "spec",
+          "plan_digest",
+          "execution_ready",
+          "unresolved",
+          "executed"
+        ],
+        "additionalProperties": false
+      },
+      "Operation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "running",
+              "unknown",
+              "succeeded",
+              "failed"
+            ]
+          },
+          "result": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "succeeded"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "result"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "failed"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "error"
+              ]
+            }
+          }
+        ]
+      },
+      "ExecutionInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+          },
+          "state": {
+            "enum": [
+              "accepted",
+              "starting",
+              "running",
+              "exited",
+              "start-failed",
+              "unknown"
+            ]
+          },
+          "sandbox_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "exit_status": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "exited"
+                  },
+                  "exit_code": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                },
+                "required": [
+                  "kind",
+                  "exit_code"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "signaled"
+                  },
+                  "signal": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 127
+                  }
+                },
+                "required": [
+                  "kind",
+                  "signal"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "unknown"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "termination_reason": {
+            "enum": [
+              "completed",
+              "signal",
+              "timeout",
+              "cancel",
+              "oom",
+              "unobserved"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "SandboxInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "state": {
+            "enum": [
+              "requested",
+              "preparing",
+              "created",
+              "starting",
+              "running",
+              "pausing",
+              "paused",
+              "resuming",
+              "stopping",
+              "stopped",
+              "failed",
+              "deleting",
+              "cleanup-required",
+              "deleted"
+            ]
+          },
+          "readiness": {
+            "enum": [
+              "not-ready",
+              "ready",
+              "degraded",
+              "unknown"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "generation",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "EnvironmentInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "services": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+                },
+                "generation": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "state": {
+                  "enum": [
+                    "requested",
+                    "preparing",
+                    "created",
+                    "starting",
+                    "running",
+                    "pausing",
+                    "paused",
+                    "resuming",
+                    "stopping",
+                    "stopped",
+                    "failed",
+                    "deleting",
+                    "cleanup-required",
+                    "deleted"
+                  ]
+                },
+                "readiness": {
+                  "enum": [
+                    "not-ready",
+                    "ready",
+                    "degraded",
+                    "unknown"
+                  ]
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "id",
+                "generation",
+                "state"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "readiness": {
+            "enum": [
+              "not-ready",
+              "ready",
+              "degraded",
+              "unknown"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "generation",
+          "services"
+        ],
+        "additionalProperties": false
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$"
+              },
+              "request_id": {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "additionalProperties": false
+      },
+      "ExitStatus": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "exited"
+              },
+              "exit_code": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            "required": [
+              "kind",
+              "exit_code"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "signaled"
+              },
+              "signal": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 127
+              }
+            },
+            "required": [
+              "kind",
+              "signal"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "unknown"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "EnvironmentCreate": {
+        "type": "object",
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+          }
+        },
+        "required": [
+          "template_id"
+        ],
+        "additionalProperties": false
+      },
+      "CancelRequest": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "enum": [
+              "process",
+              "tree",
+              "sandbox"
+            ]
+          }
+        },
+        "required": [
+          "scope"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

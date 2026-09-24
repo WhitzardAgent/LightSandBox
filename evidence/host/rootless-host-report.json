@@ -1,0 +1,164 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-09-24",
+  "probe_type": "read_only_rootless_capability_probe",
+  "constraints_honored": [
+    "no privilege escalation attempted",
+    "no /etc, sysctl, systemd, kernel or LSM modification",
+    "no package installation, no downloads during probe",
+    "all mounts performed inside private user+mount namespaces only",
+    "temporary files removed after probe"
+  ],
+  "identity_observation": {
+    "uid": 0,
+    "user": "root",
+    "groups": "root",
+    "premise_note": "委托前提描述为'当前用户没有root/没有sudo'，实测当前shell是uid=0，但处于嵌套容器内：CapEff/CapBnd=00000000a80425fb（Docker默认能力集，无CAP_SYS_ADMIN/CAP_NET_ADMIN）、cgroupfs只读、/proc存在Docker式masked路径、无/dev/kvm与/dev/fuse。因此能力面实际等价于受限rootless用户；本报告按真实原始输出记录。",
+    "effective_capability_mask": "0x00000000a80425fb",
+    "capability_decode": "cap_chown,dac_override,fowner,fsetid,kill,setgid,setuid,setpcap,net_bind_service,net_raw,sys_chroot,mknod,audit_write,setfcap",
+    "apparmor_label": "unconfined",
+    "nested_container_indicators": [
+      "hostname=cyber-copy-copy-c-copy--23b7716a310a-vgtowbpznu",
+      "rootfs type=overlayfs on /",
+      "docker-default capability mask",
+      "masked /proc submounts (bus,fs,irq,sys,sysrq-trigger ro; kcore,keys,timer_list tmpfs)",
+      "cgroup v2 mounted ro",
+      "dmesg EPERM"
+    ]
+  },
+  "os": {
+    "kernel": "5.15.0-119-generic #129-Ubuntu SMP x86_64",
+    "distro": "Ubuntu 22.04.4 LTS (jammy)",
+    "arch": "x86_64",
+    "glibc": "2.35-0ubuntu3.8",
+    "cpu_cores": 128,
+    "memory": "1.5Ti total, 1.4Ti available",
+    "disk": "overlay 7.0T, 4.9T available on /"
+  },
+  "raw_probe_outputs": {
+    "id": "uid=0(root) gid=0(root) groups=0(root)",
+    "unshare_-Ur_true": "exit=0",
+    "unshare_-Ur_detail": "uid=0(root) gid=0(root) groups=0(root); uid_map: '0 0 1'; gid_map: '0 0 1'; exit=0",
+    "kernel.unprivileged_userns_clone": "1",
+    "kernel.max_user_namespaces": "6190011",
+    "kernel.unprivileged_userns_apparmor_policy": "cat: Operation not permitted (masked/restricted in this nesting layer)",
+    "subuid_subgid": "/etc/subuid与/etc/subgid文件为空；当前用户（及任何用户）均无subordinate range",
+    "newuidmap_newgidmap": "both MISSING",
+    "oci_runtime_binaries": "runc/crun/podman/buildah/skopeo/umoci/buildctl/buildkitd all MISSING",
+    "cgroup_mount": "cgroup on /sys/fs/cgroup type cgroup2 (ro,nosuid,nodev,noexec,relatime)",
+    "cgroup_root_controllers": "cpuset cpu io memory hugetlb pids rdma misc",
+    "proc_self_cgroup": "0::/",
+    "cgroup_subtree_control": "(empty)",
+    "cgroup_mkdir_negative_test": "mkdir: cannot create directory `/sys/fs/cgroup/lsbx-probe': Read-only file system -> CGROUP_CHILD_CREATE BLOCKED",
+    "cgroup_writable_files": "(none at maxdepth>=1)",
+    "user_slice": "(no user.slice visible)",
+    "systemctl_--user": "Failed to connect to bus: $DBUS_SESSION_BUS_ADDRESS and $XDG_RUNTIME_DIR not defined",
+    "proc_filesystems": "nodev overlay; fuseblk; nodev fuse; nodev fusectl",
+    "dev_fuse": "ls: cannot access '/dev/fuse': No such file or directory",
+    "fuse_overlayfs": "MISSING",
+    "home_fs": "stat -f %T = overlayfs; df -T = overlay on /",
+    "network_helpers": "rootlesskit/slirp4netns/pasta/passt/lxc-user-nic all MISSING; ip command MISSING",
+    "seccomp_status": "Seccomp: 0, Seccomp_filters: 0, NoNewPrivs: 0",
+    "apparmor_enabled": "Y (securityfs profiles unreadable in this layer)",
+    "selinux_getenforce": "(missing)",
+    "unshare_-Urm": "exit=0",
+    "unshare_-Urpf": "exit=0",
+    "capeff_inside_userns": "CapEff 000001ffffffffff (full set inside new user namespace)",
+    "unshare_--mount-proc": "unshare: mount /proc failed: Operation not permitted (inherited masked /proc overmounts)",
+    "mount_tmpfs_in_userns": "TMPFS OK",
+    "mount_ramfs_in_userns": "RAMFS OK",
+    "mount_bind_in_userns": "BIND OK (content verified)",
+    "mount_overlay_upper_on_disk_overlayfs_backing": "FAIL: wrong fs type, bad option, bad superblock (overlay-on-overlay upper rejected)",
+    "mount_overlay_upper_on_tmpfs": "OVERLAY OK (tmpfs-backed COW works)",
+    "mount_proc_on_fresh_dir_in_userns_pidns": "FAIL: permission denied",
+    "mount_sysfs_in_userns": "FAIL: permission denied",
+    "unshare_-Urn_netns": "NETNS_CREATED OK; interfaces: lo only; net:[4026547088]",
+    "dev_kvm": "No such file or directory",
+    "dmesg": "read kernel buffer failed: Operation not permitted",
+    "ulimit_highlights": "open files(-n) 1048576; max user processes(-i) 6190011 pending signals; stack 8192k; core unlimited"
+  },
+  "analysis": {
+    "q1_unprivileged_userns_available": {
+      "answer": "YES",
+      "evidence": "unshare -Ur 成功；unprivileged_userns_clone=1；max_user_namespaces=6190011；新userns内获得完整capability集",
+      "limitation": "仅单identity映射（uid_map '0 0 1'），因为无subuid/subgid且无newuidmap/newgidmap，无法映射多uid/gid"
+    },
+    "q2_subordinate_ids": {
+      "answer": "NO",
+      "evidence": "/etc/subuid与/etc/subgid均无条目",
+      "fix_scope": "ADMIN_ONLY：编辑/etc/subuid|subgid需要宿主管理员"
+    },
+    "q3_newuidmap_newgidmap": {
+      "answer": "NO",
+      "evidence": "两个setuid helper均缺失",
+      "fix_scope": "ADMIN_ONLY（setuid安装）；用户态自行编译无法获得安全的setuid语义"
+    },
+    "q4_runc_rootless_in_principle": {
+      "answer": "PARTIAL -> 本机当前形态不可交付完整rootless OCI生命周期",
+      "evidence": "userns+mountns内：tmpfs/ramfs/bind OK、overlay(tmpfs upper) OK、netns OK；但runc二进制缺失、procfs挂载EPERM（runc默认/proc无法建立）、sysfs EPERM、磁盘持久upper的overlay EINVAL、cgroup只读",
+      "notes": "proc/disk-upper失败强烈疑似源自本机是嵌套Docker容器层；产品首个部署目标（普通VM+管理员权限）不受这些嵌套限制。可在用户目录放置静态runc/slirp4netns等二进制（本轮未下载）"
+    },
+    "q5_cgroup_v2_controllers_delegated_to_user": {
+      "answer": "NONE",
+      "evidence": "cgroup2以ro挂载；/proc/self/cgroup=0::/（命名空间根）；subtree_control为空；无任何可写cgroup文件；mkdir子cgroup返回EROFS；无user.slice；无systemd user bus",
+      "consequence": "无法实施任何memory/pids/cpu/io硬限额；cgroup硬限制支持必须如实声明HOST_UNSUPPORTED直到管理员委托"
+    },
+    "q6_rootless_filesystem_paths": {
+      "available": [
+        "tmpfs/ramfs挂载（RAM，可用size=参数做容量会计）",
+        "bind挂载（已验证内容）",
+        "overlayfs且upperdir在tmpfs上（RAM回写层COW）",
+        "磁盘上的普通目录rootfs（整树复制，vfs式，无分层去重）"
+      ],
+      "unavailable": [
+        "overlayfs且upperdir在磁盘上（本机磁盘为overlayfs，upper-on-overlay EINVAL）",
+        "fuse-overlayfs（/dev/fuse不存在且二进制缺失）",
+        "新挂载procfs与sysfs（EPERM）"
+      ]
+    },
+    "q7_rootless_networking_helpers": {
+      "answer": "当前为NONE",
+      "evidence": "rootlesskit/slirp4netns/pasta/passt/lxc-user-nic全部缺失；netns可创建但仅有lo",
+      "possibility_report_only": "用户目录静态安装slirp4netns或pasta可提供每netns的NAT出口；本轮未下载"
+    },
+    "q8_tier_classification": {
+      "answer": "Tier B（Minimal Rootless）偏下限；就'原生rootless runc默认配置'而言本机当前形态呈现Tier C特征",
+      "reasoning": [
+        "userns+mount+pid+net命名空间可创建且userns内capability完整 => 不是硬阻断",
+        "单identity映射、无subuid/uidmap => 多uid镜像不可运行",
+        "cgroup完全无委托 => 资源硬限制不可实现",
+        "procfs/sysfs挂载EPERM + 磁盘overlay upper失败 => runc默认bundle配置在本机不可原样运行",
+        "上述部分缺口可由用户态静态二进制弥补（runc/slirp4netns)，proc与多uid、cgroup委托只能由admin或宿主形态解决（本机为嵌套容器，普通VM目标环境不必然有proc限制）"
+      ]
+    },
+    "q9_benchmark_impact": {
+      "swebench": "镜像族众多且部分镜像多uid、构建期需网络出口、多数镜像要求/proc；本机当前形态预计大面积进blocked台账。用户态补齐runc+slirp4netns+（admin提供/dev/fuse后的）fuse-overlayfs后可跑单uid镜像子集；密度运行无cgroup硬限，需按观测而非限额控噪。",
+      "terminalbench": "PTY/交互在ns内可用；要求systemd、Docker-in-task或自定义网桥的任务失败；网络型任务依赖slirp/pasta；可运行小子集。",
+      "cybergym": "任务常需服务监听+定制网络，部分环境预期特权或KVM；无CAP_NET_ADMIN、无KVM、proc受限 => 预计较多任务保留在blocked台账，单进程user-space服务类任务可尝试。"
+    },
+    "q10_admin_only_items": [
+      "/etc/subuid与/etc/subgid分配（多uid rootless前提）",
+      "newuidmap/newgidmap的安全setuid安装",
+      "cgroup v2子树委托（user.slice or manual chown delegated subtree）",
+      "/dev/fuse设备暴露（fuse-overlayfs前提）",
+      "宿主侧解除/proc masked路径（决定procfs能否在ns内挂载）",
+      "任何sysctl/AppArmor/LSM策略调整",
+      "内核模块（如需要特定fs/网络功能）"
+    ],
+    "user_space_installable_not_done_this_round": [
+      "静态runc或crun",
+      "slirp4netns或pasta",
+      "rootlesskit",
+      "fuse-overlayfs静态二进制（在/dev/fuse出现前无效）",
+      "buildctl/buildkitd静态包（rootless Buildkit另有自身额外要求）"
+    ]
+  },
+  "t03_contract_alignment": {
+    "T03-C01 kvm_free": "PASS-OBSERVED：/dev/kvm不存在且探测未尝试打开KVM；容器原语(userns/mountns)可用",
+    "T03-C02 cgroup_write": "OBSERVED：cgroup目录存在但不可写（ro+EROFS）；按合同必须拒绝声明hard limit支持",
+    "T03-C03 lsm_or_policy_block": "OBSERVED：procfs/sysfs在ns内挂载EPERM；记录原因，未修改任何宿主策略",
+    "T03-C04 abort_cleanup": "OBSERVED：探测临时资源（/tmp/lsbx-probe）已清理；未触碰其他资源",
+    "status_note": "以上为T03任务开工前的被动只读观察，不等同T03完成；T03正式执行仍需授权worker与产品runner。"
+  },
+  "release_blocking_note": "本报告是host probe原始记录；host_status可由NOT_PROBED推进为'read-only probed'，但不构成runtime-verified。多uid、cgroup硬限、proc挂载三项在本机需admin或目标VM形态解决。"
+}

@@ -1,0 +1,102 @@
+{
+  "observed_on": "2026-09-24",
+  "status": "OBSERVED_NOT_LOCKED",
+  "sources": [
+    {
+      "id": "S01",
+      "title": "OCI Runtime lifecycle / runc",
+      "url": "https://raw.githubusercontent.com/opencontainers/runtime-spec/main/runtime.md",
+      "purpose": "OCI create/start/delete与配置生效边界；不是完整container manager。"
+    },
+    {
+      "id": "S02",
+      "title": "runc terminal management",
+      "url": "https://raw.githubusercontent.com/opencontainers/runc/main/docs/terminals.md",
+      "purpose": "FD、终端、监督和分离执行责任。"
+    },
+    {
+      "id": "S03",
+      "title": "OCI image-to-runtime conversion",
+      "url": "https://raw.githubusercontent.com/opencontainers/image-spec/main/conversion.md",
+      "purpose": "镜像进程配置转换；不等于所有Docker扩展。"
+    },
+    {
+      "id": "S04",
+      "title": "BuildKit upstream README",
+      "url": "https://raw.githubusercontent.com/moby/buildkit/master/README.md",
+      "purpose": "独立daemon、OCI(runc)worker与OCI导出。"
+    },
+    {
+      "id": "S05",
+      "title": "Docker OverlayFS driver",
+      "url": "https://docs.docker.com/engine/storage/drivers/overlayfs-driver/",
+      "purpose": "Docker共享层、页缓存和存储驱动行为。"
+    },
+    {
+      "id": "S06",
+      "title": "OpenSandbox architecture",
+      "url": "https://raw.githubusercontent.com/opensandbox-group/OpenSandbox/main/docs/architecture/index.md",
+      "purpose": "协议门面、Docker/Kubernetes、execd与endpoint分工。"
+    },
+    {
+      "id": "S07",
+      "title": "OpenSandbox lifecycle and execd contracts",
+      "url": "https://github.com/opensandbox-group/OpenSandbox/blob/main/specs/sandbox-lifecycle.yml",
+      "purpose": "实际协议仍须源码和SDK锁；本文不是它的复制。"
+    },
+    {
+      "id": "S08",
+      "title": "rustix documentation",
+      "url": "https://docs.rs/rustix/latest/rustix/",
+      "purpose": "Unix/Linux安全封装；版本随发布变化。"
+    },
+    {
+      "id": "S09",
+      "title": "HTTPX transports",
+      "url": "https://www.python-httpx.org/advanced/transports/",
+      "purpose": "UDS及MockTransport；mock不证明真实运行。"
+    },
+    {
+      "id": "S10",
+      "title": "Harbor task structure",
+      "url": "https://www.harborframework.com/docs/tasks",
+      "purpose": "task.toml/environment，独立验证、产物与sidecar。"
+    },
+    {
+      "id": "S11",
+      "title": "Harbor BaseEnvironment",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/src/harbor/environments/base.py",
+      "purpose": "实际环境接口，应在固定安装中测试。"
+    },
+    {
+      "id": "S12",
+      "title": "Harbor environment factory",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/src/harbor/environments/factory.py",
+      "purpose": "第三方import path入口。"
+    },
+    {
+      "id": "S13",
+      "title": "Harbor capability contracts",
+      "url": "https://raw.githubusercontent.com/harbor-framework/harbor/main/src/harbor/environments/capabilities.py",
+      "purpose": "Compose要求per-service操作；网络能力细分。"
+    },
+    {
+      "id": "S14",
+      "title": "CNI specification",
+      "url": "https://www.cni.dev/docs/spec/",
+      "purpose": "网络插件接口；完整DNS/策略需要上层实现。"
+    },
+    {
+      "id": "S15",
+      "title": "compose-go reference parser",
+      "url": "https://github.com/compose-spec/compose-go",
+      "purpose": "规范化复用参考库；不是直接执行环境。"
+    },
+    {
+      "id": "S16",
+      "title": "OpenAI harness engineering",
+      "url": "https://openai.com/index/harness-engineering/",
+      "purpose": "简短AGENTS、仓库知识、上下文渐进加载与机器检查。"
+    }
+  ]
+}

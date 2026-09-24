@@ -1,0 +1,677 @@
+test_archive_contains_only_given_environment (test_bundle.BundleTests.test_archive_contains_only_given_environment) ... ERROR
+test_archive_is_deterministic (test_bundle.BundleTests.test_archive_is_deterministic) ... ERROR
+test_content_change_changes_identity (test_bundle.BundleTests.test_content_change_changes_identity) ... ERROR
+test_empty_directories_in_identity (test_bundle.BundleTests.test_empty_directories_in_identity) ... ERROR
+test_entry_limit (test_bundle.BundleTests.test_entry_limit) ... ERROR
+test_fifo_rejected_without_blocking (test_bundle.BundleTests.test_fifo_rejected_without_blocking) ... ERROR
+test_file_limit (test_bundle.BundleTests.test_file_limit) ... ERROR
+test_mode_is_in_identity (test_bundle.BundleTests.test_mode_is_in_identity) ... ERROR
+test_mtime_does_not_change_content_identity (test_bundle.BundleTests.test_mtime_does_not_change_content_identity) ... ERROR
+test_paths_sorted (test_bundle.BundleTests.test_paths_sorted) ... ERROR
+test_relative_target_validation (test_bundle.BundleTests.test_relative_target_validation) ... ERROR
+test_symlink_rejected_with_explicit_reason (test_bundle.BundleTests.test_symlink_rejected_with_explicit_reason) ... ERROR
+test_total_limit (test_bundle.BundleTests.test_total_limit) ... ERROR
+test_bool_sequence_rejected (test_events.EventTests.test_bool_sequence_rejected) ... ERROR
+test_collects_stdout_and_exit (test_events.EventTests.test_collects_stdout_and_exit) ... ERROR
+test_duplicate_with_changed_payload_rejected (test_events.EventTests.test_duplicate_with_changed_payload_rejected) ... ERROR
+test_missing_exit_not_success (test_events.EventTests.test_missing_exit_not_success) ... ERROR
+test_output_after_exit_rejected (test_events.EventTests.test_output_after_exit_rejected) ... ERROR
+test_output_budget_no_silent_truncation (test_events.EventTests.test_output_budget_no_silent_truncation) ... ERROR
+test_replay_duplicate_does_not_append (test_events.EventTests.test_replay_duplicate_does_not_append) ... ERROR
+test_sequence_gap (test_events.EventTests.test_sequence_gap) ... ERROR
+test_split_utf8_retained_as_bytes (test_events.EventTests.test_split_utf8_retained_as_bytes) ... ERROR
+test_stale_generation (test_events.EventTests.test_stale_generation) ... ERROR
+test_stderr_separate (test_events.EventTests.test_stderr_separate) ... ERROR
+test_unknown_kind_rejected (test_events.EventTests.test_unknown_kind_rejected) ... ERROR
+test_wrong_identity (test_events.EventTests.test_wrong_identity) ... ERROR
+test_zero_code_not_none (test_events.EventTests.test_zero_code_not_none) ... ERROR
+test_agent_payload_never_includes_tests_solution (test_harbor_loader.HarborLoaderTests.test_agent_payload_never_includes_tests_solution) ... ERROR
+test_bool_is_not_cpu_count (test_harbor_loader.HarborLoaderTests.test_bool_is_not_cpu_count) ... ERROR
+test_compose_is_not_flattened (test_harbor_loader.HarborLoaderTests.test_compose_is_not_flattened) ... ERROR
+test_dockerfile_plan (test_harbor_loader.HarborLoaderTests.test_dockerfile_plan) ... ERROR
+test_force_build_selects_dockerfile (test_harbor_loader.HarborLoaderTests.test_force_build_selects_dockerfile) ... ERROR
+test_force_build_without_dockerfile_keeps_image (test_harbor_loader.HarborLoaderTests.test_force_build_without_dockerfile_keeps_image) ... ERROR
+test_loader_api_exists (test_harbor_loader.HarborLoaderTests.test_loader_api_exists) ... FAIL
+test_multistep_delegated (test_harbor_loader.HarborLoaderTests.test_multistep_delegated) ... ERROR
+test_negative_resource_rejected (test_harbor_loader.HarborLoaderTests.test_negative_resource_rejected) ... ERROR
+test_no_definition_fails (test_harbor_loader.HarborLoaderTests.test_no_definition_fails) ... ERROR
+test_prebuilt_payload_uploaded_after_start (test_harbor_loader.HarborLoaderTests.test_prebuilt_payload_uploaded_after_start) ... ERROR
+test_prebuilt_preferred_without_force (test_harbor_loader.HarborLoaderTests.test_prebuilt_preferred_without_force) ... ERROR
+test_schema_version_not_assumed_from_python_package (test_harbor_loader.HarborLoaderTests.test_schema_version_not_assumed_from_python_package) ... ERROR
+test_secrets_values_not_in_report (test_harbor_loader.HarborLoaderTests.test_secrets_values_not_in_report) ... ERROR
+test_separate_verifier_infers_mode (test_harbor_loader.HarborLoaderTests.test_separate_verifier_infers_mode) ... ERROR
+test_separate_verifier_keeps_own_source (test_harbor_loader.HarborLoaderTests.test_separate_verifier_keeps_own_source) ... ERROR
+test_separate_without_config_records_fresh_agent_spec (test_harbor_loader.HarborLoaderTests.test_separate_without_config_records_fresh_agent_spec) ... ERROR
+test_shared_with_verifier_image_rejected (test_harbor_loader.HarborLoaderTests.test_shared_with_verifier_image_rejected) ... ERROR
+test_symlinked_task_config_rejected (test_harbor_loader.HarborLoaderTests.test_symlinked_task_config_rejected) ... ERROR
+test_unknown_fields_are_reported_not_dropped (test_harbor_loader.HarborLoaderTests.test_unknown_fields_are_reported_not_dropped) ... ERROR
+test_untrusted_symlink_is_not_read (test_harbor_loader.HarborLoaderTests.test_untrusted_symlink_is_not_read) ... ERROR
+test_windows_is_visible_blocker (test_harbor_loader.HarborLoaderTests.test_windows_is_visible_blocker) ... ERROR
+test_begin_is_durable_intent (test_journal.JournalTests.test_begin_is_durable_intent) ... ERROR
+test_illegal_skip_rejected (test_journal.JournalTests.test_illegal_skip_rejected) ... ERROR
+test_invalid_json_numbers_rejected (test_journal.JournalTests.test_invalid_json_numbers_rejected) ... ERROR
+test_key_conflict_rejected (test_journal.JournalTests.test_key_conflict_rejected) ... ERROR
+test_payload_is_hashed_not_stored (test_journal.JournalTests.test_payload_is_hashed_not_stored) ... ERROR
+test_prepared_survives_reconcile (test_journal.JournalTests.test_prepared_survives_reconcile) ... ERROR
+test_result_survives_reopen (test_journal.JournalTests.test_result_survives_reopen) ... ERROR
+test_running_after_crash_becomes_unknown_not_prepared (test_journal.JournalTests.test_running_after_crash_becomes_unknown_not_prepared) ... ERROR
+test_same_request_reuses_same_id (test_journal.JournalTests.test_same_request_reuses_same_id) ... ERROR
+test_state_compare_and_swap (test_journal.JournalTests.test_state_compare_and_swap) ... ERROR
+test_success_requires_result (test_journal.JournalTests.test_success_requires_result) ... ERROR
+test_tenant_keys_do_not_collide (test_journal.JournalTests.test_tenant_keys_do_not_collide) ... ERROR
+test_unknown_not_automatically_retryable (test_journal.JournalTests.test_unknown_not_automatically_retryable) ... ERROR
+
+======================================================================
+ERROR: test_archive_contains_only_given_environment (test_bundle.BundleTests.test_archive_contains_only_given_environment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 47, in test_archive_contains_only_given_environment
+    from lightsandbox_seed.bundle import export_bundle
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_archive_is_deterministic (test_bundle.BundleTests.test_archive_is_deterministic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 42, in test_archive_is_deterministic
+    from lightsandbox_seed.bundle import export_bundle
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_content_change_changes_identity (test_bundle.BundleTests.test_content_change_changes_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 18, in test_content_change_changes_identity
+    p=self.root/'a';p.write_text('x');a=self.manifest();p.write_text('y');self.assertNotEqual(a.digest,self.manifest().digest)
+                                        ~~~~~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_empty_directories_in_identity (test_bundle.BundleTests.test_empty_directories_in_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 12, in test_empty_directories_in_identity
+    a=self.manifest();(self.root/'empty').mkdir();b=self.manifest();self.assertNotEqual(a.digest,b.digest)
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_entry_limit (test_bundle.BundleTests.test_entry_limit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 35, in test_entry_limit
+    with self.assertRaises(ValueError):self.manifest(max_entries=1)
+                                       ~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_fifo_rejected_without_blocking (test_bundle.BundleTests.test_fifo_rejected_without_blocking)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 26, in test_fifo_rejected_without_blocking
+    with self.assertRaisesRegex(ValueError,'special'):self.manifest()
+                                                      ~~~~~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_file_limit (test_bundle.BundleTests.test_file_limit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 29, in test_file_limit
+    with self.assertRaises(ValueError):self.manifest(max_file_bytes=2)
+                                       ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_mode_is_in_identity (test_bundle.BundleTests.test_mode_is_in_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 14, in test_mode_is_in_identity
+    p=self.root/'run.sh';p.write_text('echo hi');p.chmod(0o644);a=self.manifest();p.chmod(0o755);self.assertNotEqual(a.digest,self.manifest().digest)
+                                                                  ~~~~~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_mtime_does_not_change_content_identity (test_bundle.BundleTests.test_mtime_does_not_change_content_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 16, in test_mtime_does_not_change_content_identity
+    p=self.root/'a';p.write_text('x');a=self.manifest();os.utime(p,(1,1));self.assertEqual(a.digest,self.manifest().digest)
+                                        ~~~~~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_paths_sorted (test_bundle.BundleTests.test_paths_sorted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 20, in test_paths_sorted
+    (self.root/'z').write_text('x');(self.root/'a').write_text('x');self.assertEqual([e.path for e in self.manifest().entries],['a','z'])
+                                                                                                      ~~~~~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_relative_target_validation (test_bundle.BundleTests.test_relative_target_validation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 37, in test_relative_target_validation
+    from lightsandbox_seed.bundle import validate_relative_path
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_symlink_rejected_with_explicit_reason (test_bundle.BundleTests.test_symlink_rejected_with_explicit_reason)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 23, in test_symlink_rejected_with_explicit_reason
+    with self.assertRaisesRegex(ValueError,'symlink'):self.manifest()
+                                                      ~~~~~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_total_limit (test_bundle.BundleTests.test_total_limit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 32, in test_total_limit
+    with self.assertRaises(ValueError):self.manifest(max_total_bytes=5)
+                                       ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_bundle.py", line 9, in manifest
+    from lightsandbox_seed.bundle import snapshot_tree
+ModuleNotFoundError: No module named 'lightsandbox_seed.bundle'
+
+======================================================================
+ERROR: test_bool_sequence_rejected (test_events.EventTests.test_bool_sequence_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 45, in test_bool_sequence_rejected
+    a=self.make()
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_collects_stdout_and_exit (test_events.EventTests.test_collects_stdout_and_exit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 11, in test_collects_stdout_and_exit
+    a=self.make();a.accept(self.data());a.accept(self.exited());self.assertEqual(a.result().stdout,b'hello')
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_duplicate_with_changed_payload_rejected (test_events.EventTests.test_duplicate_with_changed_payload_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 23, in test_duplicate_with_changed_payload_rejected
+    a=self.make();a.accept(self.data())
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_missing_exit_not_success (test_events.EventTests.test_missing_exit_not_success)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 15, in test_missing_exit_not_success
+    a=self.make();a.accept(self.data())
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_output_after_exit_rejected (test_events.EventTests.test_output_after_exit_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 35, in test_output_after_exit_rejected
+    a=self.make();a.accept(self.exited(seq=1))
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_output_budget_no_silent_truncation (test_events.EventTests.test_output_budget_no_silent_truncation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 42, in test_output_budget_no_silent_truncation
+    a=self.make(max_output_bytes=2)
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_replay_duplicate_does_not_append (test_events.EventTests.test_replay_duplicate_does_not_append)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 21, in test_replay_duplicate_does_not_append
+    a=self.make();a.accept(self.data());a.accept(self.data());a.accept(self.exited());self.assertEqual(a.result().stdout,b'hello')
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_sequence_gap (test_events.EventTests.test_sequence_gap)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 18, in test_sequence_gap
+    a=self.make()
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_split_utf8_retained_as_bytes (test_events.EventTests.test_split_utf8_retained_as_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 38, in test_split_utf8_retained_as_bytes
+    a=self.make();b='沙箱'.encode();a.accept(self.data(raw=b[:2]));a.accept(self.data(seq=2,raw=b[2:]));a.accept(self.exited(seq=3));self.assertEqual(a.result().stdout,b)
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_stale_generation (test_events.EventTests.test_stale_generation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 26, in test_stale_generation
+    a=self.make();e=self.data();e['generation']=2
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_stderr_separate (test_events.EventTests.test_stderr_separate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 40, in test_stderr_separate
+    a=self.make();a.accept(self.data(stream='stderr'));a.accept(self.exited(code=3));r=a.result();self.assertEqual(r.stdout,b'');self.assertEqual(r.stderr,b'hello');self.assertEqual(r.return_code,3)
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_unknown_kind_rejected (test_events.EventTests.test_unknown_kind_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 32, in test_unknown_kind_rejected
+    a=self.make();e=self.data();e['kind']='success-ish'
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_wrong_identity (test_events.EventTests.test_wrong_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 29, in test_wrong_identity
+    a=self.make();e=self.data();e['run_id']='other'
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_zero_code_not_none (test_events.EventTests.test_zero_code_not_none)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 13, in test_zero_code_not_none
+    a=self.make();a.accept(self.exited(seq=1));self.assertEqual(a.result().return_code,0)
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_events.py", line 4, in make
+    from lightsandbox_seed.events import ExecAccumulator
+ModuleNotFoundError: No module named 'lightsandbox_seed.events'
+
+======================================================================
+ERROR: test_agent_payload_never_includes_tests_solution (test_harbor_loader.HarborLoaderTests.test_agent_payload_never_includes_tests_solution)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 45, in test_agent_payload_never_includes_tests_solution
+    p=self.load();names=[r.path for r in p.agent.entries]
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_bool_is_not_cpu_count (test_harbor_loader.HarborLoaderTests.test_bool_is_not_cpu_count)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 73, in test_bool_is_not_cpu_count
+    with self.assertRaises(ValueError):self.load()
+                                       ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_compose_is_not_flattened (test_harbor_loader.HarborLoaderTests.test_compose_is_not_flattened)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 43, in test_compose_is_not_flattened
+    p=self.load();self.assertEqual(p.agent.kind,'compose');self.assertIn('compose_normalization',p.required_features)
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_dockerfile_plan (test_harbor_loader.HarborLoaderTests.test_dockerfile_plan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 26, in test_dockerfile_plan
+    p=self.load();self.assertEqual(p.agent.kind,'dockerfile');self.assertEqual(p.name,'local/test')
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_force_build_selects_dockerfile (test_harbor_loader.HarborLoaderTests.test_force_build_selects_dockerfile)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 33, in test_force_build_selects_dockerfile
+    self.assertEqual(self.load(force_build=True).agent.image_selection,'build')
+                     ~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_force_build_without_dockerfile_keeps_image (test_harbor_loader.HarborLoaderTests.test_force_build_without_dockerfile_keeps_image)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 36, in test_force_build_without_dockerfile_keeps_image
+    self.assertEqual(self.load(force_build=True).agent.image_selection,'prebuilt')
+                     ~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_multistep_delegated (test_harbor_loader.HarborLoaderTests.test_multistep_delegated)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 78, in test_multistep_delegated
+    self.configure('[[steps]]\nname="stage-one"\n');p=self.load()
+                                                      ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_negative_resource_rejected (test_harbor_loader.HarborLoaderTests.test_negative_resource_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 70, in test_negative_resource_rejected
+    with self.assertRaises(ValueError):self.load()
+                                       ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_no_definition_fails (test_harbor_loader.HarborLoaderTests.test_no_definition_fails)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 49, in test_no_definition_fails
+    with self.assertRaises(ValueError):self.load()
+                                       ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_prebuilt_payload_uploaded_after_start (test_harbor_loader.HarborLoaderTests.test_prebuilt_payload_uploaded_after_start)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 40, in test_prebuilt_payload_uploaded_after_start
+    self.assertTrue(self.load().agent.upload_payload)
+                    ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_prebuilt_preferred_without_force (test_harbor_loader.HarborLoaderTests.test_prebuilt_preferred_without_force)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 30, in test_prebuilt_preferred_without_force
+    self.assertEqual(self.load().agent.image_selection,'prebuilt')
+                     ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_schema_version_not_assumed_from_python_package (test_harbor_loader.HarborLoaderTests.test_schema_version_not_assumed_from_python_package)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 85, in test_schema_version_not_assumed_from_python_package
+    result=self.load();self.assertIn('upstream_schema_validation',result.required_features)
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_secrets_values_not_in_report (test_harbor_loader.HarborLoaderTests.test_secrets_values_not_in_report)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 82, in test_secrets_values_not_in_report
+    text=self.load().to_json();self.assertNotIn('DO_NOT_LEAK_123',text);self.assertIn('API_KEY',text)
+         ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_separate_verifier_infers_mode (test_harbor_loader.HarborLoaderTests.test_separate_verifier_infers_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 60, in test_separate_verifier_infers_mode
+    self.assertEqual(self.load().verifier_mode,'separate')
+                     ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_separate_verifier_keeps_own_source (test_harbor_loader.HarborLoaderTests.test_separate_verifier_keeps_own_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 56, in test_separate_verifier_keeps_own_source
+    p=self.load();self.assertEqual(p.verifier_mode,'separate');self.assertEqual(p.verifier.source_role,'verifier')
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_separate_without_config_records_fresh_agent_spec (test_harbor_loader.HarborLoaderTests.test_separate_without_config_records_fresh_agent_spec)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 67, in test_separate_without_config_records_fresh_agent_spec
+    p=self.load();self.assertIsNone(p.verifier);self.assertIn('verifier_source_resolution',p.required_features)
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_shared_with_verifier_image_rejected (test_harbor_loader.HarborLoaderTests.test_shared_with_verifier_image_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 63, in test_shared_with_verifier_image_rejected
+    with self.assertRaises(ValueError):self.load()
+                                       ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_symlinked_task_config_rejected (test_harbor_loader.HarborLoaderTests.test_symlinked_task_config_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 91, in test_symlinked_task_config_rejected
+    with self.assertRaises(ValueError):self.load()
+                                       ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_unknown_fields_are_reported_not_dropped (test_harbor_loader.HarborLoaderTests.test_unknown_fields_are_reported_not_dropped)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 52, in test_unknown_fields_are_reported_not_dropped
+    p=self.load();self.assertIn('mystery_resource',p.agent.unknown_fields)
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_untrusted_symlink_is_not_read (test_harbor_loader.HarborLoaderTests.test_untrusted_symlink_is_not_read)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 88, in test_untrusted_symlink_is_not_read
+    with self.assertRaises(ValueError):self.load()
+                                       ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_windows_is_visible_blocker (test_harbor_loader.HarborLoaderTests.test_windows_is_visible_blocker)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 75, in test_windows_is_visible_blocker
+    self.configure('os="windows"\n');p=self.load()
+                                       ~~~~~~~~~^^
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 18, in load
+    from lightsandbox_seed.harbor_loader import inspect_task
+ModuleNotFoundError: No module named 'lightsandbox_seed.harbor_loader'
+
+======================================================================
+ERROR: test_begin_is_durable_intent (test_journal.JournalTests.test_begin_is_durable_intent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_illegal_skip_rejected (test_journal.JournalTests.test_illegal_skip_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_invalid_json_numbers_rejected (test_journal.JournalTests.test_invalid_json_numbers_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_key_conflict_rejected (test_journal.JournalTests.test_key_conflict_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_payload_is_hashed_not_stored (test_journal.JournalTests.test_payload_is_hashed_not_stored)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_prepared_survives_reconcile (test_journal.JournalTests.test_prepared_survives_reconcile)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_result_survives_reopen (test_journal.JournalTests.test_result_survives_reopen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_running_after_crash_becomes_unknown_not_prepared (test_journal.JournalTests.test_running_after_crash_becomes_unknown_not_prepared)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_same_request_reuses_same_id (test_journal.JournalTests.test_same_request_reuses_same_id)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_state_compare_and_swap (test_journal.JournalTests.test_state_compare_and_swap)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_success_requires_result (test_journal.JournalTests.test_success_requires_result)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_tenant_keys_do_not_collide (test_journal.JournalTests.test_tenant_keys_do_not_collide)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+ERROR: test_unknown_not_automatically_retryable (test_journal.JournalTests.test_unknown_not_automatically_retryable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_journal.py", line 7, in setUp
+    from lightsandbox_seed.journal import Journal
+ModuleNotFoundError: No module named 'lightsandbox_seed.journal'
+
+======================================================================
+FAIL: test_loader_api_exists (test_harbor_loader.HarborLoaderTests.test_loader_api_exists)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_v3_harbor_2026-09-23/seed/python/tests/test_harbor_loader.py", line 24, in test_loader_api_exists
+    self.assertIsNotNone(importlib.util.find_spec('lightsandbox_seed.harbor_loader'))
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 62 tests in 0.027s
+
+FAILED (failures=1, errors=61)

@@ -1,0 +1,167 @@
+{
+  "schema_version": "2.0",
+  "observed_on": "2026-09-23",
+  "note": "网页观察用于规划，不表示已完成不可变源码、二进制或数据集锁定。S19/S20为开发核对入口，未在本轮逐项审查全文。",
+  "sources": [
+    {
+      "id": "S01",
+      "title": "OpenAI: Harness engineering",
+      "url": "https://openai.com/index/harness-engineering/",
+      "published_on": "2026-02-11",
+      "use": "短入口、仓库内知识、可检查的架构边界；不照搬其宽松合并策略。",
+      "kind": "primary"
+    },
+    {
+      "id": "S02",
+      "title": "OpenAI: Run long horizon tasks with Codex",
+      "url": "https://developers.openai.com/blog/run-long-horizon-tasks-with-codex",
+      "published_on": null,
+      "use": "区分目标、执行计划、操作规程与实际进度。",
+      "kind": "primary"
+    },
+    {
+      "id": "S03",
+      "title": "OpenAI: Using PLANS.md",
+      "url": "https://developers.openai.com/cookbook/articles/codex_exec_plans",
+      "published_on": null,
+      "use": "执行计划应可独立阅读，包含验证步骤与决策记录。",
+      "kind": "primary"
+    },
+    {
+      "id": "S04",
+      "title": "OpenAI: AGENTS.md guidance",
+      "url": "https://developers.openai.com/codex/guides/agents-md",
+      "published_on": null,
+      "use": "使用仓库指导与目录级上下文；实际优先级以所用客户端文档为准。",
+      "kind": "primary"
+    },
+    {
+      "id": "S05",
+      "title": "Anthropic: Effective harnesses for long-running agents",
+      "url": "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+      "published_on": "2025-11-26",
+      "use": "区分初始化与增量开发；跨会话留下特性台账、测试结果和交接。",
+      "kind": "primary"
+    },
+    {
+      "id": "S06",
+      "title": "OpenSandbox: repository",
+      "url": "https://github.com/opensandbox-group/OpenSandbox",
+      "published_on": null,
+      "use": "核对产品层次、SDK与源码位置。",
+      "kind": "primary"
+    },
+    {
+      "id": "S07",
+      "title": "OpenSandbox: lifecycle OpenAPI",
+      "url": "https://raw.githubusercontent.com/opensandbox-group/OpenSandbox/main/specs/sandbox-lifecycle.yml",
+      "published_on": null,
+      "use": "生命周期兼容性的观察来源；浏览到的 main 未作为不可变锁定版本。",
+      "kind": "primary"
+    },
+    {
+      "id": "S08",
+      "title": "OpenSandbox: execd OpenAPI",
+      "url": "https://raw.githubusercontent.com/opensandbox-group/OpenSandbox/main/specs/execd-api.yaml",
+      "published_on": null,
+      "use": "命令、会话、文件与流式协议的观察来源。",
+      "kind": "primary"
+    },
+    {
+      "id": "S09",
+      "title": "OpenSandbox: execd architecture",
+      "url": "https://open-sandbox.ai/architecture/data-plane/execd",
+      "published_on": null,
+      "use": "了解现有进程内执行服务和监督职责。",
+      "kind": "primary"
+    },
+    {
+      "id": "S10",
+      "title": "OCI runc",
+      "url": "https://github.com/opencontainers/runc",
+      "published_on": null,
+      "use": "低层 OCI 容器生命周期原语。",
+      "kind": "primary"
+    },
+    {
+      "id": "S11",
+      "title": "runc terminal ownership",
+      "url": "https://raw.githubusercontent.com/opencontainers/runc/main/docs/terminals.md",
+      "published_on": null,
+      "use": "终端主端文件描述符、console socket及调用者责任。",
+      "kind": "primary"
+    },
+    {
+      "id": "S12",
+      "title": "Docker OverlayFS driver",
+      "url": "https://docs.docker.com/engine/storage/drivers/overlayfs-driver/",
+      "published_on": null,
+      "use": "Docker已具备层复用与页缓存共享，必须使用公平基线。",
+      "kind": "primary"
+    },
+    {
+      "id": "S13",
+      "title": "Linux cgroup v2 documentation",
+      "url": "https://docs.kernel.org/admin-guide/cgroup-v2.html",
+      "published_on": null,
+      "use": "控制器、资源归属和冻结机制；不能只检查目录存在。",
+      "kind": "primary"
+    },
+    {
+      "id": "S14",
+      "title": "BuildKit rootless documentation",
+      "url": "https://github.com/moby/buildkit/blob/master/docs/rootless.md",
+      "published_on": null,
+      "use": "构建器、文件系统驱动和宿主权限仍有前置条件。",
+      "kind": "primary"
+    },
+    {
+      "id": "S15",
+      "title": "SWE-bench official harness",
+      "url": "https://www.swebench.com/SWE-bench/reference/harness/",
+      "published_on": null,
+      "use": "官方gold patch校验流程与评测入口。",
+      "kind": "primary"
+    },
+    {
+      "id": "S16",
+      "title": "CyberGym official README",
+      "url": "https://raw.githubusercontent.com/sunblaze-ucb/cybergym/main/README.md",
+      "published_on": null,
+      "use": "代理环境、提交服务、验证runner以及数据准备。",
+      "kind": "primary"
+    },
+    {
+      "id": "S17",
+      "title": "Harbor task format",
+      "url": "https://www.harborframework.com/docs/tasks",
+      "published_on": null,
+      "use": "任务环境、solution、共享/独立验证环境和sidecar产物。",
+      "kind": "primary"
+    },
+    {
+      "id": "S18",
+      "title": "Terminal-Bench official repository",
+      "url": "https://github.com/harbor-framework/terminal-bench",
+      "published_on": null,
+      "use": "发布与任务资产的核对入口。",
+      "kind": "primary"
+    },
+    {
+      "id": "S19",
+      "title": "OCI Runtime Specification",
+      "url": "https://github.com/opencontainers/runtime-spec",
+      "published_on": null,
+      "use": "应锁定到实际使用的版本，并用运行时测试验证。",
+      "kind": "primary"
+    },
+    {
+      "id": "S20",
+      "title": "OCI Image Specification",
+      "url": "https://github.com/opencontainers/image-spec",
+      "published_on": null,
+      "use": "镜像配置、层、manifest与平台信息；开发阶段按锁定源码核对。",
+      "kind": "primary"
+    }
+  ]
+}

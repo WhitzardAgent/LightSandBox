@@ -1,0 +1,45 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 典型调用序列与故障边界
+
+以下为项目内部语义示例；对外HTTP字段必须以T01实际锁定OpenSandbox规范为准。
+
+## 从创建到销毁
+
+```mermaid
+sequenceDiagram
+ participant C as SDK Client
+ participant A as Unprivileged API
+ participant N as Node Service
+ participant R as runc / kernel
+ C->>A: authenticated create request
+ A->>N: typed request / owner identity
+ N->>N: admit + journal + allocate leases
+ N->>R: prepare rootfs/network + create/start
+ R-->>N: observed running / failure
+ N-->>A: state mapped to pinned contract
+ A-->>C: sandbox reference / endpoint
+ C->>A: command with stable operation key
+ A->>N: start_exec
+ N->>R: exec under sandbox constraints
+ R-->>N: output and actual exit
+ N-->>C: bounded stream via API
+ C->>A: delete
+ A->>N: stop + cleanup job
+ N->>R: scoped stop/unmount/network release
+ N->>N: audit no remaining owned resources
+```
+
+只有实际状态达到要求才返回对应对外状态。某HTTP码表示接受请求时，仍通过inspect/cleanup证据确认最终完成，不改变上游码的语义。
+
+## 已执行但结果丢失
+
+命令请求进入journal；执行器已产生文件副作用；确认结果前broker死亡。恢复器核对身份与记录，无法确认时标ResultUnknown。客户不能自动重试；可以查询已保留证据，由上层按业务幂等性决定后续动作。平台不宣称任意外部副作用恰好一次。
+
+## 文件操作竞争
+
+客户端请求读取sandbox内路径；恶意进程持续替换该路径的链接。文件helper在受限namespace/用户下解析和打开，不允许host root路径拼接。原对象被删除或generation变化时请求失败，不因重试读到新租户内容。
+
+## 调用方断线
+
+客户端断线只关闭连接；后台执行按请求继续。API进程重启可以重新接到仍存活broker；持有PTY master的broker死亡时，原终端能力丢失，返回明确状态。数据库中的会话元数据不能重新创造旧文件描述符。

@@ -1,0 +1,69 @@
+{
+  "agent": {
+    "content_digest": "6565c886fca0b19068c149a9babbc54f0ecf3f629abd41d0012cadd61002a2d2",
+    "entries": [
+      {
+        "kind": "file",
+        "mode": 420,
+        "path": "Dockerfile",
+        "sha256": "bdbddfb5f5346896dc7ebf15affd0f8da34227d6485b84009701b8d54468cfce",
+        "size": 134
+      }
+    ],
+    "env_keys": [],
+    "image": null,
+    "image_selection": "build",
+    "kind": "dockerfile",
+    "resources": {
+      "cpus": 1,
+      "memory_mb": 1024,
+      "storage_mb": 2048
+    },
+    "source_path": "examples/harbor/separate-verifier/environment",
+    "source_role": "agent",
+    "unknown_fields": [],
+    "upload_payload": false
+  },
+  "authoritative_validation": false,
+  "execution_ready": false,
+  "name": "separate-verifier",
+  "required_features": [
+    "buildkit",
+    "separate_verifier",
+    "upstream_schema_validation"
+  ],
+  "schema_version": "1.4",
+  "verifier": {
+    "content_digest": "84d975bb263bd70fe7e99ab104e97528f2991c839b579bbb93e248e5725157d1",
+    "entries": [
+      {
+        "kind": "file",
+        "mode": 420,
+        "path": "Dockerfile",
+        "sha256": "94ad3921bdde1ce85ff8a3bc22da1a012c9d95b62306e2f1aa927f1e0baef9ba",
+        "size": 147
+      },
+      {
+        "kind": "file",
+        "mode": 420,
+        "path": "test.sh",
+        "sha256": "2989cc8268e99146fa59eeabe3d693ae2c279138da31417ee0c486966d5381a7",
+        "size": 269
+      }
+    ],
+    "env_keys": [],
+    "image": null,
+    "image_selection": "build",
+    "kind": "dockerfile",
+    "resources": {
+      "cpus": 1,
+      "memory_mb": 512,
+      "storage_mb": 1024
+    },
+    "source_path": "examples/harbor/separate-verifier/tests",
+    "source_role": "verifier",
+    "unknown_fields": [],
+    "upload_payload": false
+  },
+  "verifier_mode": "separate"
+}

@@ -1,0 +1,8 @@
+{
+  "command": "release-check",
+  "ok": false,
+  "errors": [
+    "JSON error evidence/v5/release-blocked.json: Expecting value: line 1 column 1 (char 0)"
+  ],
+  "scope": "planning structure only; not runtime certification"
+}

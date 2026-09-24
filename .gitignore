@@ -1,0 +1,15 @@
+# Local reference source checkouts live outside this package (/opt/src).
+# If anyone keeps copies inside the tree, never track them:
+/sources/
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+
+# Rust build output (future crates)
+/target/
+
+# Virtualenvs
+.venv/
+venv/

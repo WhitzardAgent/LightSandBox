@@ -1,0 +1,22 @@
+{
+  "schema_version": "v1",
+  "services": {
+    "main": {
+      "image": "registry.example.invalid/demo@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "launch_mode": "image",
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      },
+      "resources": {
+        "cpu_millis": 1000,
+        "memory_bytes": 536870912,
+        "pids": 128
+      }
+    }
+  },
+  "networks": {},
+  "volumes": {},
+  "labels": {
+    "example": "offline-only"
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "task": {
+    "id": "T33",
+    "title": "Harbor源码锁与原始接口验证",
+    "depends_on": [
+      "T01"
+    ],
+    "requirements": [
+      "R25"
+    ],
+    "read": [
+      "docs/harbor/01_INTEGRATION_CONTRACT.md",
+      "docs/harbor/03_PROVIDER_MAPPING.md",
+      "docs/engineering/01_TECH_STACK.md"
+    ],
+    "allowed_paths": [
+      "specs/harbor-contract-lock.json",
+      "python/src/lightsandbox_harbor/contract.py",
+      "tests/harbor_contract/"
+    ],
+    "consumes": "实际Harbor源码、安装包、T01来源锁；seed AST探测只是辅助。",
+    "produces": "完整契约文件hash、真实Factory加载测试、版本漂移拒绝与安装清单。",
+    "implementation": [
+      "在干净开发环境安装固定Harbor，记录revision、wheel/源码哈希与Python依赖；不使用网页版本猜测。",
+      "枚举BaseEnvironment构造、能力、方法、CLI及TaskConfig迁移；保存最小实际调用fixture。",
+      "以官方Factory导入真实provider，检查签名、默认值、unknown字段和真实异常类型。"
+    ],
+    "review_focus": "保持原始Harbor/OCI/验证语义；真实worker证据不能由seed或contract double代替。",
+    "kind": "worker",
+    "doc": "plans/tasks/T33.md",
+    "status": "planned",
+    "test_ids": [
+      "T33-C01",
+      "T33-C02",
+      "T33-C03",
+      "T33-C04",
+      "T33-C05"
+    ]
+  },
+  "read_files": [
+    "AGENTS.md",
+    "START_HERE.md",
+    "plans/tasks/T33.md",
+    "docs/harbor/01_INTEGRATION_CONTRACT.md",
+    "docs/harbor/03_PROVIDER_MAPPING.md",
+    "docs/engineering/01_TECH_STACK.md"
+  ],
+  "dependency_states": {
+    "T01": "planned"
+  },
+  "test_cases": [
+    {
+      "id": "T33-C01",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "网页main与实际wheel不同",
+      "when": "对安装包重算文件hash",
+      "then": "不接受版本字符串相同作为锁匹配",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T33-C02",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "缺方法或新安全字段",
+      "when": "运行契约探测与真实实例化",
+      "then": "明确定位变化并拒绝未审查版本",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T33-C03",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "原版Harbor CLI",
+      "when": "使用--env模块路径",
+      "then": "无需修改枚举即可加载provider",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T33-C04",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "独立Python工具环境",
+      "when": "启动真实harbor入口",
+      "then": "能够导入同一已锁定provider与客户端",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T33-C05",
+      "task_id": "T33",
+      "requirements": [
+        "R25"
+      ],
+      "given": "lock被改写",
+      "when": "独立CI核对来源",
+      "then": "发行门禁拒绝未审核锁变化",
+      "mode": "worker",
+      "status": "specified_not_implemented"
+    }
+  ]
+}

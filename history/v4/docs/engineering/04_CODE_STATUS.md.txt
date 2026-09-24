@@ -1,0 +1,41 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 代码交付状态与采用方式
+
+本包交付可运行Python关键逻辑和Rust参考源文件，**不是已完成的LightSandbox运行时**。旧版147项产品验收规格和新增Harbor规格仍属待实现任务，不能与seed单元测试相加后称产品测试通过。
+
+| 路径 | 本轮交付 | 已验证范围 | 明确限制 |
+|---|---|---|---|
+| `seed/python/src/lightsandbox_seed/harbor_loader.py` | Harbor只读环境清单/来源识别 | 本地临时目录与TOML边界测试 | 无官方schema全验证，不执行环境 |
+| `.../bundle.py` | dirfd/O_NOFOLLOW读取、有界内容摘要、确定性tar导出 | symlink/FIFO拒绝、预算、权限、空目录、内容变化 | 受限上下文；不支持完整OCI/链接/xattr；无解包器 |
+| `.../journal.py` | SQLite请求幂等、事务、CAS、UNKNOWN | 重开数据库、租户隔离、冲突与状态变更 | 不管理真实进程，不承诺exactly-once |
+| `.../events.py` | 有界原生事件收集器 | 序列、重放、代次、字节、结束回执 | 不等同OpenSandbox SSE协议；大输出需生产制品流 |
+| `.../leases.py` | 线程安全容量/租约回收不变量 | 并发准入、stale handle、清理前不释放 | 内存reference；无TTL/持久化/cgroup |
+| `seed/python/src/lightsandbox_harbor/bridge.py` | 异步执行桥 | UTF-8跨块、取消、超时、user0、退出0 | backend使用契约替身，非真实进程 |
+| `.../provider_core.py` / `provider.py` | 真实import-path结构与上游helper转发代码 | 本地BaseEnvironment契约替身 | 真实Harbor未安装；单服务seed；原生backend未实现 |
+| `.../contract_probe.py` | 源码AST接口漂移检查 | 不执行源代码；缺方法/参数检测 | 形状一致不代表行为兼容 |
+| `.../launcher.py` | 命令包装、固定provider、源码锁检查 | argv/flag边界、缺锁拒绝 | 无服务时BLOCKED；不是一键建成沙盒 |
+| `seed/rust/ls-core-seed` | 标识校验、操作状态与runc argv参考 | 附6个Rust单元测试源码 | 当前容器无Rust编译器，未编译/运行 |
+| `tools/packctl.py`等v2工具 | 规划/台账/清单校验 | 延续并重跑原34项工具测试 | 无法认证CI签发者或验证内核安全 |
+
+Python执行记录见[evidence/v3](../../evidence/v3)。测试替身均注明contract double，不替换真实worker验收。Rust源文件没有unsafe，也不执行系统调用，但这不能被解释为已经过运行时安全审计。
+
+## 推荐采用顺序
+
+先保留seed独立测试，阅读不变量，然后把类型和状态逻辑迁入Rust目标模块。不要批量复制成最终产品；例如SQLite journal需要与真实操作记录、broker收据一起设计事务边界。复制时保留最小失败用例并补真实差分测试。
+
+Python provider和只读工具可以沿用模块结构。原生客户端需要完成构建上传、启动等待、文件安全传输、完整输出流、认证与取消收据。代码中的Protocol代表这个接口边界，不是后端已存在。
+
+## 直接运行
+
+```bash
+python3 dev/check_seeds.py
+python3 -m unittest discover -s tests/pack -v
+python3 tools/harbor_inspect.py inspect-harbor examples/harbor/minimal
+# 在拥有Rust工具链的开发机上，补做下列检查：
+cargo test --manifest-path seed/rust/ls-core-seed/Cargo.toml --offline
+```
+
+本包代码不包含真实漏洞PoC、外部攻击行为或有权限的容器操作。所有测试使用临时本地文件和明确替身，避免在未经授权的工作节点改变网络、mount或内核设置。
+
+开发启动器目前要求operator保证PATH入口与当前Python的Harbor为同一安装，正式的入口身份绑定仍由T39实现并测试。Harbor真实导入、正式客户端transport、容器执行均未在本轮验证。

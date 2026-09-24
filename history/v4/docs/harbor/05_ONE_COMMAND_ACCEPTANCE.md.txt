@@ -1,0 +1,68 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 一键加载/执行入口与验收
+
+## 1. 现在可以执行的命令
+
+在归档根目录：
+
+```bash
+python3 tools/harbor_inspect.py inspect-harbor examples/harbor/minimal
+python3 tools/harbor_run.py --task examples/harbor/minimal --agent oracle --dry-run
+python3 dev/check_seeds.py
+python3 tools/packctl.py validate
+```
+
+第一条读取环境来源、资源要求和缺口；第二条生成不经shell的Harbor命令计划；第三条运行本包代码seed测试；第四条验证文档/任务台账。这些都不创建真实沙盒。
+
+实际运行入口已经提供启动检查。当前不带dry-run时应返回BLOCKED，因为本包没有原生服务与已验证backend。不能把这类拒绝理解为“配置一个地址就已完成产品”。
+
+## 2. 完成服务后的一键命令
+
+```bash
+# 一次性安装：完成T31/T33/T36，安装固定Harbor、LightSandbox客户端/provider与节点服务。
+# 环境变量由operator配置，不能来自任务包：
+# LIGHTSANDBOX_BACKEND_FACTORY=lightsandbox.harbor_backend:create_backend
+# LIGHTSANDBOX_HARBOR_LOCK=/path/to/verified/harbor-contract-lock.json
+
+python3 tools/harbor_run.py --task ./tasks/example --agent oracle
+# 或使用Harbor registry固定版本：
+python3 tools/harbor_run.py --dataset terminal-bench@2.0 --agent oracle
+```
+
+`lightsandbox.harbor_backend:create_backend`是T36要交付的生产客户端工厂，目前尚不存在。本包没有创建一个总返回成功的同名假实现。启动器固定选择LightSandbox provider，不传任意额外参数来覆盖成Docker。完整用户agent/model参数在后续CLI适配工作中按固定Harbor接口增加并测试。
+
+也可使用Harbor原命令直接选provider；任务准备/solution/verifier仍由Harbor完成。此路线是首选，不要求训练框架改写Task定义。
+
+## 3. 三个自包含合成样例
+
+`minimal`：单Dockerfile、环境文件、solution、共享test脚本；验证构建、文件、exec、reward路径和回收。
+
+`multiservice`：main与HTTP sidecar，healthcheck及named volume；验证网络别名、组生命周期和制品。这个样例用来验收Compose执行，不代表当前seed已经支持Compose运行。
+
+`separate-verifier`：agent定义与tests/中的独立验证定义；通过顶层artifacts传递`/workspace/result.txt`并校验内容，同时验证没有把整个任务目录复制到agent。最终流程需按锁定Harbor规则验证。
+
+本包只做这些样例的只读解析/语法检查，没有构建或运行镜像。示例镜像tag尚未固定digest，只用于开发canary；release运行前必须生成制品锁。它们不是三个主流基准的替代品。
+
+## 4. Harbor集成门禁
+
+| 门禁 | 真实证据 | 不接受 |
+|---|---|---|
+| H0 上游锁 | 已安装包与契约文件hash一致 | 只写一个版本字符串 |
+| H1 原Factory加载 | 原`--env module:Class`实例化并完整验证 | monkeypatch上游枚举 |
+| H2 单服务链路 | 创建→命令→传文件→Oracle→原verifier→reward→删除 | 只跑echo |
+| H3 Compose/独立verifier | 依赖、服务级操作、网络切换、卷、收集时序 | 只解析YAML或强制单容器 |
+| H4 训练复用 | 新代次/资源回收/轮次污染/失败分类测试 | 清空workspace算reset |
+| H5 全量兼容 | 固定全量U逐任务证据，全部阻塞显式保留 | 把失败任务移出分母 |
+| H6 性能 | 同镜像同资源同Oracle，实际有效吞吐和泄漏检查 | 空闲数量冒充活跃速度 |
+
+## 5. 常见安装陷阱
+
+Harbor运行的Python解释器必须能导入provider；`uv tool`的独立环境和开发项目的site-packages可能不同。启动包装器设置了seed路径用于开发；生产用明确的可选包安装和lock。
+
+客户端本地目录不一定在远端worker存在，必须传ArtifactRef而非本地绝对路径。registry需要下载权限、构建需要镜像和包仓库网络、任务执行网络是第三套策略。不能为了让安装成功而给运行中的agent开放整个管理网络。
+
+
+### 开发版启动器的身份边界
+
+seed检查的是当前Python解释器可导入的Harbor源文件；调用的`harbor`入口来自PATH。部署时二者必须属于同一个隔离Python环境。T39须把入口制品、解释器、provider、实际加载源树与锁文件绑定并增加“PATH指向另一版本”负测，不能仅凭当前seed的源码hash检查宣称已完成供应链认证。六个契约文件hash也不代表整个Harbor及其依赖都已锁定。

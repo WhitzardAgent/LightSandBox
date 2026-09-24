@@ -1,0 +1,876 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 从 Dockerfile 到 LightSandbox：完整执行机制、兼容边界与技术取舍
+
+**状态：架构规范｜日期：2026-09-24**
+
+本文回答三个核心问题：
+
+1. LightSandbox 为什么能够接收 Dockerfile / Docker 镜像，并运行与 Docker 基本相同的 Linux 用户态环境？
+2. LightSandbox 实际需要自己实现哪些东西，哪些必须复用成熟标准组件？
+3. 与 Docker、OpenSandbox、AgentENV 相比，这条路线得到什么、损失什么，为什么其他项目没有统一采用这条路线？
+
+---
+
+## 1. 最重要的事实：Dockerfile 不是运行时格式
+
+Dockerfile 是**构建描述**。Docker Engine 并不是在容器启动时逐行执行 Dockerfile。
+
+现代 Docker 构建通常由 BuildKit 解释 Dockerfile，最终产生一个 Docker/OCI 兼容镜像。OCI 镜像由两类核心信息组成：
+
+- 一组按顺序叠加的文件系统层；
+- 镜像配置，例如 `User`、`Env`、`Entrypoint`、`Cmd`、`WorkingDir`、`Volumes`、`StopSignal` 等。
+
+因此运行链路可以拆成：
+
+```text
+Dockerfile
+   │
+   │ BuildKit / Dockerfile frontend
+   ▼
+OCI Image
+├── manifest
+├── config
+└── filesystem layers
+   │
+   │ pull / verify / unpack / convert
+   ▼
+OCI Runtime Bundle
+├── rootfs/
+└── config.json
+   │
+   │ OCI runtime
+   ▼
+runc create/start
+   │
+   ▼
+Linux namespaces + cgroups + mounts + capabilities + seccomp
+   │
+   ▼
+Application / Agent
+```
+
+LightSandbox 因此无需“实现 Dockerfile”。它只需要：
+
+1. 把 Dockerfile 构建工作交给 BuildKit；
+2. 接收 BuildKit 输出的 OCI 镜像；
+3. 正确 materialize 镜像层和镜像配置；
+4. 根据任务请求补全 OCI Runtime `config.json`；
+5. 用 runc 创建真正的 Linux container；
+6. 自己承担 Docker/containerd 原本负责的生命周期、网络、卷、执行、日志、恢复和元数据管理。
+
+**这就是 LightSandbox 能加载 Dockerfile 的根本机制。**
+
+### 1.1 官方规范对应关系
+
+OCI Image Specification 明确规定镜像层组成 root filesystem，镜像配置保存执行参数。OCI 的 conversion 规范要求把 `WorkingDir`、`Env`、`Entrypoint`、`Cmd` 等映射到运行时配置。OCI Image Layout 也明确描述了从 image layout 应用 layers 并生成 runtime `config.json` 的路径。
+
+因此：
+
+> Dockerfile → OCI Image → OCI Runtime Bundle → runc
+
+不是模拟 Docker，而是在沿用 Docker 下面本来就在使用的标准边界。
+
+---
+
+## 2. Docker 本身做了什么
+
+在 Linux 上，可以把现代 Docker 的运行路径概念化为：
+
+```text
+Docker CLI / API
+      │
+      ▼
+    dockerd
+      │
+      ▼
+  containerd
+      │
+      ▼
+containerd-shim
+      │
+      ▼
+     runc
+      │
+      ▼
+Linux kernel
+```
+
+Docker 的价值远不止 runc。它还替用户完成：
+
+- image pull、认证、内容缓存；
+- layer unpack、snapshot 管理；
+- container metadata 和 lifecycle；
+- restart/recovery；
+- network、DNS、端口映射；
+- bind mount / named volume；
+- resource limits；
+- stdout/stderr/logging；
+- exec；
+- signal；
+- healthcheck；
+- image commit；
+- Compose 生态；
+- 大量边界行为和错误语义。
+
+因此 LightSandbox 的本质不是“runc 加一个 HTTP API”。
+
+更准确地说：
+
+> **LightSandbox 是一个面向 Agent workload 的窄化 container manager。它保留 OCI/runc 数据面，重新实现 benchmark 和 Agent sandbox 真正需要的 Docker/containerd 控制面语义。**
+
+---
+
+## 3. LightSandbox 的完整运行链路
+
+### 3.1 输入形式
+
+LightSandbox v1 接受三种输入：
+
+```text
+A. registry image
+   python:3.12@sha256:...
+
+B. OCI image/layout
+   local OCI tar / OCI layout
+
+C. Dockerfile + build context
+   Dockerfile
+   src/
+   requirements.txt
+   ...
+```
+
+Harbor/Compose 上层最终也被归一化为这些输入。
+
+### 3.2 Dockerfile 构建
+
+Dockerfile 不由 LightSandbox 自行解释，调用独立 BuildKit：
+
+```text
+Dockerfile + context
+       │
+       ▼
+BuildKit
+       │
+       ├── multi-stage build
+       ├── RUN/COPY/ADD
+       ├── build args
+       ├── cache
+       ├── Dockerfile frontend
+       └── BuildKit-specific build features
+       │
+       ▼
+OCI image output
+```
+
+推荐支持两种部署方式：
+
+1. **本机独立 BuildKit worker**：适合开发与单机评测；
+2. **远程 BuildKit service**：大批量训练时把 build 与 runtime 节点分开。
+
+BuildKit 不进入每个 sandbox 的常驻路径；同一个 image digest 构建一次，后续复用。
+
+### 3.3 镜像进入内容仓库
+
+OCI image 被导入本机 content-addressable store：
+
+```text
+content/
+└── sha256/
+    ├── manifest blob
+    ├── config blob
+    └── layer blobs
+```
+
+每个 blob 根据 digest 验证。
+
+多架构 image 先根据宿主平台选择对应 manifest，例如 `linux/amd64`。
+
+### 3.4 Materialize RootFS
+
+镜像层不能简单“逐层覆盖复制”而不处理 whiteout、opaque directory、权限、xattr、hardlink 等语义。
+
+建议两阶段设计：
+
+```text
+OCI layers
+   │
+   ▼
+immutable image snapshot
+   │
+   ├── image A digest
+   ├── image B digest
+   └── ...
+   │
+   ▼
+per-sandbox writable snapshot
+```
+
+首选：
+
+```text
+immutable lowerdir(s)
+       +
+per-sandbox upperdir/workdir
+       │
+       ▼
+OverlayFS merged rootfs
+```
+
+若宿主不具备满足要求的 OverlayFS 能力，按显式能力降级到 fuse-overlayfs 或 copy/reflink backend。降级不能静默发生，性能结果必须记录 backend。
+
+### 3.5 镜像配置转换成 Runtime 配置
+
+读取 OCI image config：
+
+```text
+User
+Env
+Entrypoint
+Cmd
+WorkingDir
+StopSignal
+Volumes
+```
+
+然后结合 sandbox request：
+
+```text
+CPU / memory / PIDs
+mounts
+network mode
+DNS
+capabilities
+seccomp profile
+hostname
+env override
+command override
+```
+
+生成完整 OCI Runtime `config.json`。
+
+典型映射：
+
+```text
+Image.Config.Env             → process.env
+Image.Config.WorkingDir      → process.cwd
+Entrypoint + Cmd             → process.args
+Image.Config.User            → process.user
+sandbox resource request     → linux.resources
+sandbox mounts               → mounts
+sandbox namespace policy     → linux.namespaces
+capability profile           → process.capabilities
+```
+
+### 3.6 创建 container，但暂不启动
+
+```text
+runc create <id> --bundle <bundle>
+```
+
+此时 runc 建立 container/init process 和 namespaces，但 workload 尚未真正开始运行。
+
+LightSandbox 读取 `runc state` 获得 init PID，然后完成网络接入。
+
+### 3.7 配置网络
+
+典型流程：
+
+```text
+runc create
+   │
+   ▼
+获得 sandbox netns
+   │
+   ▼
+CNI ADD / native network driver
+   │
+   ├── veth
+   ├── bridge
+   ├── IP allocation
+   ├── route
+   ├── DNS
+   ├── egress policy
+   └── port/endpoint proxy
+   │
+   ▼
+runc start
+```
+
+对于多服务 Harbor environment，所有 service 可以进入同一个 task network，并拥有稳定 service name/DNS alias。
+
+### 3.8 启动 workload
+
+这里必须区分两种模式。
+
+#### Mode A：Docker-parity
+
+```text
+container PID 1
+└── original image Entrypoint + Cmd
+```
+
+适用于严格比较 Docker 行为的任务。
+
+优点：PID 1、signal、exit code 与 Docker 更容易保持一致。
+
+缺点：如果原始 entrypoint 退出，container 生命周期自然结束；长期 sandbox 控制能力更弱。
+
+#### Mode B：Agent-sandbox
+
+```text
+container PID 1
+└── ls-init
+    ├── original entrypoint
+    └── agent commands / PTY children
+```
+
+`ls-init` 只负责：
+
+- child reaping；
+- signal forwarding；
+- 原始 entrypoint 生命周期；
+- 受控 exec/PTY；
+- 最小状态回报。
+
+它不能成为一个重量级 per-sandbox Python/Go service。
+
+这种模式更接近 OpenSandbox 的长期 Agent environment，但会改变一部分严格的 PID 1 行为，所以必须通过 profile 明确选择，不能偷偷切换。
+
+### 3.9 exec / background / PTY
+
+LightSandbox 的 host broker 持有 sandbox 状态：
+
+```text
+Client
+   │
+   ▼
+lightsandboxd
+   │
+   ├── runc exec                 foreground/background
+   ├── PTY broker                interactive terminal
+   ├── signal/cancel
+   ├── stdout/stderr spool
+   └── operation journal
+```
+
+重要设计：
+
+- `runc` 本身不是长期 control plane；
+- `runc start/exec` 结束后需要 LightSandbox 自己监督进程结果；
+- 请求必须有稳定 operation ID；
+- client disconnect 不能自动重复执行副作用命令；
+- PTY 的 fd owner 必须在客户端断线后继续存在，才可能 reconnect。
+
+### 3.10 文件操作
+
+文件 API 可走两种路径：
+
+1. 通过 sandbox 内受控 helper；
+2. host 端在安全打开 sandbox rootfs 后操作。
+
+任何 privileged host path handling 必须使用 `openat2`/fd-relative 等方式防止 symlink/path traversal TOCTOU，不能用字符串拼接宿主路径。
+
+### 3.11 pause / resume
+
+共享内核 container 可以通过 cgroup freezer 等机制暂停 process tree。
+
+它不是 VM snapshot：
+
+- RAM 仍然占用；
+- kernel object 仍然存在；
+- node reboot 后不能从原内存状态恢复。
+
+### 3.12 filesystem snapshot
+
+v1 定义 snapshot 为：
+
+```text
+base image digest
++
+writable filesystem diff
++
+selected metadata
+```
+
+可将 writable diff 重新封装为 OCI layer/image，再创建新 sandbox。
+
+v1 **不声称**保存：
+
+- RAM；
+- CPU state；
+- TCP connection；
+- debugger instruction pointer；
+- kernel object；
+- 外部服务 transaction state。
+
+### 3.13 destroy
+
+销毁不是调用一次 `runc delete` 就结束。正确顺序至少包括：
+
+```text
+reject new operations
+      ↓
+cancel / kill processes
+      ↓
+verify cgroup empty
+      ↓
+CNI DEL / remove endpoint rules
+      ↓
+unmount merged rootfs
+      ↓
+release writable snapshot
+      ↓
+remove runtime state
+      ↓
+close PTY/log FDs
+      ↓
+mark DELETED
+```
+
+每一步必须幂等，因为宿主进程可能在中间崩溃。
+
+---
+
+## 4. 一键加载 Harbor 环境的机制
+
+Harbor compatibility 不等于“能运行 Harbor agent command”。需要把 Harbor 的 environment topology 完整 materialize。
+
+预期入口：
+
+```text
+lightsandbox harbor load ./task
+```
+
+或 Harbor 原生：
+
+```text
+harbor run ... --env lightsandbox_harbor.provider:LightSandboxEnvironment
+```
+
+### 4.1 Loader 流程
+
+```text
+Harbor task directory
+       │
+       ├── task config
+       ├── Dockerfile(s)
+       ├── docker-compose.yml / compose config
+       ├── tests/verifier
+       └── task assets
+       │
+       ▼
+Harbor Loader
+       │
+       ▼
+Normalized EnvironmentSpec
+├── services[]
+├── images/builds[]
+├── networks[]
+├── volumes[]
+├── healthchecks[]
+├── dependencies[]
+├── agent target
+├── verifier target
+└── artifact transfer rules
+```
+
+Compose 文件不自行解析，优先通过 `compose-go/v2` 归一化，从而复用 Docker Compose 的变量替换、merge 和路径解释语义。
+
+### 4.2 每个 service 的处理
+
+```text
+service.image ? pull : BuildKit(service.build)
+      ↓
+OCI image digest
+      ↓
+rootfs snapshot
+      ↓
+OCI bundle
+      ↓
+runc create
+```
+
+同一 Environment 的服务加入同一 task network。
+
+### 4.3 启动顺序与 healthcheck
+
+必须实现 Harbor 实际依赖的 Compose subset：
+
+```text
+create networks/volumes
+        ↓
+create services
+        ↓
+start dependency services
+        ↓
+health/readiness check
+        ↓
+start agent service / mark environment ready
+```
+
+未知 Compose 字段如果可能影响语义，必须 fail closed，而不是忽略。
+
+### 4.4 Verifier 隔离
+
+Harbor 任务若使用独立 verifier environment：
+
+```text
+Agent Environment
+      │
+      │ only declared artifacts
+      ▼
+Verifier Environment
+```
+
+不能把 agent 的完整 rootfs 直接挂入 verifier，否则会改变评测安全边界。
+
+### 4.5 Training reset
+
+训练时同一个 environment template 可能重复 rollout。
+
+reset 必须覆盖：
+
+```text
+processes
+filesystem writable state
+named/task volumes
+network connections
+background daemons
+operation journal identity
+PTY/session identity
+```
+
+最可靠的 v1 reset 是**销毁 per-rollout writable/runtime state 后快速重新 materialize**，而不是试图清理未知应用状态。
+
+---
+
+## 5. 我们真正损失了什么
+
+这条路线绝不是“Firecracker 能做的全部事情，但更轻”。
+
+### 5.1 最大损失：没有独立 guest kernel
+
+Docker/runc/LightSandbox 都是 shared-kernel：
+
+```text
+Sandbox A ─┐
+Sandbox B ─┼── host Linux kernel
+Sandbox C ─┘
+```
+
+microVM：
+
+```text
+Sandbox
+  ↓
+guest kernel
+  ↓
+virtual hardware boundary
+  ↓
+host kernel
+```
+
+因此 LightSandbox 不应把共享容器边界宣传成能够防御任意 kernel exploit。
+
+对 CyberGym 这类用户态代码和 PoC 任务，可以依靠外层 worker VM 作为最终 trust boundary；涉及 host-kernel exploit 的任务不能放在普通共享 worker 上。
+
+### 5.2 没有真正的 RAM snapshot / fork
+
+AgentENV 能把 VM 内存和文件系统状态一起 snapshot/fork，并可以在 idle 时释放大量 CPU/RAM，再恢复。
+
+LightSandbox v1 的 filesystem snapshot 做不到：
+
+```text
+暂停 1000 个正在运行的 Python/GDB/browser session
+→ 释放绝大多数内存
+→ 以后恢复到原指令位置
+```
+
+这正是 AgentENV 选择 microVM snapshot 技术的重要原因之一。
+
+### 5.3 跨 kernel / OS 能力弱
+
+共享宿主 Linux kernel 意味着：
+
+- Linux user-space 容器很好；
+- 需要不同 Linux kernel 的任务不成立；
+- Windows guest 不成立；
+- kernel module / kernel boot 参数 / kernel exploit 不成立或风险很高。
+
+### 5.4 privileged workload 很危险
+
+Docker 可以给 container `--privileged`，但安全上相当于显著扩大宿主风险。
+
+LightSandbox 的 v1 目标不应通过“遇到不兼容就加 privileged”达成 benchmark parity。
+
+### 5.5 我们承担了 Docker/containerd 原本承担的工程复杂度
+
+这是最大的工程成本。
+
+我们必须自己正确处理：
+
+- image content store；
+- rootfs snapshot；
+- process supervision；
+- recovery journal；
+- networking；
+- DNS；
+- endpoints；
+- volume ownership；
+- signals；
+- logs；
+- resource accounting；
+- garbage collection；
+- host reboot recovery；
+- security updates；
+- OCI/runc compatibility changes。
+
+因此 direct-runc 路线不是“免费提速”。它是用**更窄的产品范围和更多自研控制面**换高密度和可控性。
+
+---
+
+## 6. 为什么 OpenSandbox 没有默认使用 direct-runc
+
+OpenSandbox 当前的设计是 runtime-neutral control plane，单机使用 Docker backend，集群使用 Kubernetes container workload，另有 FastSandbox/microVM 集成。Docker backend 直接依赖 Docker daemon 管理 image、container、volume、network、ports 和 snapshot。
+
+这是合理的工程选择，因为 OpenSandbox 的目标是通用平台：
+
+- 尽快支持成熟 Docker 生态；
+- 支持 Kubernetes；
+- 支持 volume/GPU/network/security runtime；
+- 不自己重新承担一个完整 container manager 的长期维护成本。
+
+它还在 sandbox 内运行 `execd`，处理 command、file、PTY、Jupyter 等 data plane 功能。
+
+所以 OpenSandbox 并不是“不能做 direct-runc”。
+
+更准确地说：
+
+> OpenSandbox 选择复用 Docker/Kubernetes 的成熟控制面，换取广泛兼容和较低维护风险；LightSandbox 计划为了单机高密度 Agent workload，把这层控制面窄化后自己实现。
+
+LightSandbox 成立的前提是我们愿意接受：
+
+- scope 更窄；
+- 只实现真实需要的 Compose/Docker runtime semantics；
+- 用全量 benchmark parity suite 防止实现漂移；
+- 长期维护 OCI/runc/Linux 边界行为。
+
+---
+
+## 7. 为什么 AgentENV 选择 Firecracker/microVM
+
+AgentENV 的目标与 LightSandbox 不同。公开材料强调：
+
+- 大规模 Firecracker environment；
+- OCI image 按需加载；
+- 低延迟 snapshot/resume；
+- memory + filesystem incremental snapshot；
+- fork；
+- idle environment 快速释放资源；
+- 分布式 image/snapshot storage。
+
+这些能力非常适合超长 Agent rollout 和大规模训练，但它们依赖更完整的 VM 状态边界。
+
+AgentENV 的技术选择换来的主要能力包括：
+
+```text
+独立 guest kernel
++ stronger isolation
++ memory snapshot
++ fork from running state
++ suspend/resume with execution state
+```
+
+而 LightSandbox 选择：
+
+```text
+shared kernel
++ no KVM
++ cheap create/delete
++ high compatibility with Linux container tasks
++ lower fixed infrastructure requirement
+```
+
+这两者不是“谁更先进”，而是优化目标不同。
+
+---
+
+## 8. 为什么 LightSandbox 仍然可能比 Docker 更适合我们的场景
+
+注意：不能预先假设 direct-runc 一定比 Docker 快很多。
+
+真正值得测量的优势来自以下几处。
+
+### 8.1 去掉不需要的通用控制面
+
+Docker 路径包含 dockerd、containerd 和 task shim 等通用组件。LightSandbox 可以让一个专用 supervisor 直接管理 runc-created containers，减少多层 RPC、metadata 和 per-container service overhead。
+
+### 8.2 Agent-specific API
+
+无需把 Agent 的每一个操作映射成通用 Docker API：
+
+- persistent exec；
+- PTY；
+- output cursor；
+- operation idempotency；
+- task network；
+- environment group；
+- fast reset。
+
+这些可以成为一等概念。
+
+### 8.3 共享 immutable image snapshot
+
+大量 rollout 使用相同 benchmark image 时，可以围绕 image digest 做更强的本地 cache 和 writable snapshot pooling。
+
+但必须与 Docker/containerd snapshotter 做公平基线比较，不能把 Linux page cache 本来就有的共享算成独有创新。
+
+### 8.4 去掉不需要的后台能力
+
+不实现 swarm、通用 plugins、Docker API 全表面、任意 logging driver、全套 registry management 等，可以把单机执行路径做得更短。
+
+---
+
+## 9. 最关键的兼容性原则：我们追求 benchmark parity，不声称 Docker clone
+
+“与 Docker 无差异”必须精确定义。
+
+LightSandbox v1 的目标是：
+
+> 对固定版本的 CyberGym、SWE-bench、Terminal-Bench/Harbor 任务集合，所有 Docker/OpenSandbox 参考环境可成功 materialize 和 canonical verify 的任务，在相同输入与资源条件下得到相同的环境行为和 verifier 结果。
+
+这不等于：
+
+> 完整实现 Docker Engine 所有 CLI/API/Compose/Swarm/Plugin/Windows 行为。
+
+如果 benchmark 发现缺少某项 Docker 语义，做法是：
+
+```text
+minimize mismatch
+     ↓
+identify general semantic gap
+     ↓
+add runtime capability
+     ↓
+Docker differential test
+     ↓
+benchmark regression
+```
+
+禁止：
+
+```text
+if task_id == "xxx": special case
+```
+
+---
+
+## 10. 需要优先验证的十个高风险点
+
+1. **Image config fidelity**：Entrypoint/Cmd/User/Env/WorkingDir 的覆盖规则必须与参考实现一致。
+2. **Layer unpack fidelity**：whiteout、hardlink、xattr、mode、ownership 必须正确。
+3. **PID 1 semantics**：Docker-parity 与 Agent-sandbox 两种模式必须显式区分。
+4. **Exec result durability**：命令完成但客户端断线时不能重复副作用。
+5. **PTY owner/reconnect**：API 重启不能自动宣称 PTY 可恢复。
+6. **Network readiness**：多服务环境必须按依赖和健康状态变为 READY。
+7. **DNS/service naming**：Harbor/Compose 中服务名解析必须一致。
+8. **Volume lifecycle**：环境销毁、训练 reset 后不得跨 rollout 泄漏状态。
+9. **Host cleanup**：PID、mount、netns、veth、cgroup、FD 都需要 leak test。
+10. **Unsupported Docker semantics**：未知字段必须可见并 fail closed，不能静默忽略。
+
+---
+
+## 11. 建议的 v1 技术栈
+
+```text
+Control / Runtime Core
+  Rust
+  ├── tokio
+  ├── axum/tower
+  ├── serde
+  ├── tracing
+  ├── rusqlite
+  ├── rustix/nix（谨慎边界）
+  └── tonic only if a real internal gRPC boundary becomes necessary
+
+OCI Runtime
+  runc (reference backend)
+
+Image transport
+  skopeo or native registry client initially
+
+Image unpack
+  umoci / OCI-aware unpack helper initially
+
+Build
+  BuildKit / buildctl
+
+Filesystem snapshot
+  OverlayFS preferred
+  fuse-overlayfs fallback where validated
+  reflink/copy final compatibility fallback
+
+Networking
+  CNI plugins initially
+  nftables/iptables endpoint/egress integration
+
+Compose normalization
+  tiny Go helper using compose-go/v2
+
+Public SDK / adapters
+  Python
+  ├── pydantic
+  ├── httpx
+  └── Harbor adapter
+```
+
+原则：先 wrap 成熟 primitive，通过 parity suite，再决定是否替换成 native implementation。
+
+---
+
+## 12. 架构结论
+
+最终可以把 LightSandbox 理解成：
+
+```text
+                     LightSandbox
+                          │
+                OpenSandbox-like API
+                          │
+        ┌─────────────────┼─────────────────┐
+        │                 │                 │
+   Lifecycle/State    Exec/PTY/File     Env Group
+        │                 │                 │
+        ├──────────┬───────┴──────┬──────────┤
+        │          │              │          │
+      Image      RootFS         Network    Volume
+        │          │              │          │
+        └──────────┴──── OCI Bundle ─────────┘
+                          │
+                         runc
+                          │
+                    existing Linux VM
+```
+
+它不是 microVM 替代品，也不是 Docker 全量重写。
+
+它的准确定位应该是：
+
+> **A daemon-light, OCI-native, high-density sandbox manager specialized for agent workloads, with OpenSandbox/Harbor compatibility and benchmark-proven Docker runtime parity.**
+
+---
+
+## 13. 参考资料（核对日期：2026-09-24）
+
+- OCI Image Specification: https://github.com/opencontainers/image-spec
+- OCI Image configuration: https://github.com/opencontainers/image-spec/blob/main/config.md
+- OCI image-to-runtime conversion: https://github.com/opencontainers/image-spec/blob/main/conversion.md
+- OCI image layout: https://github.com/opencontainers/image-spec/blob/main/image-layout.md
+- runc manual: https://github.com/opencontainers/runc/blob/main/man/runc.8.md
+- Docker BuildKit: https://docs.docker.com/build/buildkit/
+- Docker OCI exporter: https://docs.docker.com/build/exporters/oci-docker/
+- Docker runtime/containerd overview: https://docs.docker.com/engine/daemon/alternative-runtimes/
+- OpenSandbox architecture: https://github.com/opensandbox-group/OpenSandbox/blob/main/docs/architecture/index.md
+- AgentENV: https://github.com/kvcache-ai/AgentENV

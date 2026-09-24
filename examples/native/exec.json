@@ -1,0 +1,12 @@
+{
+  "command": {
+    "kind": "argv",
+    "argv": [
+      "printf",
+      "%s",
+      "a b;$HOME"
+    ]
+  },
+  "env": {},
+  "timeout_ms": 30000
+}

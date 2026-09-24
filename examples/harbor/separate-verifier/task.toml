@@ -1,0 +1,26 @@
+schema_version = "1.4"
+artifacts = ["/workspace/result.txt"]
+
+[metadata]
+author_name = "LightSandbox development canary"
+category = "software-engineering"
+tags = ["synthetic", "runtime-compatibility"]
+
+[environment]
+cpus = 1
+memory_mb = 1024
+storage_mb = 2048
+workdir = "/workspace"
+
+[agent]
+timeout_sec = 120
+
+[verifier]
+timeout_sec = 60
+environment_mode = "separate"
+
+[verifier.environment]
+cpus = 1
+memory_mb = 512
+storage_mb = 1024
+workdir = "/tests"

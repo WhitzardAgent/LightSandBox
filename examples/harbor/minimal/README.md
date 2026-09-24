@@ -1,0 +1,3 @@
+# minimal：合成开发canary
+
+用途是验收环境导入与Harbor行为。本包只做只读解析和语法检查，没有构建或运行。镜像tag须在真实验收前锁定digest。普通agent只可获得environment中的文件，solution与tests按Harbor阶段访问。

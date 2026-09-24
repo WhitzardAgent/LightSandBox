@@ -1,0 +1,24 @@
+{
+  "command": "release-check",
+  "ok": false,
+  "errors": [
+    "specs/upstream-lock.json: UNLOCKED or incomplete",
+    "specs/upstream-lock.json: incomplete immutable lock for opensandbox",
+    "specs/upstream-lock.json: incomplete immutable lock for runc",
+    "specs/upstream-lock.json: incomplete immutable lock for runtime-spec",
+    "specs/upstream-lock.json: incomplete immutable lock for image-spec",
+    "specs/upstream-lock.json: incomplete immutable lock for swebench",
+    "specs/upstream-lock.json: incomplete immutable lock for cybergym",
+    "specs/upstream-lock.json: incomplete immutable lock for terminalbench",
+    "specs/upstream-lock.json: incomplete immutable lock for harbor",
+    "specs/upstream-lock.json: incomplete immutable lock for buildkit",
+    "missing file: specs/sdk-lock.json",
+    "missing file: specs/runtime-artifacts-lock.json",
+    "specs/benchmark-lock.json: UNLOCKED or incomplete",
+    "unverified product tasks: T00, T01, T02, T03, T04, T05, T06, T07, T08, T09, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22, T23, T24, T25, T26, T27, T28, T29, T30, T31, T32, T33, T34, T35, T36, T37, T38, T39, T40, T41, T42, T43, T44",
+    "host NOT_PROBED or unverified",
+    "complete benchmark ledger NOT_ENUMERATED or unverified",
+    "missing independent release/release-gate.json"
+  ],
+  "scope": "planning structure only; not runtime certification"
+}

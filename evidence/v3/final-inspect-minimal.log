@@ -1,0 +1,37 @@
+{
+  "agent": {
+    "content_digest": "6565c886fca0b19068c149a9babbc54f0ecf3f629abd41d0012cadd61002a2d2",
+    "entries": [
+      {
+        "kind": "file",
+        "mode": 420,
+        "path": "Dockerfile",
+        "sha256": "bdbddfb5f5346896dc7ebf15affd0f8da34227d6485b84009701b8d54468cfce",
+        "size": 134
+      }
+    ],
+    "env_keys": [],
+    "image": null,
+    "image_selection": "build",
+    "kind": "dockerfile",
+    "resources": {
+      "cpus": 1,
+      "memory_mb": 1024,
+      "storage_mb": 2048
+    },
+    "source_path": "examples/harbor/minimal/environment",
+    "source_role": "agent",
+    "unknown_fields": [],
+    "upload_payload": false
+  },
+  "authoritative_validation": false,
+  "execution_ready": false,
+  "name": "minimal",
+  "required_features": [
+    "buildkit",
+    "upstream_schema_validation"
+  ],
+  "schema_version": "1.4",
+  "verifier": null,
+  "verifier_mode": "shared"
+}

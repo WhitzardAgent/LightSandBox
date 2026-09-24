@@ -1,0 +1,68 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 03 内部契约与错误语义
+
+这些是项目自定义内部协议，不能标记成上游OpenSandbox API。实现由T04建立，后续任务保持兼容；接口改变需要ADR与调用方迁移测试。
+
+## 身份与请求
+
+每个资源引用至少含 `owner_id / sandbox_id / generation`。ID由服务器生成且不复用；`generation`用于恢复或重建后的旧句柄拒绝。进程另含`host_boot_id / pid / starttime`，支持时使用pidfd；仅记录PID不足以识别进程。
+
+创建命令记录包含 `operation_id / idempotency_key / canonical_request_hash`。同一key、相同请求返回同一操作；同一key、不同请求返回冲突。没有key的已发送命令，客户端不得因连接断开自动重试。
+
+## 规范化服务接口
+
+```text
+admit(HostReport, RequiredCapabilities, ResourceRequest) -> Admission
+create(Owner, CreateSpec, OperationKey) -> SandboxRef
+inspect(Owner, SandboxRef) -> SandboxInfo
+start_exec(Owner, SandboxRef, ExecSpec, OperationKey) -> ExecRef
+inspect_exec(Owner, ExecRef) -> ExecInfo
+subscribe(Owner, ExecRef, Cursor) -> EventStream
+cancel_exec(Owner, ExecRef, CancelPolicy) -> CancelResult
+create_session(Owner, SandboxRef, SessionSpec) -> SessionRef
+run_in_session(Owner, SessionRef, ShellRequest) -> ExecRef
+open_pty(Owner, SandboxRef, PtySpec) -> PtyRef
+attach_pty(Owner, PtyRef, Cursor) -> PtyStream
+file_operation(Owner, SandboxRef, FileRequest) -> FileResult
+apply_network_policy(Owner, SandboxRef, PolicyRevision) -> AppliedRevision
+snapshot(Owner, SandboxRef, SnapshotSpec) -> SnapshotRef
+delete(Owner, SandboxRef) -> CleanupRef
+inspect_cleanup(Owner, CleanupRef) -> CleanupInfo
+```
+
+`ExecSpec`包含参数向量或明确的shell模式、cwd、环境覆盖、uid/gid、终端标志、超时毫秒、输出预算与取消范围。原始字节保留在受限日志中，转成JSON文本时的编码规则单独测试。
+
+`ResourceRequest`包含CPU配额、内存、PID、可选IO与磁盘要求。每个字段有 `required / advisory` 语义；必需的硬限制无法实现则不准入。对外映射必须遵循上游字段，不把自定义字段塞入同名请求。
+
+## 操作状态
+
+沙盒内部状态：`Requested → Preparing → Created → Starting → Running → Stopping → Terminated`，另有`Pausing/Paused/Resuming/Failed`。内部额外状态不直接泄漏为未知上游状态。
+
+命令状态：`Accepted → Starting → Running → Exited`；支路为`StartFailed/Cancelled/TimedOut/Lost/ResultUnknown`。`ResultUnknown`不能改写成退出码0或自动重跑。退出码只有被真实wait/监督通道确认后才填写。
+
+快照状态：`Creating/Ready/Failed/Deleting/Deleted`。Ready意味着manifest、数据与哈希均已提交。清理有独立 `Pending/Running/Complete/Blocked` 状态。
+
+## 错误类型
+
+| 内部code | 含义 | 默认重试 |
+|---|---|---|
+| INVALID_ARGUMENT | 输入不合法 | 否 |
+| AUTHENTICATION_REQUIRED / FORBIDDEN | 身份/权限失败 | 否 |
+| NOT_FOUND / STALE_GENERATION | 资源不存在/旧句柄 | 否 |
+| CAPABILITY_UNAVAILABLE | 宿主无法兑现请求 | 否 |
+| POLICY_UNSUPPORTED | 规则超出已实现语义 | 否 |
+| RESOURCE_EXHAUSTED | 容量或配额不足 | 仅未产生副作用的准入 |
+| CONFLICT | 状态或幂等key冲突 | 查询现态 |
+| OPERATION_AMBIGUOUS | 是否执行或结果不确定 | 查询与人工/策略处理 |
+| STREAM_GAP | 日志保留不足 | 请求现有范围，不重新执行 |
+| CLEANUP_INCOMPLETE | 资源未完全回收 | 节点恢复器重试 |
+| INTERNAL_FAILURE | 平台故障 | 由操作阶段决定 |
+
+HTTP码、响应体和异常类型由兼容层依照锁定spec映射。不能把全部错误改成200加`success=false`。日志里的错误文本不作为机器判据。
+
+## 数据持久化
+
+建议最小表：`sandboxes / operations / execs / sessions / leases / snapshots / cleanup_jobs / schema_migrations`。SQLite WAL适合初期单机状态；外部资源操作不持有长事务。先提交意图，执行副作用，再确认资源归属与状态。启动恢复器按所有权日志核对内核实际状态。
+
+文档、JSON模式、Rust结构与Python测试必须在T04确定后一起校验。新模块只使用这里的规范化接口，不跨模块读取私有数据库表或路径。

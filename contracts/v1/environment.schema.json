@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native EnvironmentSpec v1 OFFLINE SUBSET",
+  "x-implementation-status": "REFERENCE_CONTRACT_NO_SERVER",
+  "x-scope": "strict reference subset; unimplemented advanced fields fail validation",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "v1"
+    },
+    "services": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string",
+            "pattern": "^[^\\u0000]*$",
+            "minLength": 1
+          },
+          "launch_mode": {
+            "enum": [
+              "image",
+              "idle-agent"
+            ],
+            "default": "image"
+          },
+          "entrypoint": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$"
+            },
+            "prefixItems": [
+              {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$",
+                "minLength": 1
+              }
+            ]
+          },
+          "command": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$"
+            },
+            "prefixItems": [
+              {
+                "type": "string",
+                "pattern": "^[^\\u0000]*$",
+                "minLength": 1
+              }
+            ]
+          },
+          "env": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^=\\u0000]+$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[^\\u0000]*$"
+            }
+          },
+          "cwd": {
+            "type": "string",
+            "pattern": "^/[^\\u0000]*$"
+          },
+          "user": {
+            "type": "string",
+            "pattern": "^[^\\u0000]*$",
+            "minLength": 1
+          },
+          "resources": {
+            "type": "object",
+            "properties": {
+              "cpu_millis": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "memory_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "storage_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "pids": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "mounts": {
+            "oneOf": [
+              {
+                "type": "array",
+                "maxItems": 0
+              },
+              {
+                "type": "object",
+                "maxProperties": 0
+              }
+            ]
+          },
+          "networks": {
+            "oneOf": [
+              {
+                "type": "array",
+                "maxItems": 0
+              },
+              {
+                "type": "object",
+                "maxProperties": 0
+              }
+            ]
+          },
+          "depends_on": {
+            "oneOf": [
+              {
+                "type": "array",
+                "maxItems": 0
+              },
+              {
+                "type": "object",
+                "maxProperties": 0
+              }
+            ]
+          }
+        },
+        "required": [
+          "image"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "networks": {
+      "type": "object",
+      "maxProperties": 0
+    },
+    "volumes": {
+      "type": "object",
+      "maxProperties": 0
+    },
+    "labels": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^=\\u0000]+$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[^\\u0000]*$"
+      }
+    }
+  },
+  "required": [
+    "services"
+  ],
+  "additionalProperties": false
+}

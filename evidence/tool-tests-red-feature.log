@@ -1,0 +1,41 @@
+......F..............F....
+======================================================================
+FAIL: test_feature_case_mapping_is_rejected (test_packctl.PackTests.test_feature_case_mapping_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_planning_pack_v2_2026-09-23/tests/pack/test_packctl.py", line 37, in test_feature_case_mapping_is_rejected
+    self.rejected('feature')
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/mnt/data/lightsandbox_planning_pack_v2_2026-09-23/tests/pack/test_packctl.py", line 30, in rejected
+    r=self.call('validate'); self.assertNotEqual(r.returncode,0,r.stdout)
+                             ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : {
+  "command": "validate",
+  "ok": true,
+  "errors": [],
+  "scope": "planning structure only; not runtime certification"
+}
+
+
+======================================================================
+FAIL: test_unknown_feature_owner_is_rejected (test_packctl.PackTests.test_unknown_feature_owner_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/lightsandbox_planning_pack_v2_2026-09-23/tests/pack/test_packctl.py", line 34, in test_unknown_feature_owner_is_rejected
+    self.rejected('feature')
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/mnt/data/lightsandbox_planning_pack_v2_2026-09-23/tests/pack/test_packctl.py", line 30, in rejected
+    r=self.call('validate'); self.assertNotEqual(r.returncode,0,r.stdout)
+                             ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : {
+  "command": "validate",
+  "ok": true,
+  "errors": [],
+  "scope": "planning structure only; not runtime certification"
+}
+
+
+----------------------------------------------------------------------
+Ran 26 tests in 17.053s
+
+FAILED (failures=2)

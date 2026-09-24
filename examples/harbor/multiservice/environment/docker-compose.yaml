@@ -1,0 +1,22 @@
+services:
+  main:
+    build: .
+    command: ["sleep", "infinity"]
+    volumes:
+      - shared:/shared
+    depends_on:
+      helper:
+        condition: service_healthy
+  helper:
+    image: python:3.12-slim
+    command: ["python", "-m", "http.server", "8080", "--bind", "0.0.0.0"]
+    working_dir: /shared
+    volumes:
+      - shared:/shared
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080')"]
+      interval: 1s
+      timeout: 2s
+      retries: 10
+volumes:
+  shared: {}

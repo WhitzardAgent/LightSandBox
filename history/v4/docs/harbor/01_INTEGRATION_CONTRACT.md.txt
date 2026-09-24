@@ -1,0 +1,49 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# Harbor兼容合同：两条入口，四层验收
+
+**目标：Harbor用户无需重写任务目录、agent、verifier或训练接入逻辑，即可选择LightSandbox环境后端。** 本包实现了只读加载、启动包装器和适配代码seed；原生runtime尚未实现，不能据此宣称任务已可执行。
+
+## 1. 两条入口
+
+**入口A：直接作为Harbor环境后端。** 使用固定Harbor的自定义环境import path，保留其Task/Trial/Agent/Verifier/产物流程。[S01/S02/S05]
+
+```bash
+# 最终集成命令：安装并验证原生服务、backend客户端和固定Harbor后执行。
+harbor run -p ./tasks/example \
+  --env lightsandbox_harbor.provider:LightSandboxEnvironment \
+  -a oracle
+```
+
+不修改Harbor的EnvironmentType枚举，不fork一套harness，不劫持`docker`命令。`--env module:Class`是本轮观察到的接口；发布时按源码锁核对。
+
+**入口B：独立加载Harbor环境。** `load_harbor_environment(source, role, overrides) → PreparedEnvironment`作为未来原生SDK功能。适用于只需要环境的训练框架。它复用固定Harbor的TaskConfig/Task解析和源选择，生成通用EnvironmentSpec。它不自动运行solution/verifier，也不自动给agent暴露测试和答案。
+
+生产包可拆为`lightsandbox`客户端和`lightsandbox-harbor`可选集成。服务端不安装Harbor、不理解benchmark ID。数据集注册、下载和版本解析仍优先使用Harbor现有入口；自行缓存时保留其不可变来源。
+
+## 2. 四层验收
+
+| 层级 | 必须证明 | 不能替代的下一层 |
+|---|---|---|
+| L0 文件/配置读取 | task目录结构、定义来源、未知字段和资源要求可列举 | 不证明任务合法或能构建 |
+| L1 Harbor接口兼容 | 真实固定BaseEnvironment实例化，签名/默认值/能力和原始SDK一致 | 不证明运行时行为 |
+| L2 环境执行兼容 | 构建、exec、文件、网络、服务、生命周期真实运行 | 不证明验证器与全任务结果 |
+| L3 原始流程结果兼容 | Harbor原agent/oracle/verifier、reward和产物完整通过差分 | 不证明未枚举任务或下一版本 |
+
+本包只读scanner的报告固定带`authoritative_validation=false`、`execution_ready=false`。provider已做契约替身测试，仍属于L1之前的实现材料；必须在固定真实Harbor上补接口和运行测试。
+
+## 3. 版本锁
+
+本轮网页观察的Harbor主分支包元数据为0.20.0、Python>=3.12，任务文档显示schema 1.4。它们是不同版本轴。[S04/S06] 开发不能据此猜测包发行物与主分支完全一致。
+
+锁定内容包括：完整源码revision、BaseEnvironment/Factory/Capabilities/Definition/TaskConfig/CLI的SHA-256、Python依赖制品、任务registry revision、镜像digest、provider commit。Harbor的额外环境参数、共享/独立验证默认值和字段迁移每次升级单独审查。
+
+`tools/harbor_run.py`真实启动前检查本地Harbor契约文件锁及backend配置；缺少时返回BLOCKED，禁止回退Docker。此检查用于可复现性，不代替整包供应链审查、签名或服务认证。
+
+## 4. 保留全量目标
+
+任意Compose字段、特殊设备、宿主权限、网络策略或oracle资产无法满足时，留在完整任务台账中，报告具体阻塞。不能为了得到100%先把它们删掉。Windows/TPU等本机不具备的执行要求同理，不用Linux进程沙盒伪装实现。
+
+SWE-bench/CyberGym转为Harbor格式时，转换只是任务资产适配。必须再验证它与官方原始harness的结果一致；“通过转换后的任务”不能自动证明原benchmark兼容。
+
+详细流程：[任务加载](02_LOADING_AND_COMPOSE.md)、[Provider映射](03_PROVIDER_MAPPING.md)、[训练契约](04_TRAINING_LEASES.md)、[命令与验收](05_ONE_COMMAND_ACCEPTANCE.md)。

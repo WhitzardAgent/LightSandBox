@@ -1,0 +1,37 @@
+ARCHIVED V4 SOURCE — NON-NORMATIVE / 不作为当前实施规范
+
+# 11 安装包、运行维护与可观测性
+
+## 独立交付
+
+发行包包括宿主服务、tiny init/helper、Python CLI/薄接口、配置示例、schema migration、第三方清单、诊断工具和验证指令。产品不依赖本规划包的目录名称，也不导入conformance代码。
+
+首选运行期使用预生成OCI镜像；BuildKit为可选构建组件。安装器检查runc/CNI等依赖与权限，不隐式下载latest、不运行curl管道脚本、不更换内核、不关闭AppArmor/SELinux。
+
+Rust静态链接能减少部分依赖，但不自动解决libc、DNS/NSS、CPU架构及所有外部helper的兼容问题。发布物在真实目标发行版中验证。工具链MSRV与目标架构在T00/T03实测后固定。
+
+## 目录与配置
+
+管理员配置data root、runtime root、Unix socket、数据库、IPAM范围和日志预算。每个安装实例拥有唯一instance ID。配置先静态校验再应用；危险参数要求显式授权。默认仅本地/受认证网络可访问。
+
+SQLite迁移有版本、校验和、备份与回滚计划。API重启不删除现有资源；卸载默认保留数据并展示残留。真正清理必须仅作用于本实例拥有的资源并经过用户授权。
+
+## 指标
+
+固定低基数指标包括创建阶段耗时、执行启动耗时、活跃/驻留数量、队列长度、拒绝原因计数、日志spool字节、FD数、cleanup backlog与错误率。sandbox ID放入日志/trace，不作为无限基数metrics label。
+
+每个操作有request/operation/sandbox/generation标识；phase记录image resolve、rootfs、network、runtime、ready、cleanup。敏感字段脱敏。原始运行信息与对外OpenSandbox metrics语义分开映射。
+
+## 运维故障手册
+
+镜像损坏：隔离digest，验证依赖租约，重新导入固定产物，不继续使用可疑缓存。
+
+磁盘耗尽：停止新准入，保留恢复日志，按保留策略清理安全可释放制品；禁止删除活动运行层。
+
+清理阻塞：展示具体mount/netns/进程归属，暂停复用资源；通过专用恢复操作处理，不全局kill或umount。
+
+服务升级：停止新建、保留现有工作、迁移元数据、重新探测支持能力。不能声明会话透明保持，除非当前broker恢复测试证明。
+
+## 发行证据
+
+每个发行物给出源码提交、锁文件、构建环境、二进制哈希、第三方版本、API兼容profile、已认证宿主组合、三个基准报告与已知限制。只有计划或单元测试不构成可发布的安全沙盒。

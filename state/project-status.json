@@ -1,0 +1,327 @@
+{
+  "schema_version": "5.0",
+  "product_status": "DESIGN_WITH_TESTED_NATIVE_CLIENT_NOT_RUNTIME",
+  "updated_on": "2026-09-24",
+  "implementation_commit": null,
+  "upstream_status": "UNLOCKED",
+  "host_status": "NOT_PROBED",
+  "benchmark_status": "NOT_ENUMERATED",
+  "tasks": [
+    {
+      "id": "T00",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T01",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T02",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T03",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T04",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T05",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T06",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T07",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T08",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T09",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T10",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T11",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T12",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T13",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T14",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T15",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T16",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T17",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T18",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T19",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T20",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T21",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T22",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T23",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T24",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T25",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T26",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T27",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T28",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T29",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T30",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T31",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T32",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "尚未实现；本包只提供规划与辅助校验。"
+    },
+    {
+      "id": "T33",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v3新增产品任务；seed已有局部代码，但产品验收尚未执行。"
+    },
+    {
+      "id": "T34",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v3新增产品任务；seed已有局部代码，但产品验收尚未执行。"
+    },
+    {
+      "id": "T35",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v3新增产品任务；seed已有局部代码，但产品验收尚未执行。"
+    },
+    {
+      "id": "T36",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v3新增产品任务；seed已有局部代码，但产品验收尚未执行。"
+    },
+    {
+      "id": "T37",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v3新增产品任务；seed已有局部代码，但产品验收尚未执行。"
+    },
+    {
+      "id": "T38",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v3新增产品任务；seed已有局部代码，但产品验收尚未执行。"
+    },
+    {
+      "id": "T39",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v3新增产品任务；seed已有局部代码，但产品验收尚未执行。"
+    },
+    {
+      "id": "T40",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v3新增产品任务；seed已有局部代码，但产品验收尚未执行。"
+    },
+    {
+      "id": "T41",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v5 reference代码和测试不是该完整产品任务的完成证据。"
+    },
+    {
+      "id": "T42",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v5 reference代码和测试不是该完整产品任务的完成证据。"
+    },
+    {
+      "id": "T43",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v5 reference代码和测试不是该完整产品任务的完成证据。"
+    },
+    {
+      "id": "T44",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "v5 reference代码和测试不是该完整产品任务的完成证据。"
+    }
+  ],
+  "seed_status": "PYTHON_UNIT_TESTED_RUST_SOURCE_UNCOMPILED"
+}

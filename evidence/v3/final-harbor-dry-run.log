@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "harbor",
+    "run",
+    "-p",
+    "examples/harbor/minimal",
+    "--env",
+    "lightsandbox_harbor.provider:LightSandboxEnvironment",
+    "-a",
+    "oracle"
+  ],
+  "execution_ready": false,
+  "mode": "plan_only"
+}

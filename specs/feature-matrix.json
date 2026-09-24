@@ -1,0 +1,342 @@
+{
+  "schema_version": "5.0",
+  "meaning": "功能范围和责任，不是已实现能力表；optional项用例只检查披露，不证明已实现。",
+  "features": [
+    {
+      "id": "F01",
+      "feature": "创建/查询/列举/删除",
+      "scope": "core",
+      "owner_task": "T08",
+      "test_id": "T08-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F02",
+      "feature": "list过滤/分页/metadata",
+      "scope": "core",
+      "owner_task": "T23",
+      "test_id": "T23-C05",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F03",
+      "feature": "TTL与续期",
+      "scope": "core",
+      "owner_task": "T21",
+      "test_id": "T21-C02",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F04",
+      "feature": "暂停/恢复",
+      "scope": "core",
+      "owner_task": "T21",
+      "test_id": "T21-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F05",
+      "feature": "OCI镜像导入/配置",
+      "scope": "core",
+      "owner_task": "T06",
+      "test_id": "T06-C02",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F06",
+      "feature": "registry认证拉取",
+      "scope": "core",
+      "owner_task": "T06",
+      "test_id": "T06-C05",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F07",
+      "feature": "Dockerfile构建",
+      "scope": "workload_required",
+      "owner_task": "T19",
+      "test_id": "T19-C05",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F08",
+      "feature": "前台shell/argv/退出码",
+      "scope": "core",
+      "owner_task": "T10",
+      "test_id": "T10-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F09",
+      "feature": "后台/取消/timeout",
+      "scope": "core",
+      "owner_task": "T11",
+      "test_id": "T11-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F10",
+      "feature": "SSE输出与logs cursor",
+      "scope": "core",
+      "owner_task": "T12",
+      "test_id": "T12-C02",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F11",
+      "feature": "持久Shell session",
+      "scope": "core",
+      "owner_task": "T13",
+      "test_id": "T13-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F12",
+      "feature": "PTY/resize/重接",
+      "scope": "core",
+      "owner_task": "T14",
+      "test_id": "T14-C02",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F13",
+      "feature": "文件操作完整面",
+      "scope": "core",
+      "owner_task": "T15",
+      "test_id": "T15-C05",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F14",
+      "feature": "metrics/health/readiness",
+      "scope": "core",
+      "owner_task": "T23",
+      "test_id": "T23-C07",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F15",
+      "feature": "实际CPU/memory/PID",
+      "scope": "core",
+      "owner_task": "T09",
+      "test_id": "T09-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F16",
+      "feature": "磁盘硬quota",
+      "scope": "when_requested",
+      "owner_task": "T09",
+      "test_id": "T09-C02",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F17",
+      "feature": "network none/task隔离",
+      "scope": "core",
+      "owner_task": "T16",
+      "test_id": "T16-C02",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F18",
+      "feature": "endpoint与访问认证",
+      "scope": "core",
+      "owner_task": "T17",
+      "test_id": "T17-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F19",
+      "feature": "出口allowlist/规则切换",
+      "scope": "core",
+      "owner_task": "T18",
+      "test_id": "T18-C03",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F20",
+      "feature": "服务组/DNS/volume",
+      "scope": "workload_required",
+      "owner_task": "T20",
+      "test_id": "T20-C02",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F21",
+      "feature": "完整观察Compose字段",
+      "scope": "workload_required",
+      "owner_task": "T20",
+      "test_id": "T20-C05",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F22",
+      "feature": "rootfs snapshot create/restore",
+      "scope": "core",
+      "owner_task": "T22",
+      "test_id": "T22-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F23",
+      "feature": "snapshot list/get/delete",
+      "scope": "core",
+      "owner_task": "T22",
+      "test_id": "T22-C05",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F24",
+      "feature": "故障协调与可靠回收",
+      "scope": "core",
+      "owner_task": "T21",
+      "test_id": "T21-C03",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F25",
+      "feature": "未修改OpenSandbox SDK",
+      "scope": "core",
+      "owner_task": "T23",
+      "test_id": "T23-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F26",
+      "feature": "独立Python辅助包",
+      "scope": "core",
+      "owner_task": "T31",
+      "test_id": "T31-C05",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F27",
+      "feature": "Code Interpreter/Jupyter",
+      "scope": "optional_after_core",
+      "owner_task": "T23",
+      "test_id": "T23-C04",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F28",
+      "feature": "isolated commit/diff扩展",
+      "scope": "optional_after_core",
+      "owner_task": "T23",
+      "test_id": "T23-C04",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F29",
+      "feature": "任务声明设备/内核相关能力",
+      "scope": "inventory_decision",
+      "owner_task": "T02",
+      "test_id": "T02-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F30",
+      "feature": "任务内Docker工具依赖",
+      "scope": "inventory_decision",
+      "owner_task": "T02",
+      "test_id": "T02-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F31",
+      "feature": "Harbor源码锁与原始接口验证",
+      "scope": "harbor_v1",
+      "owner_task": "T33",
+      "test_id": "T33-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F32",
+      "feature": "Harbor环境加载与构建来源编译",
+      "scope": "harbor_v1",
+      "owner_task": "T34",
+      "test_id": "T34-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F33",
+      "feature": "Compose参考规范化与字段覆盖检查",
+      "scope": "harbor_v1",
+      "owner_task": "T35",
+      "test_id": "T35-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F34",
+      "feature": "原生客户端与Harbor单服务后端",
+      "scope": "harbor_v1",
+      "owner_task": "T36",
+      "test_id": "T36-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F35",
+      "feature": "Harbor多服务、独立验证和阶段网络",
+      "scope": "harbor_v1",
+      "owner_task": "T37",
+      "test_id": "T37-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F36",
+      "feature": "训练租约、重置和轮次隔离",
+      "scope": "harbor_v1",
+      "owner_task": "T38",
+      "test_id": "T38-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F37",
+      "feature": "一键Harbor启动与独立环境SDK",
+      "scope": "harbor_v1",
+      "owner_task": "T39",
+      "test_id": "T39-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F38",
+      "feature": "Harbor与风险关闭的发行证据",
+      "scope": "harbor_v1",
+      "owner_task": "T40",
+      "test_id": "T40-C01",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "F39",
+      "surface": "原生协议、状态机与跨语言契约冻结",
+      "owner_task": "T41",
+      "test_id": "T41-C01",
+      "status": "planned",
+      "notes": "reference tests are not product completion"
+    },
+    {
+      "id": "F40",
+      "surface": "CLI与同步异步SDK生产化",
+      "owner_task": "T42",
+      "test_id": "T42-C01",
+      "status": "planned",
+      "notes": "reference tests are not product completion"
+    },
+    {
+      "id": "F41",
+      "surface": "轻量supervisor及故障域实测",
+      "owner_task": "T43",
+      "test_id": "T43-C01",
+      "status": "planned",
+      "notes": "reference tests are not product completion"
+    },
+    {
+      "id": "F42",
+      "surface": "接口漂移和产品声明门禁",
+      "owner_task": "T44",
+      "test_id": "T44-C01",
+      "status": "planned",
+      "notes": "reference tests are not product completion"
+    }
+  ]
+}

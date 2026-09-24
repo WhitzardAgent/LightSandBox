@@ -565,9 +565,9 @@ def cmd_firstrun(ev: Evidence):
 
 # ---------------------------------------------------------------- p1/p2
 
-def bundle_run(ev, bundle, name, cfg, as_nobody=True, keep=False):
+def bundle_run(ev, bundle, name, cfg, as_nobody=True, keep=False, runc=RUNC):
     (Path(bundle) / "config.json").write_text(json.dumps(cfg, indent=1))
-    argv = [RUNC, "run", "--bundle", str(bundle), name]
+    argv = [runc, "run", "--bundle", str(bundle), name]
     res = run_as(NOBODY_UID, NOBODY_GID, argv) if as_nobody else run(argv)
     ev.step(f"container {name}: {' '.join(cfg['process']['args'][:2])[:80]}", res)
     cleanup = [RUNC, "delete", "--force", name]
@@ -628,7 +628,10 @@ for p in os.listdir('/proc'):
         cl = open(f'/proc/{p}/cmdline','rb').read().replace(b'\x00', b' ').strip()
     except OSError:
         continue
-    if b'sleep' in cl:
+    # strict argv[0] match: a substring match self-matches this probe's own
+    # -c source text (which literally contains "sleep")
+    argv0 = cl.split(b' ', 1)[0]
+    if argv0 in (b'sleep', b'/bin/sleep'):
         seen.append((p, cl[:60]))
 out['sleep_procs_visible'] = seen
 for probe, fn in (
@@ -732,6 +735,9 @@ def cmd_p2(ev: Evidence):
         "b_stdout": res_b["stdout"][:2000],
     }, note="determines whether shared bound /proc is REJECTED as default")
     stop_detached("sbx-a")
+    ev.data["sampling"] = ("single-sample security probe: every P2 check ran "
+                           "exactly once on this host profile; absence-of-leak "
+                           "verdicts are N=1 observations, not statistical proof")
     ev.finish("P2 measured; classification recorded "
               f"(secret leaked via shared /proc: {leaked})")
 
@@ -907,7 +913,9 @@ ABS_CLI = ("import socket\ns=socket.socket(socket.AF_UNIX)\ns.settimeout(2)\ntry
 SHM_CREATE = ("import ctypes\nlibc=ctypes.CDLL(None,use_errno=True)\nlibc.shmget.restype=ctypes.c_int\n"
               "shmid=libc.shmget(0,64,0o1000|0o600)\nprint('SHMID',shmid,'errno',ctypes.get_errno())\n")
 SHM_ATTACH = ("import ctypes\nlibc=ctypes.CDLL(None,use_errno=True)\nlibc.shmat.restype=ctypes.c_void_p\n"
-              "p=libc.shmat(%d,None,0)\nprint('rc',p,'errno',ctypes.get_errno())\n")
+              "ctypes.set_errno(0)\np=libc.shmat(SHMID_TOK,None,0)\ne=ctypes.get_errno()\n"
+              "ok = e == 0 and p not in (None, 0, 18446744073709551615)\n"
+              "print('ATTACH_OK' if ok else 'ATTACH_FAIL errno', e, p)\n")
 PTRACE_CODE = ("import ctypes\ntry:\n rc=ctypes.CDLL(None,use_errno=True).ptrace(16,%d,0,0)\n"
                " print('rc',rc,'errno',ctypes.get_errno())\nexcept Exception as e:\n print('exc',e)\n")
 
@@ -926,6 +934,14 @@ def run_as_bg(argv_s, out_path):
 
 def iso_exec(name, args):
     return run_as(NOBODY_UID, NOBODY_GID, [RUNC, "exec", name] + [str(a) for a in args])
+
+
+def _is_eacces(res):
+    """True only when the probe result carries EACCES evidence (a python
+    PermissionError traceback or an explicit 'errno 13' print). Any other
+    failure must NOT be upgraded to an isolation verdict."""
+    blob = res["stdout"] + res["stderr"]
+    return "PermissionError" in blob or "Errno 13" in blob or "errno 13" in blob
 
 
 def cmd_isolation(ev: Evidence):
@@ -957,10 +973,18 @@ def cmd_isolation(ev: Evidence):
         if not pid_a or not pid_b:
             ev.finish("isolation aborted: sandbox failed to start")
             return
-        iso_exec("iso-b", ["/bin/bash", "-c", "echo bwas > /tmp/b_marker"])
-        r = iso_exec("iso-a", ["/bin/bash", "-c", "cat /tmp/b_marker"])
-        axis("filesystem", "ISOLATED" if r["exit"] != 0 else "INTERFERABLE",
-             (r["stdout"] + r["stderr"]).strip(), "separate rootfs copies + own mount ns")
+        w = iso_exec("iso-b", ["/bin/bash", "-c", "echo bwas > /tmp/b_marker"])
+        if w["exit"] != 0:
+            # if the B-side write silently failed, A's failing read would
+            # falsely confirm isolation — refuse to classify
+            axis("filesystem", "NOT_TESTED",
+                 f"B-side marker write failed rc={w['exit']}: "
+                 f"{(w['stdout'] + w['stderr']).strip()}")
+        else:
+            r = iso_exec("iso-a", ["/bin/bash", "-c", "cat /tmp/b_marker"])
+            axis("filesystem", "ISOLATED" if r["exit"] != 0 else "INTERFERABLE",
+                 f"write rc=0; A read: {(r['stdout'] + r['stderr']).strip()}",
+                 "separate rootfs copies + own mount ns")
 
         r = iso_exec("iso-a", ["/usr/bin/python3", "-c",
                      "import os;print(len([d for d in os.listdir('/proc') if d.isdigit()]))"])
@@ -981,50 +1005,108 @@ def cmd_isolation(ev: Evidence):
 
         r = iso_exec("iso-b", ["/usr/bin/python3", "-c",
                      f"print(open('/proc/{pid_a}/cmdline','rb').read()[:200])"])
-        axis("proc_cmdline_of_A", "VISIBLE" if r["exit"] == 0 and r["stdout"].strip() else "ISOLATED",
-             r["stdout"].strip())
+        # classify on evidence, not on "probe did not print": a crashed probe
+        # must be INCONCLUSIVE, never ISOLATED
+        axis("proc_cmdline_of_A",
+             "VISIBLE" if (r["exit"] == 0 and r["stdout"].strip())
+             else "ISOLATED" if _is_eacces(r) else "INCONCLUSIVE",
+             (r["stdout"] + r["stderr"]).strip())
 
         r = iso_exec("iso-b", ["/usr/bin/python3", "-c",
                      f"print(open('/proc/{pid_a}/environ','rb').read()[:300])"])
         leaked = secret.encode().decode() in r["stdout"]
-        axis("proc_environ_of_A", "VISIBLE" if leaked else "ISOLATED", r["stdout"].strip(),
-             "SECURITY EXPERIMENT result; same-host-uid processes pass ptrace_may_access")
+        axis("proc_environ_of_A",
+             "VISIBLE" if leaked
+             else "ISOLATED" if _is_eacces(r) else "INCONCLUSIVE",
+             (r["stdout"] + r["stderr"]).strip(),
+             "SECURITY EXPERIMENT result; ISOLATED only on EACCES/errno 13 evidence")
 
         r = iso_exec("iso-b", ["/usr/bin/python3", "-c",
                      f"import os\ntry:\n print('FD_COUNT',len(os.listdir('/proc/{pid_a}/fd')))\n"
                      f"except OSError as e: print('errno',e.errno)"])
-        axis("proc_fd_of_A", "VISIBLE" if "FD_COUNT" in r["stdout"] else "ISOLATED",
-             r["stdout"].strip())
+        axis("proc_fd_of_A",
+             "VISIBLE" if "FD_COUNT" in r["stdout"]
+             else "ISOLATED" if "errno 13" in r["stdout"] else "INCONCLUSIVE",
+             (r["stdout"] + r["stderr"]).strip())
 
         srv = run_as_bg([RUNC, "exec", "iso-b", "/usr/bin/python3", "-c", NET_SRV],
                         STATE / "iso-netsrv.log")
         time.sleep(2.0)
-        r = iso_exec("iso-a", ["/usr/bin/python3", "-c", NET_CLI])
-        srv.terminate()
-        axis("network_tcp_loopback", "ISOLATED" if "FAIL" in r["stdout"] else "INTERFERABLE",
-             r["stdout"].strip(), "private netns per sandbox (loopback-only); no cross-sandbox TCP")
+        # positive control: the same client MUST succeed inside B's own netns,
+        # otherwise a dead listener would fake an ISOLATED verdict
+        ctl = iso_exec("iso-b", ["/usr/bin/python3", "-c", NET_CLI])
+        if "CONNECTED" not in ctl["stdout"]:
+            srv.terminate()
+            axis("network_tcp_loopback", "NOT_TESTED",
+                 f"same-netns control failed: "
+                 f"{(ctl['stdout'] + ctl['stderr']).strip()}")
+        else:
+            r = iso_exec("iso-a", ["/usr/bin/python3", "-c", NET_CLI])
+            srv.terminate()
+            axis("network_tcp_loopback",
+                 "ISOLATED" if "FAIL" in r["stdout"] else "INTERFERABLE",
+                 f"control CONNECTED; A: {r['stdout'].strip()}",
+                 "private netns per sandbox (loopback-only); no cross-sandbox TCP")
 
-        r = iso_exec("iso-a", ["/usr/bin/python3", "-c", HOST_PROBE])
-        axis("network_host_loopback", "ISOLATED" if "FAIL" in r["stdout"] else "REACHABLE",
-             r["stdout"].strip(), "host loopback services unreachable from sandbox netns")
+        # positive control: only run the sandbox probe if the host actually
+        # has a listener on 127.0.0.1:22, else the axis is vacuous
+        host_has_sshd = False
+        try:
+            import socket as _sock
+            _s = _sock.socket()
+            _s.settimeout(1.5)
+            _s.connect(("127.0.0.1", 22))
+            host_has_sshd = True
+            _s.close()
+        except OSError:
+            host_has_sshd = False
+        if not host_has_sshd:
+            axis("network_host_loopback", "NOT_TESTED",
+                 "no host listener on 127.0.0.1:22; cross-probe would be vacuous")
+        else:
+            r = iso_exec("iso-a", ["/usr/bin/python3", "-c", HOST_PROBE])
+            axis("network_host_loopback", "ISOLATED" if "FAIL" in r["stdout"] else "REACHABLE",
+                 f"host sshd present; A: {r['stdout'].strip()}",
+                 "host loopback services unreachable from sandbox netns")
 
         srv = run_as_bg([RUNC, "exec", "iso-b", "/usr/bin/python3", "-c", ABS_SRV],
                         STATE / "iso-abssrv.log")
         time.sleep(2.0)
-        r = iso_exec("iso-a", ["/usr/bin/python3", "-c", ABS_CLI])
-        srv.terminate()
-        axis("unix_abstract_socket", "ISOLATED" if "FAIL" in r["stdout"] else "INTERFERABLE",
-             r["stdout"].strip(), "abstract unix namespace is per-netns")
+        ctl = iso_exec("iso-b", ["/usr/bin/python3", "-c", ABS_CLI])
+        if "CONNECTED" not in ctl["stdout"]:
+            srv.terminate()
+            axis("unix_abstract_socket", "NOT_TESTED",
+                 f"same-netns control failed: "
+                 f"{(ctl['stdout'] + ctl['stderr']).strip()}")
+        else:
+            r = iso_exec("iso-a", ["/usr/bin/python3", "-c", ABS_CLI])
+            srv.terminate()
+            axis("unix_abstract_socket",
+                 "ISOLATED" if "FAIL" in r["stdout"] else "INTERFERABLE",
+                 f"control CONNECTED; A: {r['stdout'].strip()}",
+                 "abstract unix namespace is per-netns")
 
         r = iso_exec("iso-a", ["/usr/bin/python3", "-c", SHM_CREATE])
         m = re.search(r"SHMID (-?\d+)", r["stdout"])
         shmid = int(m.group(1)) if m else -1
         if shmid >= 0:
-            r = iso_exec("iso-b", ["/usr/bin/python3", "-c", SHM_ATTACH % shmid])
-            blocked = "errno 22" in r["stdout"] or "errno 2" in r["stdout"] or "rc 0" not in r["stdout"]
-            axis("sysv_shm", "ISOLATED" if blocked else "INTERFERABLE",
-                 f"A created shmid={shmid}; B attach: {r['stdout'].strip()}",
-                 "own IPC ns per sandbox; A's shmid is invalid in B")
+            # positive control: attaching within A's own IPC ns MUST succeed,
+            # otherwise a broken probe would fake an ISOLATED verdict
+            ctl = iso_exec("iso-a", ["/usr/bin/python3", "-c", SHM_ATTACH.replace("SHMID_TOK", str(shmid))])
+            if "ATTACH_OK" not in ctl["stdout"]:
+                axis("sysv_shm", "NOT_TESTED",
+                     f"same-IPC-ns attach control failed: {ctl['stdout'].strip()}")
+            else:
+                r = iso_exec("iso-b", ["/usr/bin/python3", "-c", SHM_ATTACH.replace("SHMID_TOK", str(shmid))])
+                if "ATTACH_OK" in r["stdout"]:
+                    cls = "INTERFERABLE"
+                elif "ATTACH_FAIL errno 22" in r["stdout"] or "ATTACH_FAIL errno 2" in r["stdout"]:
+                    cls = "ISOLATED"
+                else:
+                    cls = "INCONCLUSIVE"
+                axis("sysv_shm", cls,
+                     f"A created shmid={shmid}; A-attach ATTACH_OK; B attach: {r['stdout'].strip()}",
+                     "own IPC ns per sandbox; A's shmid is invalid in B")
         else:
             axis("sysv_shm", "NOT_TESTED", f"create failed: {r['stdout'].strip()}")
 
@@ -1039,6 +1121,10 @@ def cmd_isolation(ev: Evidence):
         stop_detached("iso-b")
 
     ev.step("cross-sandbox isolation matrix", matrix)
+    ev.data["sampling"] = ("single-sample security probes: each axis probe ran "
+                           "exactly once (timing steps elsewhere repeat 3-5x); "
+                           "classifications are N=1 observations on this host "
+                           "profile, with positive controls recorded per axis")
     bad = [m["axis"] for m in matrix if m["classification"] in ("INTERFERABLE", "REACHABLE")]
     exposed = [m["axis"] for m in matrix if m["classification"].startswith("VISIBLE")]
     ev.finish(f"{len(matrix)} axes; interference={bad or 'none'}; metadata-exposed={exposed or 'none'}")
@@ -1237,6 +1323,78 @@ def cmd_p21(ev: Evidence):
         shutil.rmtree(b, ignore_errors=True)
 
 
+# ---------------------------------------------------------------- seccomp
+
+RSECC = TOOLS / "runc-seccomp"
+
+PERS_PY = ("import ctypes\nlibc=ctypes.CDLL(None,use_errno=True)\n"
+           "rc=libc.personality(0xffffffff)\n"
+           "print('personality rc',rc,'errno',ctypes.get_errno())\n")
+
+SECCOMP_PROFILE = {
+    "defaultAction": "SCMP_ACT_ALLOW",
+    "architectures": ["SCMP_ARCH_X86_64", "SCMP_ARCH_X86", "SCMP_ARCH_X32"],
+    "syscalls": [{"names": ["personality"], "action": "SCMP_ACT_ERRNO"}],
+}
+
+
+def cmd_seccomp(ev: Evidence):
+    """seccomp runtime test (feasibility): build from scripts/build-runc-seccomp.sh
+    (user-local libseccomp + locked runc source, seccomp tag). Profile =
+    allow-all EXCEPT one harmless-but-detectable syscall (personality ->
+    SCMP_ACT_ERRNO). Proves (a) the filter is actually enforced, (b) real
+    workloads are unaffected by an allow-all baseline. Deliberately NOT a copy
+    of the Docker default profile: policy design is T30 territory."""
+    bundle = STATE / "bundles" / "a"
+    if not (bundle / "rootfs").is_dir():
+        raise SystemExit("run unpack first")
+    if not RSECC.exists():
+        raise SystemExit("run scripts/build-runc-seccomp.sh first")
+    prepare_nobody_context()
+    chown_tree(bundle, NOBODY_UID, NOBODY_GID)
+
+    def cfg_for(args, with_profile):
+        cfg = minimal_config(args, host_uid=NOBODY_UID, host_gid=NOBODY_GID,
+                             bind_proc_ro=True)
+        if with_profile:
+            cfg["linux"]["seccomp"] = SECCOMP_PROFILE
+        return cfg
+
+    # (a) enforcement proof: personality allowed without profile, denied with it
+    r0 = bundle_run(ev, bundle, "sc-noprofile-personality",
+                    cfg_for(["/usr/bin/python3", "-c", PERS_PY], False),
+                    runc=RSECC)
+    r1 = bundle_run(ev, bundle, "sc-profile-personality",
+                    cfg_for(["/usr/bin/python3", "-c", PERS_PY], True),
+                    runc=RSECC)
+    enforced = ("errno 1" in r1["stdout"]) and (
+        "errno 1" not in r0["stdout"]) and (r0["exit"] == 0) and (r1["exit"] == 0)
+    ev.step("seccomp enforcement (personality baseline vs denied)", {
+        "without_profile": r0["stdout"].strip(),
+        "with_profile": r1["stdout"].strip(), "enforced": enforced})
+
+    # (b) allow-all baseline leaves real workloads intact
+    workloads = [
+        ("bash", ["/bin/bash", "-c", "echo bash-ok; echo $((6*7))"]),
+        ("python3", ["/usr/bin/python3", "-c", "print('py-ok')"]),
+        ("git", ["/usr/bin/git", "--version"]),
+        ("node", ["/usr/bin/node", "-e", "console.log('node-ok')"]),
+        ("gcc", ["/bin/bash", "-c",
+                 "printf 'int main(){return 0;}\\n' > /tmp/s.c "
+                 "&& gcc -O2 -o /tmp/s /tmp/s.c && /tmp/s; echo gcc-exit-$?"]),
+    ]
+    ok = 0
+    for name, args in workloads:
+        r = bundle_run(ev, bundle, f"sc-profile-{name}", cfg_for(args, True),
+                       runc=RSECC)
+        good = (r["exit"] == 0 and "ok" in r["stdout"].lower()
+                or name == "gcc" and "gcc-exit-0" in r["stdout"])
+        ok += 1 if good else 0
+    chown_tree(bundle, 0, 0)
+    ev.finish(f"seccomp: enforced={enforced}; workloads_ok={ok}/{len(workloads)}; "
+              "capability AVAILABLE for contract (profile policy design = T30)")
+
+
 # ---------------------------------------------------------------- perf
 
 def cmd_perf(ev: Evidence):
@@ -1308,13 +1466,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("experiment",
                         choices=("fixtures", "unpack", "firstrun", "p1", "p2", "uids",
-                                 "rootfs", "isolation", "p21", "perf"))
+                                 "rootfs", "isolation", "p21", "seccomp", "perf"))
     args = parser.parse_args()
     STATE.mkdir(parents=True, exist_ok=True)
     ev = Evidence(args.experiment)
     {"fixtures": cmd_fixtures, "unpack": cmd_unpack, "firstrun": cmd_firstrun,
      "p1": cmd_p1, "p2": cmd_p2, "uids": cmd_uids,
      "rootfs": cmd_rootfs, "isolation": cmd_isolation, "p21": cmd_p21,
+     "seccomp": cmd_seccomp,
      "perf": cmd_perf}[args.experiment](ev)
 
 

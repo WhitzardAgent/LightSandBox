@@ -1,6 +1,6 @@
 {
   "experiment": "isolation",
-  "started_at": "2026-09-24T09:47:42.536242+00:00",
+  "started_at": "2026-09-24T15:19:50.320979+00:00",
   "host": {
     "kernel": "5.15.0-119-generic",
     "uid": 0
@@ -39,7 +39,7 @@
           "/tmp/lsbx-spike/bundles/a2iso"
         ],
         "exit": 0,
-        "ms": 1001,
+        "ms": 950,
         "stdout": "",
         "stderr": ""
       }
@@ -59,7 +59,7 @@
           "iso-a"
         ],
         "exit": 0,
-        "ms": 65,
+        "ms": 119,
         "run_as": "65534:65534",
         "stdout": "",
         "stderr": ""
@@ -80,7 +80,7 @@
           "iso-b"
         ],
         "exit": 0,
-        "ms": 65,
+        "ms": 66,
         "run_as": "65534:65534",
         "stdout": "",
         "stderr": ""
@@ -93,13 +93,13 @@
         {
           "axis": "filesystem",
           "classification": "ISOLATED",
-          "detail": "cat: /tmp/b_marker: No such file or directory",
+          "detail": "write rc=0; A read: cat: /tmp/b_marker: No such file or directory",
           "note": "separate rootfs copies + own mount ns"
         },
         {
           "axis": "process_metadata",
           "classification": "VISIBLE_READONLY",
-          "detail": "35 host pids visible via bound host /proc",
+          "detail": "39 host pids visible via bound host /proc",
           "note": "host-level numbering; contents subject to ptrace_may_access of same-uid processes"
         },
         {
@@ -123,8 +123,8 @@
         {
           "axis": "proc_environ_of_A",
           "classification": "ISOLATED",
-          "detail": "",
-          "note": "SECURITY EXPERIMENT result; same-host-uid processes pass ptrace_may_access"
+          "detail": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nPermissionError: [Errno 13] Permission denied: '/proc/558544/environ'",
+          "note": "SECURITY EXPERIMENT result; ISOLATED only on EACCES/errno 13 evidence"
         },
         {
           "axis": "proc_fd_of_A",
@@ -135,25 +135,25 @@
         {
           "axis": "network_tcp_loopback",
           "classification": "ISOLATED",
-          "detail": "FAIL ConnectionRefusedError 111",
+          "detail": "control CONNECTED; A: FAIL ConnectionRefusedError 111",
           "note": "private netns per sandbox (loopback-only); no cross-sandbox TCP"
         },
         {
           "axis": "network_host_loopback",
-          "classification": "ISOLATED",
-          "detail": "FAIL ConnectionRefusedError 111",
-          "note": "host loopback services unreachable from sandbox netns"
+          "classification": "NOT_TESTED",
+          "detail": "no host listener on 127.0.0.1:22; cross-probe would be vacuous",
+          "note": ""
         },
         {
           "axis": "unix_abstract_socket",
           "classification": "ISOLATED",
-          "detail": "FAIL ConnectionRefusedError 111",
+          "detail": "control CONNECTED; A: FAIL ConnectionRefusedError 111",
           "note": "abstract unix namespace is per-netns"
         },
         {
           "axis": "sysv_shm",
           "classification": "ISOLATED",
-          "detail": "A created shmid=0; B attach: rc 18446744073709551615 errno 22",
+          "detail": "A created shmid=0; A-attach ATTACH_OK; B attach: ATTACH_FAIL errno 22 18446744073709551615",
           "note": "own IPC ns per sandbox; A's shmid is invalid in B"
         },
         {
@@ -171,5 +171,6 @@
       ]
     }
   ],
+  "sampling": "single-sample security probes: each axis probe ran exactly once (timing steps elsewhere repeat 3-5x); classifications are N=1 observations on this host profile, with positive controls recorded per axis",
   "verdict": "13 axes; interference=none; metadata-exposed=['process_metadata', 'proc_cmdline_of_A', 'proc_fd_of_A']"
 }

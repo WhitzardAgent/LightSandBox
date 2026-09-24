@@ -4,11 +4,13 @@
 
 ## 固定的产品目标
 
-一个可独立安装的 Linux 沙盒服务，首个部署目标是具备必要管理权限的普通 Linux VM。无需 KVM、嵌套虚拟化或替换内核。候选执行链路不调用 Docker/containerd daemon，镜像构建允许独立 BuildKit OCI worker。Linux 能力、安全补丁、权限、文件系统、CPU 架构和用户态 ABI 仍须分别满足要求。[S01/S04]
+一个可独立安装的 Linux 沙盒服务。**首个部署目标是无 root、无 sudo、无 KVM 的普通 Linux VM 上的普通用户（Portable Rootless Host)**：不假定 subuid/subgid、cgroup 委托、/dev/fuse 或可写私有 proc。rootful 部署仅为未来可选 backend，不是当前主要目标。无需 KVM、嵌套虚拟化或替换内核。候选执行链路不调用 Docker/containerd daemon，镜像构建允许独立 BuildKit OCI worker。Linux 能力、安全补丁、权限、文件系统、CPU 架构和用户态 ABI 仍须分别满足要求。[S01/S04]
 
 外部提供三条入口：原生 CLI/Python SDK；固定版本 OpenSandbox 协议门面；Harbor 第三方 Environment provider。三个入口共用领域服务，禁止各写一套生命周期实现。Harbor 的任务组织、模型、验证和奖励仍由 Harbor/调用方负责。
 
 固定版本 CyberGym、SWE-bench、Terminal-Bench 的**完整任务集合**保持最终验收目标。环境可运行、结果一致、正向 oracle 可用是三个独立指标。缺镜像、参考故障、没有有效 PoC、宿主不支持等全部保留在总台账。进入不了某个任务的执行路径，就不能宣布该任务已经兼容。[全量合同](../acceptance/01_PARITY_CONTRACT.md)
+
+本项目追求的是 **Benchmark Task Parity**（固定任务集合上的环境/操作/验证一致），不是 **General Docker Semantic Parity**（任意 Docker 负载语义全等）。宿主按 HostCapabilityTier 分层（见[领域合同 §宿主能力分层](03_DOMAIN.md)）;PORTABLE_ROOTLESS 上依赖多个真实容器 UID、硬 cgroup 限额、特定内核特性、特权挂载或宿主网络管理的任务，必须按能力依赖如实入台账，不能通过 flatten 用户、删改 verifier 或修改任务计入兼容。
 
 ## 明确的三项取舍
 

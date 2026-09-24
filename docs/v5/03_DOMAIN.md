@@ -56,3 +56,17 @@ Operation状态：pending→running→succeeded/failed/unknown。unknown禁止�
 核心只接受services/networks/volumes/labels。每service包括image、launch、资源、mount和网络等物理参数。Harbor的agent_service选择、artifacts、verifier、steps、reward在HarborRecipe，不能进入runtime schema。
 
 离线参考解析器现在可验证一个或多个service声明，但只支持无额外卷/网络/依赖的严格子集；这不构成多服务运行能力。支持字段见代码与schema；非空高级字段报不支持。多服务生产IR由T20/T35实现，不把只读解析成功当环境可执行。
+
+## 宿主能力分层（2026-09-24 修订）
+
+`HostCapabilityTier` 是准入与能力宣告的输入，与 `launch_mode`/`security_profile` 正交：
+
+| Tier | 前提 | 可承诺 |
+|---|---|---|
+| `PORTABLE_ROOTLESS` | 单 ID userns；无 subuid/subgid 与 newuidmap/newgidmap；无 cgroup 委托；无可写私有 proc 保证；无 /dev/fuse；rootfs 为整树复制或 RAM COW；网络为 userspace helper 或 none | Benchmark Task Parity 目标；**不承诺**完整 Docker UID/GID 语义与 cgroup 硬限 |
+| `FULL_ROOTLESS` | 多 ID 映射（subuid/subgid＋newuidmap/newgidmap）、可用私有 proc、可用 rootless 网络、可用可写文件系统策略；请求硬限时必须具备 cgroup 委托 | 完整 rootless 语义 |
+| `ROOTFUL` | 管理员权限 | 未来可选 backend；非当前主要部署目标 |
+
+逐能力状态取值 `SUPPORTED`/`DEGRADED`/`UNSUPPORTED`/`NOT_TESTED`，每项绑定证据命令、退出码与关键输出（T03 HostReport，见 `specs/host-profiles.json`)。HostReport 不给 host 打单一标签；tier 判定由逐能力状态推导。
+
+单 ID 宿主上的 UID/GID 语义降级必须显式走 `SingleIdCompatibilityPolicy` 并在结果中披露（哪些 ownership/setuid/USER 语义被保留、模拟或丢失）；不允许为让命令执行而静默把镜像 USER 折成 0。多 UID 严格需求在 PORTABLE_ROOTLESS 上记 `UNSUPPORTED`。cgroup 硬限额在无委托时同样记 `UNSUPPORTED`;RLIMIT 类仅为进程级护栏，不能对外命名为 cgroup 硬限。

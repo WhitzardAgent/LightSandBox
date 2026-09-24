@@ -2,6 +2,12 @@
 
 **验收目标：固定完整任务集合中的每一个任务，都能在承诺的宿主配置上得到与参考运行时一致的环境、操作和验证结果。** 没有真实数据前不声称已经兼容。成功执行沙盒任务与模型能够解题是两个指标。
 
+## 0. 两类 parity（2026-09-24 修订）
+
+本合同的对象是 **Benchmark Task Parity**：固定任务集合上的环境、操作与验证一致。**General Docker Semantic Parity**（任意 Docker 负载语义全等）不是 PORTABLE_ROOTLESS 宿主的承诺目标。
+
+依赖多个真实容器 UID/GID、硬 cgroup 隔离、特定内核特性、特权挂载或宿主网络管理的任务，必须在逐任务证据中记为能力依赖，在 PORTABLE_ROOTLESS 上只能落入相应阻塞/不支持类别（如`HOST_UNSUPPORTED`)；禁止通过 flatten 用户身份、删改 verifier 或修改任务定义把它们计入兼容，任务分母不因宿主分层而减少。
+
 ## 1. 分母不能由测试结果决定
 
 T02在运行候选系统前生成完整任务manifest。每条记录至少包含benchmark、dataset/release、revision、split、task_id、资源与平台要求、镜像配置、verifier摘要、oracle来源状态。原始manifest排序后计算SHA-256。修改集合必须产生新版本与原因，不能原地删掉失败任务。

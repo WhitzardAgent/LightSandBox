@@ -2,7 +2,7 @@
 
 **2026-09-24｜独立包｜设计、参考代码与开发工作包；尚无完整运行时。**
 
-目标保持：普通Linux虚机、无KVM、无需更换内核；以runc/OCI实现沙盒，独立BuildKit处理构建；OpenSandbox兼容接口与Harbor环境后端；最终以完整固定CyberGym、SWE-bench、Terminal-Bench任务集验收。必要宿主能力/管理权限仍必须具备。
+目标保持：普通Linux虚机、无KVM、无需更换内核；以runc/OCI实现沙盒，独立BuildKit处理构建；OpenSandbox兼容接口与Harbor环境后端；最终以完整固定CyberGym、SWE-bench、Terminal-Bench任务集验收。**2026-09-24修订：首发宿主假设为无root/无sudo的Portable Rootless Host（单ID userns、无cgroup委托，见docs/v5/03_DOMAIN.md §宿主能力分层）；rootful仅为未来可选backend。** 目标是Benchmark Task Parity，不是General Docker Semantic Parity。
 
 ## 本次实质修订
 

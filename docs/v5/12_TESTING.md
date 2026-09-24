@@ -4,6 +4,8 @@
 
 L0 文档/清单：链接、schema、状态机、任务依赖、API方法矩阵。L1 无特权参考：类型、argv、HTTP请求、超时、重试、退出/未知、CLI解析。L2 真Linux运行：runc、mount、cgroup、network、FD、PTY。L3 上游互操作：原版Harbor/OpenSandbox。L4 完整基准差分。L5 故障/隔离/吞吐。
 
+L2 首发宿主配置为 `PORTABLE_ROOTLESS`；FULL_ROOTLESS/ROOTFUL 差分另行分层。每项宿主能力判定取 `SUPPORTED`/`DEGRADED`/`UNSUPPORTED`/`NOT_TESTED`，绑定证据命令、退出码与关键输出（见 T03 HostReport 与 `specs/host-profiles.json`)；能力未证不支持时对应声明作废，不得降级视为通过。
+
 本包执行L0/L1及旧参考回归，不执行L2–L5。L1的MockTransport证明HTTP客户端请求/错误行为，不能证明服务实现；旧FakeEnvironment不能证明真实Harbor继承接口兼容。
 
 ## 新增的具体边界测试

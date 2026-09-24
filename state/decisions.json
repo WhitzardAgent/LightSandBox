@@ -2,6 +2,15 @@
   "schema_version": "2.0",
   "product_decisions": "PROPOSED_DESIGN",
   "deployment_authorization": "NOT_GIVEN_IN_THIS_PACK",
+  "resolved": [
+    {
+      "id": "D01",
+      "decision": "首发宿主假设改为 Portable Rootless Host(无root/无sudo、单ID userns、无cgroup委托、无/dev/fuse);ROOTFUL 仅作未来可选 backend。验收目标区分为 Benchmark Task Parity(承诺)与 General Docker Semantic Parity(不承诺)。",
+      "decided_on": "2026-09-24",
+      "evidence": ["evidence/host/rootless-host-report.json", "evidence/host/rootless-host-report.md"],
+      "docs": ["docs/v5/00_PRODUCT.md", "docs/v5/03_DOMAIN.md", "docs/acceptance/01_PARITY_CONTRACT.md"]
+    }
+  ],
   "unresolved": [
     {
       "id": "U01",

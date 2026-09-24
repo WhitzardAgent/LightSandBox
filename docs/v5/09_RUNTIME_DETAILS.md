@@ -40,9 +40,9 @@ IP/CIDR策略与hostname策略分开宣告。域名解析为IP并放行不能证
 
 ## 资源和宿主
 
-检测namespace/cgroup/seccomp/文件系统等真实能力，首发只选择实际可验证配置。cgroup v2优先，v1/rootless是单独支持项。`storage_bytes`硬限制无可用配额时拒绝，而非后台轮询假装hard limit。PIDs、FDs、mount、network states和CAS inode也有全局预算。
+检测namespace/cgroup/seccomp/文件系统等真实能力，首发只选择实际可验证配置，默认宿主为 `PORTABLE_ROOTLESS`（单 ID userns、无 cgroup 委托、无 uidmap helper、无可写私有 proc 保证、无 /dev/fuse；见领域合同 §宿主能力分层）。cgroup v2优先；无委托时硬限能力直报`UNSUPPORTED`。`storage_bytes`硬限制无可用配额时拒绝，而非后台轮询假装hard limit。PIDs、FDs、mount、network states和CAS inode也有全局预算；进程级RLIMIT只能作为护栏，不得对外称为cgroup硬限。
 
-“不换内核”保留；但如果已有内核缺必要原语或安全策略不允许，则报告HOST_UNSUPPORTED。静态Rust、旧glibc构建、KVM缺失属于不同维度，不能互相推导兼容。
+“不换内核”保留；但如果已有内核缺必要原语或安全策略不允许，则报告HOST_UNSUPPORTED。静态Rust、旧glibc构建、KVM缺失属于不同维度，不能互相推导兼容。单 ID 宿主的 UID/GID 语义降级走显式 `SingleIdCompatibilityPolicy` 并披露保留/模拟/丢失清单，不静默 flatten。
 
 ## 威胁模型
 

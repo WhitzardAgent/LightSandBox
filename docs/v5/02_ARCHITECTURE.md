@@ -65,4 +65,6 @@ SQLite保存意图、对象归属、请求去重、状态修订及引用关系�
 
 ## 默认边界
 
-共享宿主内核容器不能保证抵御任意内核漏洞。危险负载放在专用worker VM，管理网络与模型凭据网关隔离。用户提供root命令或Dockerfile并不授予宿主root管理权限。首次兼容只保证批准的host profile；rootless/其他cgroup/filesystem路径分别测试。[S01/S02/S04]
+共享宿主内核容器不能保证抵御任意内核漏洞。危险负载放在专用worker VM，管理网络与模型凭据网关隔离。用户提供root命令或Dockerfile并不授予宿主root管理权限。首次兼容只保证批准的host profile。[S01/S02/S04]
+
+首发准入按 `HostCapabilityTier=PORTABLE_ROOTLESS` 验证：单 ID userns、无 subuid/uidmap helper、无 cgroup 委托、无 /dev/fuse、无可写私有 proc 保证。FULL_ROOTLESS 与 ROOTFUL 是显式的独立支持配置，不是 PORTABLE_ROOTLESS 的隐含回退或假设；逐能力状态与证据按 T03 HostReport 登记（见领域合同 §宿主能力分层）。

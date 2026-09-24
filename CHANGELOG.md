@@ -1,5 +1,13 @@
 # v5 修订摘要
 
+## 2026-09-24 宿主能力分层修订
+
+- 引入 `HostCapabilityTier`（PORTABLE_ROOTLESS/FULL_ROOTLESS/ROOTFUL)，首发宿主假设为无root/无sudo的单ID userns主机；rootful降为未来可选backend。
+- 区分 Benchmark Task Parity 与 General Docker Semantic Parity;PORTABLE_ROOTLESS 只承诺前者,依赖多UID/硬cgroup/特权挂载的任务按能力依赖入台账。
+- 逐能力状态(SUPPORTED/DEGRADED/UNSUPPORTED/NOT_TESTED)绑定证据命令与退出码;UID/GID降级必须显式走SingleIdCompatibilityPolicy,禁止静默flatten。
+
+## 首批修订
+
 - 原生EnvironmentSpec移除verifier/reward/agent；Harbor保留原Trial和Verifier。
 - CLI统一lsbx；exec提交与execution管理分组，SDK同步/异步共用请求合同。
 - 新增native OpenAPI/JSON schema/状态机/surface和75项本轮native reference测试。

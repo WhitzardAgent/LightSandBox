@@ -1,0 +1,10 @@
+[package]
+name = "ls-host"
+description = "LightSandbox host-side probing primitives (T00; extended by T03 runtime checks)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+ls-core = { workspace = true }

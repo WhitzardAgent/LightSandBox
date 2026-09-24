@@ -10,6 +10,9 @@ __pycache__/
 # Rust build output (future crates)
 /target/
 
+# dev/check run logs (summaries are committed deliberately under evidence/)
+/dev/.check-runs/
+
 # Virtualenvs
 .venv/
 venv/

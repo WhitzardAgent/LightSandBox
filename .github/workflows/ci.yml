@@ -1,0 +1,39 @@
+name: dev-gates
+
+on:
+  push:
+    branches: [main, 'spike/**']
+  pull_request: {}
+
+# Unprivileged gates only. runtime/differential/security/parity/performance
+# suites are NOT wired here on purpose: docs/harness/04_TEST_RUNNER_AND_EVIDENCE.md
+# requires them to execute via an authorized worker registry (dev/runtime-workers.json),
+# which ships empty — those suites must report BLOCKED, never simulated green.
+
+jobs:
+  unprivileged:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Python reference deps
+        run: python3 -m pip install httpx==0.28.1 jsonschema==4.26.0
+
+      - name: Pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal
+          rustup default 1.98.1
+          rustc --version
+
+      - name: Structure lint
+        run: ./dev/check structure
+
+      - name: Unit gates (cargo + harness + python dev)
+        run: ./dev/check unit
+
+      - name: Fast gates (adds reference suites and clean-tree build)
+        run: ./dev/check fast --json

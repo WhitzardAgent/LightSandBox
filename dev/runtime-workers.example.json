@@ -1,0 +1,10 @@
+{
+  "WORKER_ID_EXAMPLE": {
+    "authorized": true,
+    "host": "operator-registered test VM hostname",
+    "tier": "PORTABLE_ROOTLESS",
+    "registered_by": "operator identity",
+    "registered_on": "YYYY-MM-DD",
+    "notes": "runtime/differential/security suites only ever run against entries present here; T00 ships an empty registry so all such suites report BLOCKED."
+  }
+}

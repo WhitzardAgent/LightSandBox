@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+"""LightSandbox dev/check entry point (T00).
+
+Adds the locally provisioned rustup toolchain to PATH when cargo is otherwise
+absent, then delegates to dev/checklib.py. All suite logic lives in checklib
+so tests can import it directly.
+"""
+import os
+import shutil
+import sys
+from pathlib import Path
+
+DEV_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(DEV_DIR))
+
+# dev/check requires Python >= 3.11 (tomllib, modern unittest). Re-exec with a
+# suitable interpreter when launched under an older one; fail loudly if none.
+if sys.version_info < (3, 11):
+    for candidate in ('python3.12', 'python3.11'):
+        found = shutil.which(candidate)
+        if found and Path(found).resolve() != Path(sys.executable).resolve():
+            os.execv(found, [found, str(Path(__file__).resolve()), *sys.argv[1:]])
+    print('dev/check requires Python >= 3.11 (none of python3.12/python3.11 found on PATH)',
+          file=sys.stderr)
+    raise SystemExit(4)
+
+_LOCAL_CARGO = Path.home() / '.cargo' / 'bin'
+if shutil.which('cargo') is None and (_LOCAL_CARGO / 'cargo').exists():
+    os.environ['PATH'] = f"{_LOCAL_CARGO}{os.pathsep}" + os.environ.get('PATH', '')
+
+from checklib import main  # noqa: E402
+
+if __name__ == '__main__':
+    raise SystemExit(main())

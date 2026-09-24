@@ -1,0 +1,4 @@
+{
+  "rustc": "1.98.1",
+  "note": "Pinned Rust toolchain verified by dev/check before cargo test. Go, build helpers and upstream sources are pinned separately by T01 source locks."
+}

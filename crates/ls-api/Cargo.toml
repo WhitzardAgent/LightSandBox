@@ -1,0 +1,9 @@
+[package]
+name = "ls-api"
+description = "LightSandbox native API surface vocabulary (T00: stable error codes only)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]

@@ -1,0 +1,11 @@
+[package]
+name = "ls-core"
+description = "LightSandbox core domain vocabulary: host capability tiers, statuses and reports (T00)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

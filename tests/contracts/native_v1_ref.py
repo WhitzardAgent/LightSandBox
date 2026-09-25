@@ -210,9 +210,13 @@ def legal_transition(states: dict, domain: str, frm: str, to: str) -> bool:
 
 
 def check_semantic_fact(doc: dict) -> bool:
+    # null-or-absent ONLY means "missing" (Rust engine rule, round-03 review
+    # item #7): a falsy non-null exit_record ({}, [], 0, "") is an observed
+    # record; a non-object execution never trips the rule.
     execution = doc.get("execution")
-    if execution and execution.get("state") == "exited" and not execution.get("exit_record"):
-        return False
+    if isinstance(execution, dict) and execution.get("state") == "exited":
+        if execution.get("exit_record") is None:
+            return False
     return True
 
 

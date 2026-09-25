@@ -226,7 +226,7 @@ impl BackendCapabilities {
                 (dim::MULTI_UID.into(), multi_uid),
                 (
                     dim::PRIVATE_PROC.into(),
-                    bool_str_supported(&host.process.proc_policy.mode, "PRIVATE_PROC"),
+                    bool_str_supported(host.process.proc_policy.mode.wire(), "PRIVATE_PROC"),
                 ),
                 // Native pid 1 IS the workload payload: no guest init-system
                 // semantics exist to offer. This is a semantic fact, not a gap
@@ -235,7 +235,7 @@ impl BackendCapabilities {
                 (dim::HARD_MEMORY_LIMIT.into(), host.resource.hard_memory_limit),
                 (
                     dim::SECCOMP.into(),
-                    bool_str_supported(&host.process.seccomp, "AVAILABLE"),
+                    bool_str_supported(host.process.seccomp.wire(), "AVAILABLE"),
                 ),
                 (dim::OUTBOUND_NETWORK.into(), host.network.outbound),
                 (dim::NET_ADMIN.into(), host.network.net_admin),
@@ -564,18 +564,21 @@ mod tests {
 
     #[test]
     fn native_offer_maps_from_t41_host_capabilities() {
+        // values below are the frozen host-capabilities.schema.json v1 enum
+        // vocabulary (round-03 review item #5 closed the serde mirror;
+        // out-of-schema strings no longer parse)
         let host: HostCapabilities = serde_json::from_value(serde_json::json!({
             "tier": "PORTABLE_ROOTLESS",
             "identity": {
                 "user_namespace": "SUPPORTED",
                 "uid_mapping_mode": "SINGLE_ID",
                 "gid_mapping_mode": "SINGLE_ID",
-                "ownership_model": "FLATTENED_BY_UNPACK",
-                "image_user_support": "UID0_ONLY"
+                "ownership_model": "FLATTENED",
+                "image_user_support": "ROOT_ONLY"
             },
             "process": {
                 "pid_namespace": "SUPPORTED",
-                "proc_policy": {"mode": "HOST_RBIND_RO", "confidentiality": "METADATA_AND_ARGV_VISIBLE"},
+                "proc_policy": {"mode": "RBIND_RO_HOST_PROC", "confidentiality": "METADATA_AND_ARGV_VISIBLE"},
                 "seccomp": "AVAILABLE"
             },
             "resource": {
@@ -585,7 +588,7 @@ mod tests {
                 "hard_pid_limit": "UNSUPPORTED"
             },
             "filesystem": {
-                "rootfs_driver": "REFLINK_VOLATILE",
+                "rootfs_driver": "REFLINK_COPY",
                 "persistent_cow": "UNSUPPORTED",
                 "ephemeral_cow": "SUPPORTED"
             },
@@ -598,7 +601,7 @@ mod tests {
             },
             "runtime": {
                 "runc": {"version": "1.4.x", "sha256": "aa", "seccomp": false},
-                "supervisor": "NONE"
+                "supervisor": "ABSENT"
             }
         }))
         .unwrap();

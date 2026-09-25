@@ -12,11 +12,16 @@
 //!   (shell metacharacters inside argv are NOT protocol injection: argv is
 //!   never interpreted by any host shell — that contrast is pinned in the
 //!   accept fixtures)
+//! * `execution.start` embeds the frozen ExecutionSpec
+//!   (contracts/v1/exec.schema.json) verbatim, validated by the
+//!   fixture-locked [`ExecSpec::parse`]: the guest-side shell command form
+//!   is still guest input, never a host shell
 //! * strict per-op field whitelists; wrong-typed scalars (bool as number,
 //!   negative generation) rejected at parse
 
 use super::error::DomainError;
 use super::ids::{BundleRef, ExecutionId, Generation, GuestPath, SandboxId};
+use crate::contracts::ExecSpec;
 use serde_json::Value;
 use std::collections::BTreeMap;
 
@@ -43,7 +48,9 @@ pub enum ControlRequest {
         sandbox_id: SandboxId,
         generation: Generation,
         execution_id: ExecutionId,
-        argv: Vec<String>,
+        /// The frozen ExecutionSpec (contracts/v1/exec.schema.json),
+        /// schema-normalized and carried verbatim — never stripped.
+        spec: ExecSpec,
     },
     ExecutionCancel {
         execution_id: ExecutionId,
@@ -153,30 +160,56 @@ pub fn parse(doc: &Value) -> Result<ControlRequest, DomainError> {
             })
         }
         "execution.start" => {
-            let obj = require_object(doc, &["sandbox_id", "generation", "execution_id", "argv"])?;
-            let raw = obj
-                .get("argv")
-                .and_then(Value::as_array)
-                .ok_or_else(|| DomainError::invalid("field \"argv\" is required and must be an array"))?;
-            if raw.is_empty() {
-                return Err(DomainError::invalid("argv must not be empty"));
-            }
-            let mut argv = Vec::with_capacity(raw.len());
-            for item in raw {
-                let s = item
-                    .as_str()
-                    .ok_or_else(|| DomainError::invalid("argv elements must be strings"))?;
-                if s.is_empty() {
-                    return Err(DomainError::invalid("argv elements must not be empty"));
+            let obj = require_object(
+                doc,
+                &[
+                    "sandbox_id", "generation", "execution_id", "argv", "command", "env", "cwd",
+                    "user", "timeout_ms",
+                ],
+            )?;
+            // The op embeds the frozen ExecutionSpec (contracts/v1/
+            // exec.schema.json) verbatim next to the routing fields:
+            // `command` is the schema oneOf (argv|shell); a bare top-level
+            // `argv` array is the argv-kind shorthand. Validation and
+            // normalization (empty-string argv elements preserved, env-name
+            // rules, null != missing) are delegated to the fixture-locked
+            // ExecSpec::parse so this boundary cannot drift from the contract.
+            let command = match (obj.get("command"), obj.get("argv")) {
+                (Some(_), Some(_)) => {
+                    return Err(DomainError::invalid(
+                        "fields \"command\" and \"argv\" are mutually exclusive (top-level argv \
+                         is shorthand for command {\"kind\": \"argv\", ...})",
+                    ))
                 }
-                no_nul("argv element", s)?;
-                argv.push(s.to_string());
+                (Some(command), None) => command.clone(),
+                (None, Some(argv)) => {
+                    let mut c = serde_json::Map::new();
+                    c.insert("kind".to_string(), Value::String("argv".to_string()));
+                    c.insert("argv".to_string(), argv.clone());
+                    Value::Object(c)
+                }
+                (None, None) => {
+                    return Err(DomainError::invalid(
+                        "field \"argv\" is required and must be an array (or provide field \"command\")",
+                    ))
+                }
+            };
+            let mut spec_doc = serde_json::Map::new();
+            spec_doc.insert("command".to_string(), command);
+            for key in ["env", "cwd", "user", "timeout_ms"] {
+                // Forwarded verbatim whenever the key is present — INCLUDING
+                // explicit null, which ExecSpec::parse rejects per the frozen
+                // schema (null != missing).
+                if let Some(v) = obj.get(key) {
+                    spec_doc.insert(key.to_string(), v.clone());
+                }
             }
+            let spec = ExecSpec::parse(&Value::Object(spec_doc)).map_err(DomainError::invalid)?;
             Ok(ControlRequest::ExecutionStart {
                 sandbox_id: SandboxId::new(string_field(obj, "sandbox_id")?)?,
                 generation: generation_field(obj)?,
                 execution_id: ExecutionId::new(string_field(obj, "execution_id")?)?,
-                argv,
+                spec,
             })
         }
         "execution.cancel" => {
@@ -309,6 +342,100 @@ mod tests {
                 "nul case {i}"
             );
         }
+    }
+
+    #[test]
+    fn execspec_empty_argv_element_is_preserved_verbatim() {
+        // Frozen exec.schema.json preserves empty-string argv elements at
+        // their position (execspec fixture argv-empty-string-preserved);
+        // only argv[0] must be non-empty. Rejecting them here was drift
+        // against the frozen contract (round-03 review finding #1).
+        let doc = serde_json::json!({
+            "op": "execution.start", "sandbox_id": "sb_01", "generation": 1,
+            "execution_id": "ex_01", "argv": ["echo", ""]
+        });
+        match parse(&doc).unwrap() {
+            ControlRequest::ExecutionStart { spec, .. } => assert_eq!(
+                spec.command,
+                crate::contracts::Command::Argv(vec!["echo".to_string(), String::new()])
+            ),
+            other => panic!("wrong variant: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn execspec_env_is_carried_with_values_intact() {
+        // env must ride the op verbatim (schema string values, may be empty);
+        // it was previously not even representable on this op.
+        let doc = serde_json::json!({
+            "op": "execution.start", "sandbox_id": "sb_01", "generation": 1,
+            "execution_id": "ex_01", "argv": ["env"], "env": {"A": "B", "EMPTY": ""}
+        });
+        match parse(&doc).unwrap() {
+            ControlRequest::ExecutionStart { spec, .. } => {
+                assert_eq!(spec.env.get("A").and_then(Value::as_str), Some("B"));
+                assert_eq!(spec.env.get("EMPTY").and_then(Value::as_str), Some(""));
+            }
+            other => panic!("wrong variant: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn execspec_cwd_user_timeout_and_shell_command_round_trip() {
+        // The frozen ExecSpec fields (incl. the shell command kind) must
+        // arrive in the typed op, not be stripped at the parse boundary.
+        let doc = serde_json::json!({
+            "op": "execution.start", "sandbox_id": "sb_01", "generation": 3,
+            "execution_id": "ex_02",
+            "command": {"kind": "shell", "executable": "/bin/bash", "script": "cd /app && pytest -q"},
+            "cwd": "/app", "user": "root", "timeout_ms": 30000
+        });
+        match parse(&doc).unwrap() {
+            ControlRequest::ExecutionStart {
+                sandbox_id,
+                generation,
+                execution_id,
+                spec,
+            } => {
+                assert_eq!(sandbox_id.as_str(), "sb_01");
+                assert_eq!(generation.0, 3);
+                assert_eq!(execution_id.as_str(), "ex_02");
+                assert_eq!(
+                    spec.command,
+                    crate::contracts::Command::Shell {
+                        executable: "/bin/bash".to_string(),
+                        script: "cd /app && pytest -q".to_string(),
+                    }
+                );
+                assert_eq!(spec.cwd.as_deref(), Some("/app"));
+                assert_eq!(spec.user.as_deref(), Some("root"));
+                assert_eq!(spec.timeout_ms, Some(30000));
+            }
+            other => panic!("wrong variant: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn execspec_env_key_with_equals_is_rejected() {
+        // exec.schema.json env propertyNames "^[^=\\u0000]+$" bans '=' in
+        // env names on this surface too (fixture env-name-with-equals).
+        let doc = serde_json::json!({
+            "op": "execution.start", "sandbox_id": "sb_01", "generation": 1,
+            "execution_id": "ex_01", "argv": ["true"], "env": {"A=B": "x"}
+        });
+        let err = parse(&doc).unwrap_err();
+        assert_eq!(err.code, super::super::error::ErrorCode::InvalidArgument);
+    }
+
+    #[test]
+    fn execspec_empty_env_key_is_rejected() {
+        // exec.schema.json env propertyNames minLength 1 bans the empty name.
+        let doc = serde_json::json!({
+            "op": "execution.start", "sandbox_id": "sb_01", "generation": 1,
+            "execution_id": "ex_01", "argv": ["true"], "env": {"": "x"}
+        });
+        let err = parse(&doc).unwrap_err();
+        assert_eq!(err.code, super::super::error::ErrorCode::InvalidArgument);
     }
 
     #[test]

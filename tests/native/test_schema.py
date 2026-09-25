@@ -38,6 +38,27 @@ class TestSchemas(unittest.TestCase):
             headers={h['name'] for h in o['parameters'] if h['in']=='header'}
             self.assertEqual('X-LS-Generation' in headers,x['requires_generation'])
             self.assertEqual('Idempotency-Key' in headers,x['method']!='GET')
+    def test_openapi_error_envelope_matches_frozen_schema(self):
+        api=load('contracts/v1/native.openapi.json');frozen=load('contracts/v1/error.schema.json')
+        o=api['components']['schemas']['Error']
+        Draft202012Validator.check_schema(o)
+        vo=Draft202012Validator(o);vf=Draft202012Validator(frozen)
+        inner=frozen['properties']['error']
+        probes=[{'error':{'code':'NOT_FOUND','message':'gone','request_id':'rq1'}},
+                {'error':{'code':'NOT_A_CODE','message':'x','request_id':'rq1'}},
+                {'error':{'code':'NOT_FOUND','message':'x'}},
+                {'error':{'code':'NOT_FOUND','message':'','request_id':'rq1'}},
+                {'error':{'code':'NOT_FOUND','message':'x','request_id':''}},
+                {'error':{'code':'NOT_FOUND','message':'x','request_id':'bad\u0000id'}},
+                {'error':{'code':'NOT_FOUND','message':'x','request_id':'rq1','extra':1}},
+                {'error':{'code':'NOT_FOUND','message':'x','request_id':'rq1'},'extra':1},
+                {}]
+        for p in probes:
+            with self.subTest(probe=p):
+                self.assertEqual(not list(vo.iter_errors(p)),not list(vf.iter_errors(p)))
+        err=o['properties']['error']
+        self.assertEqual(set(err['required']),set(inner['required']))
+        self.assertEqual(err['properties']['code']['enum'],inner['properties']['code']['enum'])
     def test_local_refs_resolve(self):
         api=load('contracts/v1/native.openapi.json')
         def visit(x):

@@ -730,6 +730,41 @@
                 "maxProperties": 0
               }
             ]
+          },
+          "requires": {
+            "type": "object",
+            "properties": {
+              "multi_uid": {
+                "type": "boolean",
+                "default": false
+              },
+              "hard_memory_limit": {
+                "type": "boolean",
+                "default": false
+              },
+              "private_proc": {
+                "type": "boolean",
+                "default": false
+              },
+              "seccomp": {
+                "type": "boolean",
+                "default": false
+              },
+              "outbound_network": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            "additionalProperties": false,
+            "description": "hard preconditions per sandbox-requirements.schema.json; a true requirement whose mapped host capability is not SUPPORTED rejects the create preflight with HOST_CAPABILITY_UNAVAILABLE (412) per resolution-rules.json; all default false"
+          },
+          "single_id_compatibility_policy": {
+            "enum": [
+              "STRICT",
+              "FLATTEN_ROOT"
+            ],
+            "default": "STRICT",
+            "description": "STRICT refuses unfaithful UID/GID expressions pre-create; FLATTEN_ROOT is an explicit benchmark-compat switch whose effects MUST appear in effective_degradations"
           }
         },
         "required": [
@@ -1418,7 +1453,7 @@
           },
           "revision": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 0
           }
         },
         "required": [
@@ -1480,7 +1515,7 @@
                 },
                 "revision": {
                   "type": "integer",
-                  "minimum": 1
+                  "minimum": 0
                 }
               },
               "required": [
@@ -1514,23 +1549,35 @@
             "type": "object",
             "properties": {
               "code": {
-                "type": "string",
-                "pattern": "^[^\\u0000]*$",
-                "minLength": 1
+                "enum": [
+                  "INVALID_ARGUMENT",
+                  "AUTHENTICATION_REQUIRED",
+                  "FORBIDDEN",
+                  "NOT_FOUND",
+                  "CONFLICT",
+                  "STALE_GENERATION",
+                  "CAPABILITY_UNAVAILABLE",
+                  "HOST_CAPABILITY_UNAVAILABLE",
+                  "POLICY_UNSUPPORTED",
+                  "RESOURCE_EXHAUSTED",
+                  "INTERNAL_FAILURE",
+                  "UNAVAILABLE"
+                ]
               },
               "message": {
                 "type": "string",
-                "pattern": "^[^\\u0000]*$"
+                "minLength": 1
               },
               "request_id": {
                 "type": "string",
-                "pattern": "^[^\\u0000]*$",
-                "minLength": 1
+                "minLength": 1,
+                "pattern": "^[^\\u0000]*$"
               }
             },
             "required": [
               "code",
-              "message"
+              "message",
+              "request_id"
             ],
             "additionalProperties": false
           }

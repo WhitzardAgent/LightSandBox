@@ -342,21 +342,110 @@ pub enum SingleIdCompatibilityPolicy {
     FlattenRoot,
 }
 
+// Closed enums mirroring the frozen host-capabilities.schema.json value sets
+// (round-03 review item #5): the serde mirror was more lenient than the
+// schema on these seven fields. Wire names stay byte-identical via
+// SCREAMING_SNAKE_CASE renames; out-of-schema values now reject at parse
+// time instead of passing through as arbitrary strings. Serialize derives
+// are additive (wire names unchanged), as with `Status` above.
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum OwnershipModel {
+    Faithful,
+    Flattened,
+    EmulatedPartial,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ImageUserSupport {
+    AnyUid,
+    RootOnly,
+    Unsupported,
+    NotTested,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ProcPolicyMode {
+    PrivateProc,
+    RbindRoHostProc,
+    Unavailable,
+    NotTested,
+}
+
+impl ProcPolicyMode {
+    pub fn wire(&self) -> &'static str {
+        match self {
+            ProcPolicyMode::PrivateProc => "PRIVATE_PROC",
+            ProcPolicyMode::RbindRoHostProc => "RBIND_RO_HOST_PROC",
+            ProcPolicyMode::Unavailable => "UNAVAILABLE",
+            ProcPolicyMode::NotTested => "NOT_TESTED",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ProcConfidentiality {
+    Private,
+    MetadataAndArgvVisible,
+    ContentVisible,
+    NotTested,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SeccompAvailability {
+    Available,
+    Unavailable,
+    NotTested,
+}
+
+impl SeccompAvailability {
+    pub fn wire(&self) -> &'static str {
+        match self {
+            SeccompAvailability::Available => "AVAILABLE",
+            SeccompAvailability::Unavailable => "UNAVAILABLE",
+            SeccompAvailability::NotTested => "NOT_TESTED",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum RootfsDriver {
+    FullCopy,
+    ReflinkCopy,
+    TmpfsCow,
+    Overlay,
+    NotTested,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SupervisorPresence {
+    Present,
+    Absent,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IdentityCaps {
     pub user_namespace: Status,
     pub uid_mapping_mode: UidMappingMode,
     pub gid_mapping_mode: UidMappingMode,
-    pub ownership_model: String,
-    pub image_user_support: String,
+    pub ownership_model: OwnershipModel,
+    pub image_user_support: ImageUserSupport,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ProcPolicy {
-    pub mode: String,
-    pub confidentiality: String,
+    pub mode: ProcPolicyMode,
+    pub confidentiality: ProcConfidentiality,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -365,7 +454,7 @@ pub struct ProcessCaps {
     pub pid_namespace: Status,
     pub proc_policy: ProcPolicy,
     /// AVAILABLE on this host once runc-seccomp is adopted (ADR 0001 A3).
-    pub seccomp: String,
+    pub seccomp: SeccompAvailability,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -382,7 +471,7 @@ pub struct ResourceCaps {
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FilesystemCaps {
-    pub rootfs_driver: String,
+    pub rootfs_driver: RootfsDriver,
     pub persistent_cow: Status,
     pub ephemeral_cow: Status,
 }
@@ -409,7 +498,7 @@ pub struct RuncFact {
 #[serde(deny_unknown_fields)]
 pub struct RuntimeCaps {
     pub runc: RuncFact,
-    pub supervisor: String,
+    pub supervisor: SupervisorPresence,
 }
 
 /// Dimensioned host capability observation. Never a requirement.
@@ -423,6 +512,12 @@ pub struct HostCapabilities {
     pub filesystem: FilesystemCaps,
     pub network: NetworkCaps,
     pub runtime: RuntimeCaps,
+    /// Optional per-dimension evidence binding (round-03 review item #6a):
+    /// the frozen schema accepts this top-level object; the serde mirror
+    /// must not reject it. Kept untyped here — the per-entry shape lives
+    /// schema-side; divergent-corner pins (6b/6c) are deferred to T45.
+    #[serde(default)]
+    pub evidence: Option<Value>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Default)]
@@ -509,7 +604,22 @@ pub struct Resolution {
     pub effective: Value,
 }
 
+/// Dotted capability-path lookup into the raw host report; the same rule as
+/// the Python reference `_dig`. Missing segments or non-string leaves
+/// resolve to None.
+fn dig<'a>(mut cur: &'a Value, dotted: &str) -> Option<&'a str> {
+    for part in dotted.split('.') {
+        cur = cur.get(part)?;
+    }
+    cur.as_str()
+}
+
 /// Drives off the frozen rules table; both resolvers consume the same file.
+/// The requirement -> capability mapping is read from `requirements_map`
+/// itself (round-03 review item #8): re-pointing a capability path in the
+/// table re-points this resolver, exactly like the Python engine. The
+/// requirement vocabulary stays typed (the frozen requirements schema is
+/// additionalProperties:false); iteration order is unchanged from v1.
 pub fn resolve(
     host: &HostCapabilities,
     host_raw: &Value,
@@ -518,28 +628,32 @@ pub fn resolve(
 ) -> Resolution {
     let mut rejections = Vec::new();
     let mut degradations = Vec::new();
-    let reqs: Vec<(&str, bool, &str)> = vec![
-        ("multi_uid", spec.requires.multi_uid, "identity.uid_mapping_mode"),
-        ("hard_memory_limit", spec.requires.hard_memory_limit, "resource.hard_memory_limit"),
-        ("private_proc", spec.requires.private_proc, "process.proc_policy.mode"),
-        ("seccomp", spec.requires.seccomp, "process.seccomp"),
-        ("outbound_network", spec.requires.outbound_network, "network.outbound"),
+    let wanted = [
+        ("multi_uid", spec.requires.multi_uid),
+        ("hard_memory_limit", spec.requires.hard_memory_limit),
+        ("private_proc", spec.requires.private_proc),
+        ("seccomp", spec.requires.seccomp),
+        ("outbound_network", spec.requires.outbound_network),
     ];
-    let map = &rules["requirements_map"];
-    for (name, wanted, capability) in reqs {
-        if !wanted {
+    let map = rules["requirements_map"]
+        .as_object()
+        .expect("frozen rules table: requirements_map must be an object");
+    for (name, on) in wanted {
+        if !on {
             continue;
         }
-        let accepted = map[name]["accepted_value"].as_str().unwrap();
-        let actual = match capability {
-            "identity.uid_mapping_mode" => host.identity.uid_mapping_mode.wire(),
-            "resource.hard_memory_limit" => host.resource.hard_memory_limit.wire(),
-            "process.proc_policy.mode" => host.process.proc_policy.mode.as_str(),
-            "process.seccomp" => host.process.seccomp.as_str(),
-            "network.outbound" => host.network.outbound.wire(),
-            other => panic!("rules table maps unknown capability {other}"),
-        };
-        if actual != accepted {
+        let mapping = map
+            .get(name)
+            .unwrap_or_else(|| panic!("frozen rules table lost requirement {name}"));
+        let capability = mapping["capability"]
+            .as_str()
+            .expect("frozen rules table: capability path must be a string");
+        let accepted = mapping["accepted_value"]
+            .as_str()
+            .expect("frozen rules table: accepted_value must be a string");
+        // Fail closed: a capability path that does not resolve on the host
+        // report is NOT the accepted value (never silently satisfied).
+        if dig(host_raw, capability) != Some(accepted) {
             rejections.push(Rejection {
                 requirement: name.to_string(),
                 code: rules["rejection"]["code"].as_str().unwrap().to_string(),
@@ -976,6 +1090,209 @@ mod tests {
         assert_eq!(
             SingleIdCompatibilityPolicy::default(),
             SingleIdCompatibilityPolicy::Strict
+        );
+    }
+
+    // --------------------------------------------- round-03 review pins
+
+    fn walk<'a>(mut cur: &'a Value, path: &[&str]) -> &'a Value {
+        for seg in path {
+            cur = &cur[seg];
+        }
+        cur
+    }
+
+    fn set_path(doc: &mut Value, path: &[&str], v: Value) {
+        let mut cur = doc;
+        for seg in &path[..path.len() - 1] {
+            cur = cur.get_mut(seg).unwrap();
+        }
+        cur[path[path.len() - 1]] = v;
+    }
+
+    #[test]
+    fn c06_closed_enums_mirror_the_frozen_schema() {
+        // round-03 review item #5: these seven host-report fields are closed
+        // enums in host-capabilities.schema.json; the serde mirror must accept
+        // exactly the schema value set byte-identically and reject the rest.
+        let schema = cases("host-capabilities.schema.json");
+        let fx = cases("fixtures/resolution/cases.json");
+        let base = fx["hosts"]["full_rootless"].clone();
+        // (schema path to the enum's parent, host doc path, parsed-field reader)
+        let fields: [(&[&str], &[&str], fn(&HostCapabilities) -> Value); 7] = [
+            (
+                &["properties", "identity", "properties", "ownership_model"],
+                &["identity", "ownership_model"],
+                |h| serde_json::to_value(&h.identity.ownership_model).unwrap(),
+            ),
+            (
+                &["properties", "identity", "properties", "image_user_support"],
+                &["identity", "image_user_support"],
+                |h| serde_json::to_value(&h.identity.image_user_support).unwrap(),
+            ),
+            (
+                &["properties", "process", "properties", "proc_policy", "properties", "mode"],
+                &["process", "proc_policy", "mode"],
+                |h| serde_json::to_value(&h.process.proc_policy.mode).unwrap(),
+            ),
+            (
+                &["properties", "process", "properties", "proc_policy", "properties", "confidentiality"],
+                &["process", "proc_policy", "confidentiality"],
+                |h| serde_json::to_value(&h.process.proc_policy.confidentiality).unwrap(),
+            ),
+            (
+                &["properties", "process", "properties", "seccomp"],
+                &["process", "seccomp"],
+                |h| serde_json::to_value(&h.process.seccomp).unwrap(),
+            ),
+            (
+                &["properties", "filesystem", "properties", "rootfs_driver"],
+                &["filesystem", "rootfs_driver"],
+                |h| serde_json::to_value(&h.filesystem.rootfs_driver).unwrap(),
+            ),
+            (
+                &["properties", "runtime", "properties", "supervisor"],
+                &["runtime", "supervisor"],
+                |h| serde_json::to_value(&h.runtime.supervisor).unwrap(),
+            ),
+        ];
+        for (schema_path, doc_path, read) in fields {
+            let values = walk(&schema, schema_path)["enum"]
+                .as_array()
+                .unwrap_or_else(|| panic!("schema enum missing at {schema_path:?}"));
+            for v in values {
+                let wire = v.as_str().unwrap();
+                let mut host = base.clone();
+                set_path(&mut host, doc_path, v.clone());
+                let parsed: HostCapabilities = serde_json::from_value(host)
+                    .unwrap_or_else(|e| panic!("{doc_path:?}={wire}: schema value rejected: {e}"));
+                assert_eq!(
+                    read(&parsed),
+                    Value::String(wire.to_string()),
+                    "{doc_path:?}: wire name not byte-identical for {wire}"
+                );
+            }
+            for bogus in [
+                Value::String("BOGUS_VALUE".to_string()),
+                Value::String(values[0].as_str().unwrap().to_lowercase()),
+            ] {
+                let mut host = base.clone();
+                set_path(&mut host, doc_path, bogus.clone());
+                assert!(
+                    serde_json::from_value::<HostCapabilities>(host).is_err(),
+                    "{doc_path:?}: out-of-enum value {bogus} must be rejected"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn c06_host_report_accepts_optional_evidence_block() {
+        // round-03 review item #6a: the schema accepts an optional top-level
+        // `evidence` object; the serde mirror must not reject it.
+        let fx = cases("fixtures/resolution/cases.json");
+        let mut host = fx["hosts"]["full_rootless"].clone();
+        host["evidence"] = serde_json::json!({
+            "identity.user_namespace": {
+                "command": "unshare --user true",
+                "exit_code": 0,
+                "output_excerpt": ""
+            }
+        });
+        let parsed: HostCapabilities = serde_json::from_value(host)
+            .expect("host report carrying schema-legal evidence must parse");
+        assert!(
+            parsed.evidence.as_ref().is_some_and(Value::is_object),
+            "evidence must be retained verbatim"
+        );
+    }
+
+    #[test]
+    fn c03_exit_record_falsy_nonnull_counts_as_observed() {
+        // round-03 review item #7: null-or-absent ONLY means "missing"; a
+        // falsy non-null exit_record ({} / [] / 0 / "" / false) is an observed
+        // record. Rust rule; the same cases are pinned for the Python engine
+        // in tests/contracts/test_native_v1_freeze.py.
+        for (record, consistent) in [
+            (serde_json::json!(null), false),
+            (serde_json::json!({}), true),
+            (serde_json::json!([]), true),
+            (serde_json::json!(0), true),
+            (serde_json::json!(""), true),
+            (serde_json::json!(false), true),
+        ] {
+            let doc = serde_json::json!({
+                "execution": {"state": "exited", "exit_record": record}
+            });
+            assert_eq!(check_semantic_fact(&doc), consistent, "exit_record={record}");
+        }
+        let absent = serde_json::json!({"execution": {"state": "exited"}});
+        assert!(!check_semantic_fact(&absent), "absent exit_record is missing");
+        let non_object = serde_json::json!({"execution": "exited"});
+        assert!(
+            check_semantic_fact(&non_object),
+            "non-object execution never trips the rule"
+        );
+    }
+
+    #[test]
+    fn resolver_table_keys_match_known_requirements() {
+        // round-03 review item #8 lock: the frozen table and the resolver's
+        // known requirement set must not drift apart, and every mapped
+        // capability path must resolve on every fixture host.
+        let rules = cases("resolution-rules.json");
+        let map = rules["requirements_map"].as_object().unwrap();
+        let table: BTreeSet<&str> = map.keys().map(String::as_str).collect();
+        let known = BTreeSet::from([
+            "multi_uid",
+            "hard_memory_limit",
+            "private_proc",
+            "seccomp",
+            "outbound_network",
+        ]);
+        assert_eq!(
+            table, known,
+            "frozen requirements_map drifted from resolver-known requirements"
+        );
+        let fx = cases("fixtures/resolution/cases.json");
+        for (hname, host) in fx["hosts"].as_object().unwrap() {
+            for (req, m) in map {
+                let path = m["capability"].as_str().unwrap();
+                assert!(
+                    dig(host, path).is_some(),
+                    "{hname}: capability path {path} (requirement {req}) unresolved"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn resolver_follows_capability_paths_from_the_table() {
+        // round-03 review item #8: re-pointing a capability path in the frozen
+        // rules table must re-point the Rust resolver — true data-driven
+        // parity with the Python engine; no hard-coded mapping.
+        let fx = cases("fixtures/resolution/cases.json");
+        let mut rules = cases("resolution-rules.json");
+        rules["requirements_map"]["seccomp"]["capability"] =
+            serde_json::json!("network.outbound");
+        let host_raw = fx["hosts"]["full_rootless"].clone();
+        let host: HostCapabilities = serde_json::from_value(host_raw.clone()).unwrap();
+        let spec: SandboxRequirements = serde_json::from_value(serde_json::json!({
+            "image": {"ref": "example/image:v1"},
+            "requires": {"seccomp": true}
+        }))
+        .unwrap();
+        let got = resolve(&host, &host_raw, &spec, &rules);
+        assert!(
+            !got.accepted,
+            "full_rootless observes network.outbound=SUPPORTED != accepted AVAILABLE"
+        );
+        assert!(
+            got.rejections
+                .iter()
+                .any(|r| r.requirement == "seccomp" && r.capability == "network.outbound"),
+            "rejection must name the table's re-pointed path: {:?}",
+            got.rejections
         );
     }
 }

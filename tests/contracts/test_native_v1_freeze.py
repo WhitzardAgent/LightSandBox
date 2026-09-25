@@ -159,6 +159,21 @@ class C03StateMachines(unittest.TestCase):
                 self.assertEqual(ref.check_semantic_fact(fact["document"]),
                                  fact["consistent"])
 
+    def test_exit_record_falsy_nonnull_counts_as_observed(self):
+        # round-03 review item #7: null-or-absent ONLY means "missing"; a
+        # falsy non-null exit_record is an observed record. Same cases pinned
+        # for the Rust engine in crates/ls-core/src/contracts/mod.rs tests.
+        absent = {"execution": {"state": "exited"}}
+        self.assertFalse(ref.check_semantic_fact(absent))
+        with_null = {"execution": {"state": "exited", "exit_record": None}}
+        self.assertFalse(ref.check_semantic_fact(with_null))
+        for record in ({}, [], 0, "", False):
+            with self.subTest(exit_record=repr(record)):
+                doc = {"execution": {"state": "exited", "exit_record": record}}
+                self.assertTrue(ref.check_semantic_fact(doc))
+        # a non-object execution never trips the rule (Rust engine behavior)
+        self.assertTrue(ref.check_semantic_fact({"execution": "exited"}))
+
 
 class C04IdentityGenerationRevision(unittest.TestCase):
     """T41-C04: generation fences incarnations; revision is CAS; API restart

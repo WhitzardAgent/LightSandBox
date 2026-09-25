@@ -3028,6 +3028,126 @@
       "then": "明确阻断运行时与互操作声明",
       "mode": "runtime",
       "status": "specified_not_implemented"
+    },
+    {
+      "id": "T45-C01",
+      "task_id": "T45",
+      "requirements": [
+        "R33"
+      ],
+      "given": "PORTABLE_ROOTLESS 宿主 native=SINGLE_ID,kernel/machine offers 全 SUPPORTED",
+      "when": "planner AUTO 处理 {multi_uid:true} 与默认空需求",
+      "then": "无需求→NATIVE;multi_uid→KERNEL;全部维度在 effective_capabilities 可见",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T45-C02",
+      "task_id": "T45",
+      "requirements": [
+        "R33"
+      ],
+      "given": "显式 backend_preference=native 且 multi_uid=true",
+      "when": "plan() 求值",
+      "then": "拒绝 HOST_CAPABILITY_UNAVAILABLE,记录 native observed UNSUPPORTED;绝不静默切 KERNEL",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T45-C03",
+      "task_id": "T45",
+      "requirements": [
+        "R33"
+      ],
+      "given": "公共请求面 vocabulary 审阅",
+      "when": "grep/序列化 wire 名检查",
+      "then": "不出现 runc/uml/qemu binary 名;implementation 仅在 diagnostics;HostKind×PrivilegeTier 双维独立",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T46-C01",
+      "task_id": "T46",
+      "requirements": [
+        "R34"
+      ],
+      "given": "kernel+busybox 源已锁定,宿主无 sudo/KVM",
+      "when": "以当前用户启动 UML initramfs",
+      "then": "guest console 出现 LSB_UML_BOOT_OK 标记且宿主进程正常退出;否则记录具体 errno/syscall/outer-seccomp 证据判定 BLOCKED",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T46-C02",
+      "task_id": "T46",
+      "requirements": [
+        "R34"
+      ],
+      "given": "C01 之后空 rootfs",
+      "when": "guest 内 chown 1000:999、su user、USER 等价写入",
+      "then": "全部 OK 且与宿主 subuid 无关;任一失败据实记录失败步",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T46-C03",
+      "task_id": "T46",
+      "requirements": [
+        "R34"
+      ],
+      "given": "spike 结束",
+      "when": "清理检查",
+      "then": "spike/uml/work 之外零残留;宿主 mountinfo 无新挂载;spike 产物哈希入档",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T47-C01",
+      "task_id": "T47",
+      "requirements": [
+        "R35"
+      ],
+      "given": "含 root/user1000/svc999/setuid/symlink/hardlink/whiteout 历史的 OCI fixture",
+      "when": "builder-UML 物化为 base ext 盘后 guest 内逐项 stat/读校验",
+      "then": "uid/gid/mode/link/内容与 OCI 参考完全一致;不一致项逐条列出",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T47-C02",
+      "task_id": "T47",
+      "requirements": [
+        "R35"
+      ],
+      "given": "C01 base 盘",
+      "when": "A/B/C 三沙盒 UBD COW:A 写后对 B 不可见;destroy A;重开 C",
+      "then": "B 无 A 写入;base sha256 不变;C 为 clean state;记录 COW create/allocated/删除延迟",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T48-C01",
+      "task_id": "T48",
+      "requirements": [
+        "R36"
+      ],
+      "given": "T46 结论=BLOCKED 且 errno 链完整",
+      "when": "qemu -accel tcg 启动 minimal guest",
+      "then": "boot 日志/idle RSS/CPU 开销/multi-UID/proc 记录入 spike/results/qemu-*.json;不启动则记录拒绝原因",
+      "mode": "local",
+      "status": "specified_not_implemented"
+    },
+    {
+      "id": "T49-C01",
+      "task_id": "T49",
+      "requirements": [
+        "R33"
+      ],
+      "given": "T46/T47/T45 完成",
+      "when": "production UmlBackend create→exec→delete 全链",
+      "then": "真实 guest 退出码、无残留、supervisor 权威退出收据;spike 代码零并入",
+      "mode": "local",
+      "status": "specified_not_implemented"
     }
   ]
 }

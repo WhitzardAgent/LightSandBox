@@ -15,7 +15,7 @@
 //!     (bytes / cpu_millis / pids); hardness comes only from `requires.*`;
 //!   * secrets MUST NOT enter argv (LSR-1, docs/security/SECRET_HANDLING.md).
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::collections::BTreeSet;
 use std::fmt;
@@ -289,7 +289,10 @@ pub enum Tier {
     UnsupportedHost,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+// Serialize added in round 3 (ADR 0002): backend capability offers reuse this
+// status vocabulary and must be emittable in plans/diagnostics. Wire names
+// unchanged; purely additive derive.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Status {
     Supported,

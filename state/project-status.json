@@ -321,6 +321,41 @@
       "evidence": [],
       "review": null,
       "notes": "v5 reference代码和测试不是该完整产品任务的完成证据。"
+    },
+    {
+      "id": "T45",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "round-03 新增(ADR 0002);尚未实现。"
+    },
+    {
+      "id": "T46",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "round-03 新增(ADR 0002);尚未实现。"
+    },
+    {
+      "id": "T47",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "round-03 新增(ADR 0002);尚未实现。"
+    },
+    {
+      "id": "T48",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "round-03 新增(ADR 0002);尚未实现。"
+    },
+    {
+      "id": "T49",
+      "status": "planned",
+      "evidence": [],
+      "review": null,
+      "notes": "round-03 新增(ADR 0002);尚未实现。"
     }
   ],
   "seed_status": "PYTHON_UNIT_TESTED_RUST_SOURCE_UNCOMPILED"

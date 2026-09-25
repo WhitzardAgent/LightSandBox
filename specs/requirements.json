@@ -1171,6 +1171,53 @@
         "T44-C03",
         "T44-C04"
       ]
+    },
+    {
+      "id": "R33",
+      "requirement": "LightSandbox=capability-adaptive 多后端运行时;后端由能力需求驱动选择,AUTO 轻优先,显式偏好不可静默回退",
+      "tasks": [
+        "T45",
+        "T49"
+      ],
+      "tests": [
+        "T45-C01",
+        "T45-C02",
+        "T45-C03",
+        "T49-C01"
+      ]
+    },
+    {
+      "id": "R34",
+      "requirement": "受限宿主(CONTAINERIZED+PORTABLE_ROOTLESS)上 Kernel(UML)兼容路径的真实可行性判定,含 multi-UID 私有 /proc 语义",
+      "tasks": [
+        "T46"
+      ],
+      "tests": [
+        "T46-C01",
+        "T46-C02",
+        "T46-C03"
+      ]
+    },
+    {
+      "id": "R35",
+      "requirement": "OCI 镜像保真物化为 guest 磁盘(UID/GID/mode/link/whiteout/USER 与原像一致),base+COW 隔离",
+      "tasks": [
+        "T47"
+      ],
+      "tests": [
+        "T47-C01",
+        "T47-C02"
+      ]
+    },
+    {
+      "id": "R36",
+      "requirement": "无 KVM/root 的 Machine(QEMU TCG)兜底兼容路径存在性(条件)",
+      "tasks": [
+        "T48"
+      ],
+      "tests": [
+        "T48-C01"
+      ]
     }
   ]
 }

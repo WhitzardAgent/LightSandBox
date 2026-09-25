@@ -5,6 +5,7 @@
 //! docs/v5/02_ARCHITECTURE.md §模块与依赖方向.
 
 pub mod access;
+pub mod backend;
 pub mod control;
 pub mod error;
 pub mod execution;

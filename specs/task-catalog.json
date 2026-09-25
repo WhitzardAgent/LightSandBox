@@ -164,7 +164,10 @@
         "T03-C02",
         "T03-C03",
         "T03-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T04",
@@ -257,7 +260,10 @@
         "T05-C02",
         "T05-C03",
         "T05-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T06",
@@ -385,7 +391,10 @@
         "T08-C02",
         "T08-C03",
         "T08-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T09",
@@ -427,7 +436,10 @@
         "T09-C03",
         "T09-C04",
         "T09-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T10",
@@ -468,7 +480,10 @@
         "T10-C02",
         "T10-C03",
         "T10-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T11",
@@ -507,7 +522,10 @@
         "T11-C02",
         "T11-C03",
         "T11-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T12",
@@ -549,7 +567,10 @@
         "T12-C02",
         "T12-C03",
         "T12-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T13",
@@ -590,7 +611,10 @@
         "T13-C02",
         "T13-C03",
         "T13-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T14",
@@ -630,7 +654,10 @@
         "T14-C02",
         "T14-C03",
         "T14-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T15",
@@ -675,7 +702,10 @@
         "T15-C03",
         "T15-C04",
         "T15-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T16",
@@ -716,7 +746,10 @@
         "T16-C03",
         "T16-C04",
         "T16-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T17",
@@ -759,7 +792,10 @@
         "T17-C03",
         "T17-C04",
         "T17-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T18",
@@ -800,7 +836,10 @@
         "T18-C02",
         "T18-C03",
         "T18-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T19",
@@ -845,7 +884,10 @@
         "T19-C03",
         "T19-C04",
         "T19-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T20",
@@ -892,7 +934,10 @@
         "T20-C03",
         "T20-C04",
         "T20-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T21",
@@ -937,7 +982,10 @@
         "T21-C03",
         "T21-C04",
         "T21-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T22",
@@ -981,7 +1029,10 @@
         "T22-C03",
         "T22-C04",
         "T22-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T23",
@@ -1036,7 +1087,10 @@
         "T23-C05",
         "T23-C06",
         "T23-C07"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T24",
@@ -1080,7 +1134,10 @@
         "T24-C02",
         "T24-C03",
         "T24-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T25",
@@ -1126,7 +1183,10 @@
         "T25-C02",
         "T25-C03",
         "T25-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T26",
@@ -1172,7 +1232,10 @@
         "T26-C02",
         "T26-C03",
         "T26-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T27",
@@ -1215,7 +1278,10 @@
         "T27-C02",
         "T27-C03",
         "T27-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T28",
@@ -1260,7 +1326,10 @@
         "T28-C02",
         "T28-C03",
         "T28-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T29",
@@ -1304,7 +1373,10 @@
         "T29-C02",
         "T29-C03",
         "T29-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T30",
@@ -1353,7 +1425,10 @@
         "T30-C03",
         "T30-C04",
         "T30-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T31",
@@ -1400,7 +1475,10 @@
         "T31-C03",
         "T31-C04",
         "T31-C05"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T32",
@@ -1452,7 +1530,10 @@
         "T32-C02",
         "T32-C03",
         "T32-C04"
-      ]
+      ],
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "risk_note": "execution_risk/requires_host_root vocabulary added in round-03 per ADR 0002 §6: kind=privileged alone never meant 'host root required'."
     },
     {
       "id": "T33",
@@ -1967,6 +2048,190 @@
         "T44-C02",
         "T44-C03",
         "T44-C04"
+      ]
+    },
+    {
+      "id": "T45",
+      "title": "多后端合同与能力规划器(backend-neutral domain + plan 语义)",
+      "depends_on": [
+        "T41",
+        "T04"
+      ],
+      "requirements": [
+        "R33"
+      ],
+      "read": [
+        "docs/adr/0002-capability-adaptive-backends.md",
+        "contracts/v1/resolution-rules.json",
+        "docs/v5/03_DOMAIN.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-core/src/domain/",
+        "contracts/v2/",
+        "tests/contracts/"
+      ],
+      "consumes": "HostCapabilities(T41)、CapabilityRequirements、各后端实测 BackendCapabilities。",
+      "produces": "BackendKind/HostKind/BackendPlan 领域模型；AUTO 轻优先选择；显式偏好不可静默换后端；合同演进冻结周期。",
+      "implementation": [
+        "纯逻辑 planner(ls-core/domain/backend.rs)+AUTO规则 NATIVE→KERNEL→MACHINE；拒绝=HOST_CAPABILITY_UNAVAILABLE+逐后端 rejected_requirements。",
+        "合同面 v2(backend_preference/BackendPlan/新增需求维度 full_init_system/net_admin) 新增-不编辑冻结 v1。"
+      ],
+      "review_focus": "合同不得以 runc 词汇命名公共概念；implementation 只允许 diagnostics。",
+      "kind": "contract",
+      "execution_risk": "LOCAL_MUTATION",
+      "requires_host_root": false,
+      "doc": "plans/tasks/T45.md",
+      "status": "planned",
+      "test_ids": [
+        "T45-C01",
+        "T45-C02",
+        "T45-C03"
+      ]
+    },
+    {
+      "id": "T46",
+      "title": "UML feasibility spike:受限宿主启动判定 + Phase A 语义",
+      "depends_on": [
+        "T03"
+      ],
+      "requirements": [
+        "R34"
+      ],
+      "read": [
+        "docs/adr/0002-capability-adaptive-backends.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "spike/uml/",
+        "spike/results/",
+        "evidence/runtime/uml/"
+      ],
+      "consumes": "spike 级 source lock(kernel/busybox/本地工具链);ADR 0002 优先级。",
+      "produces": "当前 CONTAINERIZED+PORTABLE_ROOTLESS 宿主上 UML 能否真实启动的判定(BOOT_OK/BLOCKED+errno)；无 sudo/KVM。",
+      "implementation": [
+        "T01 同源锁定机制取 kernel+busybox 源；宿主内构建 m4/bison/flex(ed 缺失则 bc 如实跳过)；ARCH=um defconfig+static busybox initramfs。",
+        "启动后 guest 标记:BOOT_OK/proc own/hostname/多 UID chown·su·USER 写入/cgroups 行数；清理验证无残留。"
+      ],
+      "review_focus": "失败必须保留具体 syscall/errno,不得温和化成 unsupported;成功标准全部经 guest console 标记证明。",
+      "kind": "worker",
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "doc": "plans/tasks/T46.md",
+      "status": "planned",
+      "test_ids": [
+        "T46-C01",
+        "T46-C02",
+        "T46-C03"
+      ]
+    },
+    {
+      "id": "T47",
+      "title": "UML OCI 镜像物化 spike(builder-UML→base UBD 盘)",
+      "depends_on": [
+        "T46",
+        "T06"
+      ],
+      "requirements": [
+        "R35"
+      ],
+      "read": [
+        "docs/adr/0002-capability-adaptive-backends.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "spike/uml/",
+        "spike/results/",
+        "evidence/runtime/uml/"
+      ],
+      "consumes": "T46 kernel binary、T06 LoadedImage/层语义、OCI fixture。",
+      "produces": "OCI 原始 UID/GID/mode/link/whiteout/USER 经 builder-UML 物化为 base ext 盘并逐项对账；base+COW 隔离与 clean rebuild。",
+      "implementation": [
+        "host 只暴露专用 OCI cache 目录给 builder UML(受限 hostfs,不暴露 /);guest 内解包保真。",
+        "fixture: root/user(1000)/svc(999)/setuid/symlink/hardlink/whiteout-history/ENTRYPOINT/CMD/ENV/WORKDIR/USER。"
+      ],
+      "review_focus": "不得把 T07 host flatten 的 rootfs 当作 guest 磁盘语义证据;所有权以 guest 内 stat 为准。",
+      "kind": "worker",
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "doc": "plans/tasks/T47.md",
+      "status": "planned",
+      "test_ids": [
+        "T47-C01",
+        "T47-C02"
+      ]
+    },
+    {
+      "id": "T48",
+      "title": "QEMU TCG 兜底 smoke(条件触发:仅当 T46 硬阻塞)",
+      "depends_on": [
+        "T46"
+      ],
+      "requirements": [
+        "R36"
+      ],
+      "read": [
+        "docs/adr/0002-capability-adaptive-backends.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "spike/qemu/",
+        "spike/results/",
+        "evidence/runtime/qemu/"
+      ],
+      "consumes": "T46 硬阻塞的具体 errno/seccomp 定位。",
+      "produces": "无 KVM、无 root 的 full Linux guest 可启动性、开销与 multi-UID/proc 语义兜底判定。",
+      "implementation": [
+        "固定内核+rootfs,-accel tcg,网络 user 或 none;记录 boot 延迟/idle RSS/CPU 开销。",
+        "不产品化;只做 smoke 证据。"
+      ],
+      "review_focus": "仅在 T46 BLOCKED 且有明确 syscall/seccomp 证据链时执行。",
+      "kind": "worker",
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "doc": "plans/tasks/T48.md",
+      "status": "planned",
+      "test_ids": [
+        "T48-C01"
+      ]
+    },
+    {
+      "id": "T49",
+      "title": "Kernel backend 实现(UML production,未来)",
+      "depends_on": [
+        "T46",
+        "T47",
+        "T45"
+      ],
+      "requirements": [
+        "R33"
+      ],
+      "read": [
+        "docs/adr/0002-capability-adaptive-backends.md",
+        "docs/v5/02_ARCHITECTURE.md",
+        "docs/v5/09_RUNTIME_DETAILS.md"
+      ],
+      "allowed_paths": [
+        "crates/ls-host/src/runtime/",
+        "crates/ls-guest/src/",
+        "tests/runtime/"
+      ],
+      "consumes": "T46/T47 spike 结论、T45 合同、ls-guest 控制协议。",
+      "produces": "UmlBackend + KernelInstanceSupervisor + UBD/COW 生命周期 create/exec/delete。",
+      "implementation": [
+        "按 InstanceSupervisor 合同实现 UML 进程/guest 通道生命周期,不复制 native 逻辑。",
+        "安全边界:禁任意 hostfs、模块加载启动后关闭、非特权宿主进程、可证 seccomp。"
+      ],
+      "review_focus": "不得把 spike 代码直接并入 runtime core。",
+      "kind": "privileged",
+      "execution_risk": "RUNTIME_ISOLATION",
+      "requires_host_root": false,
+      "doc": "plans/tasks/T49.md",
+      "status": "planned",
+      "test_ids": [
+        "T49-C01"
       ]
     }
   ]

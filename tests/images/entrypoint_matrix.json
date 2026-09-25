@@ -1,0 +1,98 @@
+{
+  "description": "T06-C02 image-config -> native process spec combination matrix. Semantics fixed by docs/v5/03_DOMAIN.md line 50 (launch_mode=image keeps original ENTRYPOINT/CMD; override null/missing = inherit, [] = clear) and the OCI/Docker argv rule (process argv = Entrypoint ++ Cmd). The Docker-CLI nuance that --entrypoint RESETS Cmd is adapter-compiled and deliberately NOT part of these cases.",
+  "argv_rule": "argv = entrypoint ++ command",
+  "override_semantics": {"missing_or_null": "inherit", "[]": "clear", "[..]": "replace"},
+  "cases": [
+    {
+      "name": "m01-image-has-neither-entry-nor-cmd",
+      "image": {"entrypoint": null, "cmd": null},
+      "override_entrypoint": "ABSENT",
+      "override_command": "ABSENT",
+      "expect": {"entrypoint": [], "command": [], "argv": []}
+    },
+    {
+      "name": "m02-image-entry-and-cmd-concatenated",
+      "image": {"entrypoint": ["/init"], "cmd": ["--serve", "--port", "8080"]},
+      "override_entrypoint": "ABSENT",
+      "override_command": "ABSENT",
+      "expect": {"entrypoint": ["/init"], "command": ["--serve", "--port", "8080"], "argv": ["/init", "--serve", "--port", "8080"]}
+    },
+    {
+      "name": "m03-image-cmd-only",
+      "image": {"entrypoint": null, "cmd": ["ash"]},
+      "override_entrypoint": "ABSENT",
+      "override_command": "ABSENT",
+      "expect": {"entrypoint": [], "command": ["ash"], "argv": ["ash"]}
+    },
+    {
+      "name": "m04-image-entrypoint-only-cmd-null",
+      "image": {"entrypoint": ["/entry"], "cmd": null},
+      "override_entrypoint": "ABSENT",
+      "override_command": "ABSENT",
+      "expect": {"entrypoint": ["/entry"], "command": [], "argv": ["/entry"]}
+    },
+    {
+      "name": "m05-image-cmd-empty-array-differs-from-null",
+      "image": {"entrypoint": ["/entry"], "cmd": []},
+      "override_entrypoint": "ABSENT",
+      "override_command": "ABSENT",
+      "expect": {"entrypoint": ["/entry"], "command": [], "argv": ["/entry"]}
+    },
+    {
+      "name": "m06-override-entrypoint-replace-cmd-kept",
+      "image": {"entrypoint": ["/init"], "cmd": ["--serve"]},
+      "override_entrypoint": ["/custom", "--flag"],
+      "override_command": "ABSENT",
+      "expect": {"entrypoint": ["/custom", "--flag"], "command": ["--serve"], "argv": ["/custom", "--flag", "--serve"]}
+    },
+    {
+      "name": "m07-override-entrypoint-clear-empty-array",
+      "image": {"entrypoint": ["/init"], "cmd": ["--serve"]},
+      "override_entrypoint": [],
+      "override_command": "ABSENT",
+      "expect": {"entrypoint": [], "command": ["--serve"], "argv": ["--serve"]}
+    },
+    {
+      "name": "m08-override-entrypoint-null-is-inherit",
+      "image": {"entrypoint": ["/init"], "cmd": ["--serve"]},
+      "override_entrypoint": "NULL",
+      "override_command": "ABSENT",
+      "expect": {"entrypoint": ["/init"], "command": ["--serve"], "argv": ["/init", "--serve"]}
+    },
+    {
+      "name": "m09-override-command-replace-entry-kept",
+      "image": {"entrypoint": ["/init"], "cmd": ["--serve"]},
+      "override_entrypoint": "ABSENT",
+      "override_command": ["ash", "-l"],
+      "expect": {"entrypoint": ["/init"], "command": ["ash", "-l"], "argv": ["/init", "ash", "-l"]}
+    },
+    {
+      "name": "m10-override-command-clear-empty-array",
+      "image": {"entrypoint": ["/init"], "cmd": ["--serve"]},
+      "override_entrypoint": "ABSENT",
+      "override_command": [],
+      "expect": {"entrypoint": ["/init"], "command": [], "argv": ["/init"]}
+    },
+    {
+      "name": "m11-override-both-replaced",
+      "image": {"entrypoint": ["/init"], "cmd": ["--serve"]},
+      "override_entrypoint": ["/a"],
+      "override_command": ["/b", "1", "2"],
+      "expect": {"entrypoint": ["/a"], "command": ["/b", "1", "2"], "argv": ["/a", "/b", "1", "2"]}
+    },
+    {
+      "name": "m12-image-cmd-with-empty-string-element-preserved",
+      "image": {"entrypoint": ["/tool"], "cmd": ["--name", ""]},
+      "override_entrypoint": "ABSENT",
+      "override_command": "ABSENT",
+      "expect": {"entrypoint": ["/tool"], "command": ["--name", ""], "argv": ["/tool", "--name", ""]}
+    },
+    {
+      "name": "m13-override-leading-empty-string-rejected",
+      "image": {"entrypoint": ["/init"], "cmd": null},
+      "override_entrypoint": [""],
+      "override_command": "ABSENT",
+      "expect_error": "EMPTY_LEADING_ARG"
+    }
+  ]
+}

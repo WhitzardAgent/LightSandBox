@@ -3,6 +3,10 @@
 //! T00 scope: unprivileged, read-only probes producing capability findings
 //! with bound evidence (argv form, no shell). T03 extends this module with
 //! worker-authorized runtime checks; see plans/tasks/T03.md.
+//! T06 adds the OCI image module (`images`): digest-verified import store
+//! and image-config conversion, plans/tasks/T06.md.
+
+pub mod images;
 
 pub mod probe {
     use ls_core::capability::{CapabilityFinding, CapabilityStatus};

@@ -8,7 +8,7 @@
 | Round | Date | Start Commit | End Commit | Milestone | Tasks | Status | Key Decision | Progress File |
 |---|---|---|---|---|---|---|---|---|
 | 01 | 2026-09-24 | bc69c5c | 39200e3 | 首发宿主定位 + T00/T01/T03 + Portable Rootless feasibility + ADR 0001 | T00, T01, T03, spike(9 实验), ADR 0001 | COMPLETED | v1 backend = native rootless runc + 显式降级(ADR 0001 选项 B) | [2026-09-24-round-01.md](2026-09-24-round-01.md) |
-| 02 | 2026-09-24 | 39200e3 | (进行中) | T41 合同冻结 + T04 核心域 + 安全补强(/proc、seccomp、supervisor) | T00–T03 review, P2.1, seccomp spike, T41, T04, runtime spine | IN_PROGRESS | (进行中) | [2026-09-24-round-02.md](2026-09-24-round-02.md) |
+| 02 | 2026-09-24 | 39200e3 | 本记录提交(代码至 `5bf3792`) | T41 合同冻结 + T04 核心域 + 安全补强 + runtime spine 至 rootfs(T06/T07);T08 授权阻塞 | T00–T03 review, P2.1, seccomp spike, T41, T04, reflink/proctree 证据, T06, T07 | COMPLETED | 解包只封装 pinned umoci;FullCopy 禁 copy_file_range(offload 实测);lease+mount-audit GC;argv 保密=单信任域 | [2026-09-24-round-02.md](2026-09-24-round-02.md) |
 
 ## Status 词汇(只允许这四个)
 

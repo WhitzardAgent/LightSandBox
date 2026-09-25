@@ -17,11 +17,13 @@ pub mod layout;
 pub mod process_config;
 pub mod pull;
 pub mod store;
+pub mod unpack;
 
 pub use error::{ImageError, Result};
 pub use layout::{LoadedImage, ManifestDescriptor};
 pub use process_config::{ImageProcessConfig, ProcessOverrides, ProcessSpec};
 pub use pull::{FileTransport, PullOutcome, PullRequest, RegistryCreds, SkopeoTransport, Transport};
+pub use unpack::UmociUnpacker;
 pub use store::{ImageStore, ImportOutcome};
 
 use ls_core::domain::ids::BundleRef;

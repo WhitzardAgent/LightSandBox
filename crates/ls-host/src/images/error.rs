@@ -26,6 +26,9 @@ pub enum ImageError {
     Transport { detail: String },
     /// transfer tool not available on this host (e.g. no pinned skopeo).
     TransportUnavailable { tool: String },
+    /// pinned mature unpacker failed/timed out (T07 unpack path only; the
+    /// post-unpack containment audit failure maps to LayoutInvalid).
+    UnpackFailed { detail: String },
     Io { detail: String },
 }
 
@@ -40,6 +43,7 @@ impl ImageError {
             ImageError::PinnedDigestMismatch { .. } => "IMAGE_PINNED_DIGEST_MISMATCH",
             ImageError::Transport { .. } => "IMAGE_TRANSPORT_FAILED",
             ImageError::TransportUnavailable { .. } => "IMAGE_TRANSPORT_UNAVAILABLE",
+            ImageError::UnpackFailed { .. } => "IMAGE_UNPACK_FAILED",
             ImageError::Io { .. } => "IMAGE_IO",
         }
     }
@@ -75,6 +79,7 @@ impl fmt::Display for ImageError {
             ImageError::TransportUnavailable { tool } => {
                 write!(f, "{} transfer tool {tool} not available", self.code())
             }
+            ImageError::UnpackFailed { detail } => write!(f, "{} {detail}", self.code()),
             ImageError::Io { detail } => write!(f, "{} {detail}", self.code()),
         }
     }

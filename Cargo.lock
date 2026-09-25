@@ -29,6 +29,7 @@ name = "ls-host"
 version = "0.1.0"
 dependencies = [
  "ls-core",
+ "serde",
  "serde_json",
 ]
 

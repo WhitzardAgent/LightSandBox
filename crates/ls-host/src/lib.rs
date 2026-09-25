@@ -7,6 +7,7 @@
 //! and image-config conversion, plans/tasks/T06.md.
 
 pub mod images;
+pub mod rootfs;
 
 pub mod probe {
     use ls_core::capability::{CapabilityFinding, CapabilityStatus};

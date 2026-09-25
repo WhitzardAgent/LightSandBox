@@ -118,6 +118,21 @@ impl RootfsManager {
         if complete.is_file() && base_rootfs.is_dir() {
             return Ok((base_rootfs, 0));
         }
+        // Layout↔image binding (round-03 #7): the base dir names digest A
+        // but the unpacker will consume `layout_root:reference` — the two
+        // MUST resolve to the same digest or foreign content would be
+        // published under the verified image's name. Fail closed BEFORE any
+        // spawn. Once a base exists (above) it is digest-keyed and was
+        // verified at import + unpack time, so re-binding is unnecessary.
+        let descriptors = crate::images::layout::list_descriptors(layout_root)?;
+        let resolved = crate::images::layout::select_descriptor(&descriptors, Some(reference))
+            .or_else(|_| crate::images::layout::select_descriptor(&descriptors, None))?;
+        if resolved.digest != image.manifest_digest {
+            return Err(layout_invalid(format!(
+                "layout reference {reference:?} resolves to {} but the verified image digest is {}",
+                resolved.digest, image.manifest_digest
+            )));
+        }
         let n = TMP_N.fetch_add(1, Ordering::SeqCst);
         let tmp = self
             .bases_dir()
@@ -145,6 +160,12 @@ impl RootfsManager {
 
     /// Prepare a sandbox rootfs and return its lease. Fails closed: any
     /// error leaves the sandbox dir marked `.incomplete` for the GC sweep.
+    ///
+    /// Clobber law (round-03 #4): a pre-existing sandbox dir is NEVER
+    /// silently erased. A dir carrying a committed `lease.json` or any
+    /// live mount reference underneath is REFUSED (another owner may hold
+    /// it); other residue is removed with the removal error PROPAGATED —
+    /// never swallowed.
     pub fn prepare(
         &self,
         layout_root: &Path,
@@ -154,7 +175,26 @@ impl RootfsManager {
         driver: Driver,
     ) -> Result<RootfsLease> {
         let sandbox_dir = self.sandbox_dir(sandbox_id);
-        let _ = fs::remove_dir_all(&sandbox_dir);
+        if sandbox_dir.exists() {
+            if sandbox_dir.join(lease::LEASE_FILE).is_file() {
+                return Err(layout_invalid(format!(
+                    "refusing to clobber committed lease dir: {}",
+                    sandbox_dir.display()
+                )));
+            }
+            let leaks = lease::mount_leaks_under(&sandbox_dir)?;
+            if !leaks.is_empty() {
+                return Err(ImageError::Io {
+                    detail: format!(
+                        "refusing to clobber sandbox dir with live mount leaks {:?}: {}",
+                        leaks,
+                        sandbox_dir.display()
+                    ),
+                });
+            }
+            // residue without a lease (debris): removal failure propagates
+            fs::remove_dir_all(&sandbox_dir).map_err(ImageError::from)?;
+        }
         fs::create_dir_all(&sandbox_dir).map_err(ImageError::from)?;
         lease::mark_incomplete(&sandbox_dir)?;
 
@@ -250,10 +290,14 @@ pub fn logical_size(root: &Path) -> Result<u64> {
 
 /// Free bytes of the filesystem hosting `path`, via `df` (measurement only;
 /// None when unmeasurable — reported honestly as None, never guessed).
+/// Round-03 #15: same spawn discipline as everywhere else — scrubbed env +
+/// pinned PATH — so a PATH hijack cannot fabricate measurements.
 fn avail_bytes(path: &Path) -> Option<u64> {
     let out = Command::new("df")
         .args(["-k", "--output=avail"])
         .arg(path)
+        .env_clear()
+        .env("PATH", "/usr/bin:/bin")
         .stdin(Stdio::null())
         .stderr(Stdio::null())
         .output()
@@ -702,6 +746,111 @@ mod tests {
         let _ = fs::remove_dir_all(&root);
     }
 
+    /// Round-03 #4: prepare() must REFUSE to clobber a dir that carries a
+    /// committed lease (lease.json) or a live mount reference — the old
+    /// unconditional remove_dir_all could erase a live sandbox from under
+    /// its holder, and swallowed the removal error. Mount refusal shares
+    /// the audited mount_leaks_under gate (bind mounts are not permitted on
+    /// this host; exercised on mount-capable hosts via the c04-mount path).
+    /// The unpacker is deliberately bogus: refusal must fire BEFORE any
+    /// unpack work.
+    #[test]
+    fn prepare_refuses_to_clobber_committed_lease_dir() {
+        let layout = build_layout_with_layers(vec![tar(&[Ent::File {
+            path: "x".into(),
+            mode: 0o644,
+            data: b"x".to_vec(),
+        }])]);
+        let image = load(&layout);
+        let root = tmpdir("clob");
+        let mgr = RootfsManager::new(root.clone(), UmociUnpacker::new("/definitely/not/umoci"));
+        let sand = root.join("sandbox-busy");
+        fs::create_dir_all(&sand).unwrap();
+        fs::write(sand.join(crate::rootfs::lease::LEASE_FILE), b"{}").unwrap();
+        fs::write(sand.join("precious"), b"do-not-erase").unwrap();
+        let err = mgr
+            .prepare(&layout.dir, "fixture:latest", &image, "busy", Driver::FullCopy)
+            .map(|_lease| ())
+            .unwrap_err();
+        assert_eq!(err.code(), "IMAGE_LAYOUT_INVALID", "clobber refusal, got {err}");
+        assert!(
+            sand.join(crate::rootfs::lease::LEASE_FILE).is_file()
+                && sand.join("precious").is_file(),
+            "committed sandbox dir must be untouched by the refused prepare"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// Round-03 #7: bases/<hex> names digest A but umoci unpacks
+    /// `layout_root:reference` — a mismatched pair must be rejected, never
+    /// silently unpack foreign content under the verified image's digest.
+    /// Bogus unpacker again: the binding check must precede any spawn.
+    #[test]
+    fn prepare_rejects_layout_reference_mismatched_to_image_digest() {
+        let layout_a = build_layout_with_layers(vec![tar(&[Ent::File {
+            path: "a".into(),
+            mode: 0o644,
+            data: b"a".to_vec(),
+        }])]);
+        let layout_b = build_layout_with_layers(vec![tar(&[Ent::File {
+            path: "b".into(),
+            mode: 0o644,
+            data: b"bb".to_vec(),
+        }])]);
+        let image_a = load(&layout_a);
+        assert_ne!(
+            image_a.manifest_digest,
+            format!("sha256:{}", layout_b.manifest_digest),
+            "fixture layouts must differ for this test to mean anything"
+        );
+        let root = tmpdir("bind");
+        let mgr = RootfsManager::new(root.clone(), UmociUnpacker::new("/definitely/not/umoci"));
+        // verified image from A, layout+reference from B — must fail closed
+        let err = mgr
+            .prepare(&layout_b.dir, "fixture:latest", &image_a, "bindbad", Driver::FullCopy)
+            .map(|_lease| ())
+            .unwrap_err();
+        assert_eq!(err.code(), "IMAGE_LAYOUT_INVALID", "binding check, got {err}");
+        let hex_a = image_a.manifest_digest.strip_prefix("sha256:").unwrap();
+        assert!(
+            !root.join("bases").join(hex_a).join(".complete").exists(),
+            "no foreign base may be published under the verified digest"
+        );
+        // fail-closed shape preserved: sandbox dir exists, marked incomplete
+        assert!(
+            root.join("sandbox-bindbad")
+                .join(crate::rootfs::lease::INCOMPLETE_MARKER)
+                .is_file()
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// Matched pair sanity: same layout+reference+image resolves cleanly
+    /// through the binding check (unpack then fails on the bogus unpacker
+    /// with the honest IMAGE_TRANSPORT_UNAVAILABLE, proving the check did
+    /// not misfire on the happy path).
+    #[test]
+    fn prepare_matched_layout_reference_passes_binding_check() {
+        let layout = build_layout_with_layers(vec![tar(&[Ent::File {
+            path: "m".into(),
+            mode: 0o644,
+            data: b"m".to_vec(),
+        }])]);
+        let image = load(&layout);
+        let root = tmpdir("bindok");
+        let mgr = RootfsManager::new(root.clone(), UmociUnpacker::new("/definitely/not/umoci"));
+        let err = mgr
+            .prepare(&layout.dir, "fixture:latest", &image, "bindok", Driver::FullCopy)
+            .map(|_lease| ())
+            .unwrap_err();
+        assert_eq!(
+            err.code(),
+            "IMAGE_TRANSPORT_UNAVAILABLE",
+            "binding check must pass; only the bogus unpacker may fail it, got {err}"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
     #[test]
     fn full_copy_preserves_hardlinks_modes_and_symlinks() {
         let src = tmpdir("fc-src").join("tree");
@@ -758,24 +907,31 @@ mod tests {
     #[test]
     fn reflink_driver_maps_missing_ficlone_to_host_unsupported() {
         // when the probe fails the driver must reject with HOST_UNSUPPORTED,
-        // never fall back silently. We cannot easily fake a no-FICLONE fs
-        // here, so assert the contract shape: reflink_supported()==false
-        // implies prepare with ReflinkCopy fails with HOST_UNSUPPORTED.
-        let Some(unpacker) = pinned_umoci() else {
-            eprintln!("SKIP reflink-neg: pinned umoci absent on this host");
+        // never fall back silently. Round-03 #10: probe a GENUINELY
+        // non-FICLONE filesystem so the negative path really executes —
+        // /dev/shm (tmpfs) is measured non-FICLONE on this host (kernel
+        // 5.15, measured 2026-09-25); fallbacks cover hosts where tmpfs
+        // gained clone support or /dev/shm is absent.
+        let mut neg_host = None;
+        for cand in ["/dev/shm", "/proc", "/sys"] {
+            let p = std::path::Path::new(cand);
+            if p.is_dir() && !reflink_supported(p) {
+                neg_host = Some(p);
+                break;
+            }
+        }
+        let Some(work) = neg_host else {
+            eprintln!(
+                "SKIP reflink-neg: every candidate fs supports FICLONE on this host; \
+                 negative path unexecuted (explicit host-fact skip, not a pass)"
+            );
             return;
         };
-        let _ = unpacker;
-        let work = tmpdir("rcneg");
-        if reflink_supported(&work) {
-            eprintln!("NOTE reflink-neg: host supports FICLONE; negative path covered by unit shape");
-            // still assert clobber refusal classification above; done.
-            return;
-        }
-        let src = work.join("src");
-        fs::create_dir_all(&src).unwrap();
-        fs::write(src.join("x"), b"x").unwrap();
-        let err = reflink_copy(&src, &work.join("dst"), &work).unwrap_err();
+        eprintln!("HOST FACT: reflink non-supporting fs for negative path = {}", work.display());
+        // reflink_copy probes the work dir FIRST and must reject before
+        // touching src/dst — this exercises the real mapping without
+        // needing a writable fs underneath it.
+        let err = reflink_copy(&work.join("nonexistent-src"), &work.join("dst"), work).unwrap_err();
         assert_eq!(err.code(), "HOST_UNSUPPORTED");
     }
 }

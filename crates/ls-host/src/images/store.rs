@@ -92,7 +92,16 @@ impl ImageStore {
                 &expected[..16.min(expected.len())],
                 nanos()
             ));
-            let _ = fs::create_dir_all(&q);
+            // Round-03 #16a: evidence-sink failures must never be silent —
+            // they cannot mask the digest error itself, so surface them
+            // loudly on stderr instead.
+            if let Err(ioe) = fs::create_dir_all(&q) {
+                eprintln!(
+                    "WARNING: quarantine dir creation failed ({}): {ioe}",
+                    q.display()
+                );
+                return;
+            }
             if let Ok(body) = serde_json::to_vec(&serde_json::json!({
                 "code": e.code(),
                 "blob_kind": kind,
@@ -102,7 +111,12 @@ impl ImageStore {
                 "principal": principal,
                 "source_ref": source_ref,
             })) {
-                let _ = fs::write(q.join("reason.json"), body);
+                if let Err(ioe) = fs::write(q.join("reason.json"), body) {
+                    eprintln!(
+                        "WARNING: quarantine reason.json write failed ({}): {ioe}",
+                        q.display()
+                    );
+                }
             }
         }
     }
@@ -161,8 +175,10 @@ impl ImageStore {
         fs::create_dir_all(&staging)?;
 
         let outcome = (|| -> Result<ImportOutcome> {
-            // 3a. blobs: manifest, config, layers — hard link when possible
-            //     (same fs), byte copy otherwise; each lands via rename.
+            // 3a. blobs: manifest, config, layers — copied from the caller
+            //     layout (streamed; NEVER fs::copy — clone-offload on this
+            //     fs class can extent-share the source), mode 0444, then
+            //     rename-published so the visible path is atomic.
             let mut digests = vec![loaded.manifest_digest.clone(), loaded.config_digest.clone()];
             digests.extend(loaded.layers.iter().map(|l| l.digest.clone()));
             for digest in &digests {
@@ -172,33 +188,32 @@ impl ImageStore {
                     continue; // content-addressed: identical bytes already there
                 }
                 let src = blob_path(layout, digest)?;
-                // Publish by ATOMIC hard_link, not tmp+rename: POSIX says a
-                // rename whose old and new paths are hard links to the SAME
-                // inode "does nothing and returns success", so a racing
-                // tmp+rename leaks the tmp file (observed: 19 leftover
-                // blob-* files in the C04 race). hard_link either publishes
-                // or reports the race outcome.
-                match fs::hard_link(&src, &target) {
+                // Round-03 #11: a hard_link would ALIAS the caller-mutable
+                // layout inode into the store — a post-import edit of the
+                // layout blob would silently corrupt the store (digests are
+                // verified at import, not re-verified at consumption). Copy
+                // at import instead: the aliasing cost is paid once, the
+                // store blob lives on its own read-only inode, and racing
+                // importers converge because the bytes are identical.
+                // The tmp stays INSIDE staging so cleanup covers every
+                // failure mode (the C04-race residue lesson).
+                let tmp = staging.join(format!("blob-{blob_hex}"));
+                copy_blob_streaming(&src, &tmp)?;
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    fs::set_permissions(&tmp, fs::Permissions::from_mode(0o444))?;
+                }
+                match fs::rename(&tmp, &target) {
                     Ok(()) => {}
                     Err(_e) if target.exists() => {
                         // racer published the identical content-addressed
                         // bytes first — that is a win, not an error
-                    }
-                    Err(_) => {
-                        // cross-fs / no-hardlink fallback: byte-copy through
-                        // a tmp INSIDE our own staging dir so staging
-                        // cleanup covers any failure mode.
-                        let tmp = staging.join(format!("blob-{blob_hex}"));
-                        fs::copy(&src, &tmp)?;
-                        match fs::rename(&tmp, &target) {
-                            Ok(()) => {}
-                            Err(e) if target.exists() => {
-                                let _ = fs::remove_file(&tmp);
-                                let _ = e;
-                            }
-                            Err(e) => return Err(ImageError::from(e)),
-                        }
                         let _ = fs::remove_file(&tmp);
+                    }
+                    Err(e) => {
+                        let _ = fs::remove_file(&tmp);
+                        return Err(ImageError::from(e));
                     }
                 }
             }
@@ -252,7 +267,7 @@ impl ImageStore {
                     },
                     already_present: false,
                 }),
-                Err(e) if refs_dir.is_dir() => Ok(ImportOutcome {
+                Err(_e) if refs_dir.is_dir() => Ok(ImportOutcome {
                     image: ImageRef {
                         digest: BundleRef::new(&loaded.manifest_digest).map_err(|e2| {
                             ImageError::LayoutInvalid {
@@ -292,6 +307,19 @@ impl ImageStore {
     pub fn quarantine_dir(&self) -> PathBuf {
         self.root.join("quarantine")
     }
+}
+
+/// Byte-exact blob copy through an explicit userspace read/write loop +
+/// data sync before publish. Never `fs::copy`: on clone-offload-capable
+/// filesystems (measured on this host's overlayfs) `copy_file_range` can
+/// share extents with the caller layout, re-creating at the extent level
+/// the aliasing #11 forbids at the inode level.
+fn copy_blob_streaming(src: &Path, dst: &Path) -> Result<()> {
+    let mut r = fs::File::open(src).map_err(ImageError::from)?;
+    let mut w = fs::File::create(dst).map_err(ImageError::from)?;
+    std::io::copy(&mut r, &mut w).map_err(ImageError::from)?;
+    w.sync_data().map_err(ImageError::from)?;
+    Ok(())
 }
 
 fn nanos() -> u128 {
@@ -389,6 +417,57 @@ mod tests {
             .unwrap_err();
         assert_eq!(err.code(), "HOST_UNSUPPORTED");
         assert!(store.list_runnable().unwrap().is_empty());
+        let _ = fs::remove_dir_all(&store_root);
+    }
+
+    /// Round-03 #11: blob publish must SEVER the caller-layout alias. A
+    /// hard link shares the caller-mutable inode — a post-import edit of
+    /// the layout blob would silently corrupt the store (digests are
+    /// verified at import, not re-verified at consumption). Fix: import
+    /// copies bytes (streamed; never fs::copy — clone-offload on this fs
+    /// class can extent-share) and publishes 0444, rename-atomically.
+    /// Evidence shape: this test FAILS under hard-link publish (the edit
+    /// aliases straight through) and PASSES once import copies.
+    #[test]
+    fn c01_imported_blob_is_copy_0444_and_severs_caller_mutation() {
+        let img = build_layout("amd64", json!(null), json!(["ash"]), json!([]), "", "", "");
+        let store_root = tmpdir("store-alias");
+        let store = ImageStore::open(&store_root).unwrap();
+        store
+            .import(&img.dir, None, &host(), "fixture:latest", "tester")
+            .unwrap();
+        for digest in [
+            img.manifest_digest.clone(),
+            img.config_digest.clone(),
+            img.layer_digests[0].clone(),
+        ] {
+            let blob = store_root.join("blobs").join("sha256").join(&digest);
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                assert_eq!(
+                    fs::metadata(&blob).unwrap().permissions().mode() & 0o777,
+                    0o444,
+                    "store blobs must publish read-only: {digest}"
+                );
+            }
+        }
+        // mutate the CALLER's blob after import; the store must not notice
+        let layer_hex = img.layer_digests[0].clone();
+        let caller_blob = img.dir.join("blobs").join("sha256").join(&layer_hex);
+        use std::io::Write;
+        fs::OpenOptions::new()
+            .append(true)
+            .open(&caller_blob)
+            .unwrap()
+            .write_all(b"caller-side-tamper")
+            .unwrap();
+        let stored = fs::read(store_root.join("blobs").join("sha256").join(&layer_hex)).unwrap();
+        assert_eq!(
+            ls_core::domain::idempotency::sha256_hex(&stored),
+            layer_hex,
+            "caller-side edit must never reach the store blob"
+        );
         let _ = fs::remove_dir_all(&store_root);
     }
 

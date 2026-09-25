@@ -63,6 +63,42 @@ pub fn read_verified_blob(layout: &Path, digest: &str, kind: &'static str) -> Re
     Ok(bytes)
 }
 
+/// Stream-hash a blob against its digest name WITHOUT materializing it in
+/// memory (round-03 #12): 64 KiB reads through an incremental SHA-256.
+/// Used for layer blobs, which can be arbitrarily large; manifest/config
+/// remain on `read_verified_blob` because their bytes are needed anyway.
+/// Returns the verified byte count.
+pub fn verify_blob_streaming(layout: &Path, digest: &str, kind: &'static str) -> Result<u64> {
+    use std::io::Read;
+    let hex = parse_digest(digest)?;
+    let path = layout.join("blobs").join("sha256").join(hex);
+    let mut f = fs::File::open(&path).map_err(|e| ImageError::LayoutInvalid {
+        detail: format!("blob {digest} unreadable at {}: {e}", path.display()),
+    })?;
+    let mut hasher = super::sha256::Sha256::new();
+    let mut total = 0u64;
+    let mut buf = vec![0u8; 64 * 1024];
+    loop {
+        let n = f.read(&mut buf).map_err(|e| ImageError::LayoutInvalid {
+            detail: format!("blob {digest} read failure at {}: {e}", path.display()),
+        })?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+        total += n as u64;
+    }
+    let actual = hasher.finalize_hex();
+    if actual != hex {
+        return Err(ImageError::DigestMismatch {
+            kind,
+            expected: hex.to_string(),
+            actual,
+        });
+    }
+    Ok(total)
+}
+
 fn expect_obj<'v>(v: &'v serde_json::Value, what: &str) -> Result<&'v serde_json::Map<String, serde_json::Value>> {
     v.as_object().ok_or_else(|| ImageError::LayoutInvalid {
         detail: format!("{what} must be an object"),
@@ -236,13 +272,11 @@ pub fn load_verified(
             .and_then(|m| m.as_str())
             .unwrap_or("")
             .to_string();
-        let bytes = read_verified_blob(layout, &digest, "layer")?;
-        if bytes.len() as u64 != size {
+        // stream-hashed: no full layer ever sits in RAM for verification
+        let actual_size = verify_blob_streaming(layout, &digest, "layer")?;
+        if actual_size != size {
             return Err(ImageError::LayoutInvalid {
-                detail: format!(
-                    "layer {digest} size {} != descriptor size {size}",
-                    bytes.len()
-                ),
+                detail: format!("layer {digest} size {actual_size} != descriptor size {size}"),
             });
         }
         layers.push(LayerDescriptor {
@@ -309,6 +343,8 @@ mod tests {
         let loaded = load_verified(&img.dir, None, &host()).unwrap();
         assert_eq!(loaded.manifest_digest, format!("sha256:{}", img.manifest_digest));
         assert_eq!(loaded.config_digest, format!("sha256:{}", img.config_digest));
+        // verified config blob round-trips to exactly the fixture's config JSON
+        assert_eq!(loaded.config, img.config_json);
         assert_eq!(loaded.layers.len(), 1);
         assert_eq!(
             loaded.layers[0].digest,
@@ -343,6 +379,34 @@ mod tests {
             }
             other => panic!("expected DigestMismatch, got {other:?}"),
         }
+    }
+
+    /// Round-03 #12: layer verification is STREAMED through the incremental
+    /// hasher — prove the multi-chunk path by verifying a >128 KiB layer
+    /// end-to-end and catching a byte flip hash-side (not whole-buffer-side).
+    #[test]
+    fn c01_large_layer_stream_verified_and_flip_detected() {
+        let big: Vec<u8> = (0..300_000u32).map(|i| ((i * 31) % 251) as u8).collect();
+        let layout = crate::rootfs::testkit::build_layout_with_layers(vec![big.clone()]);
+        let loaded = load_verified(&layout.dir, Some("fixture:latest"), &Platform::host()).unwrap();
+        assert_eq!(loaded.layers.len(), 1);
+        assert_eq!(loaded.layers[0].size, big.len() as u64);
+        // flip a byte mid-stream (past the first 64 KiB read): digest gate
+        // must still fire through the streaming verifier.
+        let hex = loaded.layers[0]
+            .digest
+            .strip_prefix("sha256:")
+            .unwrap()
+            .to_string();
+        let p = layout.dir.join("blobs").join("sha256").join(&hex);
+        let mut b = fs::read(&p).unwrap();
+        b[150_000] ^= 0xFF;
+        fs::write(&p, b).unwrap();
+        let err = load_verified(&layout.dir, Some("fixture:latest"), &Platform::host()).unwrap_err();
+        assert_eq!(err.code(), "IMAGE_DIGEST_MISMATCH");
+        // and the size-vs-descriptor gate still works on the streamed count
+        let err = verify_blob_streaming(&layout.dir, &format!("sha256:{hex}"), "layer").unwrap_err();
+        assert_eq!(err.code(), "IMAGE_DIGEST_MISMATCH");
     }
 
     #[test]

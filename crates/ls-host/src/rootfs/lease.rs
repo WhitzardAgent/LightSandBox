@@ -8,12 +8,19 @@
 //!   leave disk state for the sweep, so crashes cannot leak invisible
 //!   trees... the opposite trade also exists; honesty: Drop does not log
 //!   either in v1 — the incomplete/lease state on disk is the record).
-//! * The GC sweep touches ONLY `sandbox-*` dirs, only those still carrying
-//!   `.incomplete`, only older than a caller cutoff, never any dir named in
-//!   `active_ids`, and NEVER anything with a live mount reference under it
-//!   (`/proc/self/mountinfo` audit) — a mount leak is reported, not silently
-//!   deleted. `bases/` (shared per-digest verified bases) is outside sweep
-//!   scope by construction.
+//! * The GC sweep (round-03 MAJOR #2) owns TWO classes, and ALWAYS audits
+//!   `/proc/self/mountinfo` ahead of any deletion (a mount leak is
+//!   reported, never silently deleted):
+//!   1. incomplete debris — `sandbox-*` dirs still carrying `.incomplete`,
+//!      inactive, and older than the caller cutoff;
+//!   2. committed-lease reconciliation — `sandbox-*` dirs carrying
+//!      `lease.json` that are inactive, stale (record `created_ms` +
+//!      cutoff), and whose recorded owner pid is DEAD (or whose record is
+//!      unreadable). A LIVE owner keeps its tree: it may legitimately hold
+//!      paths into it.
+//!   `bases/` (shared per-digest verified bases) and anything not named
+//!   `sandbox-*` is outside sweep scope by construction. Per-entry failures
+//!   never abort a pass; they are enumerated in `GcReport::errors`.
 
 use std::collections::HashSet;
 use std::fs;
@@ -102,9 +109,36 @@ pub fn mark_incomplete(sandbox_dir: &Path) -> Result<()> {
     fs::write(sandbox_dir.join(INCOMPLETE_MARKER), b"in-progress\n").map_err(ImageError::from)
 }
 
+/// Publish `bytes` as `dir/lease.json` crash-atomically (round-03 MAJOR
+/// #2): write a uniquely-named tmp file, sync it, then rename over the
+/// final path. A crash mid-commit leaves either the old state or the new
+/// one — never a torn record. Tmp residue is only possible across a hard
+/// crash and is swept with the sandbox dir it lives in.
+fn write_lease_atomic(dir: &Path, bytes: &[u8]) -> Result<()> {
+    use std::io::Write;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static N: AtomicU64 = AtomicU64::new(0);
+    let n = N.fetch_add(1, Ordering::SeqCst);
+    let tmp = dir.join(format!(".lease.json.tmp-{}-{n}", std::process::id()));
+    let outcome = (|| -> std::io::Result<()> {
+        let mut f = fs::File::create(&tmp)?;
+        f.write_all(bytes)?;
+        f.sync_data()?;
+        drop(f);
+        fs::rename(&tmp, dir.join(LEASE_FILE))
+    })();
+    if outcome.is_err() {
+        let _ = fs::remove_file(&tmp);
+    }
+    outcome.map_err(ImageError::from)
+}
+
 /// Commit a lease: write lease.json, clear `.incomplete`, return the live
 /// handle. Called once by `RootfsManager::prepare` after the copy driver
-/// succeeds.
+/// succeeds. Ordering is significant: the atomic lease.json publish lands
+/// FIRST and `.incomplete` is cleared LAST, so a crash between the two
+/// leaves a marker-classified dir (incomplete debris) — the fail-closed
+/// state the sweep already owns.
 pub fn commit(sandbox_dir: &Path, handle: RootfsHandle, report: PrepareReport) -> Result<RootfsLease> {
     let record = LeaseRecord {
         lease_id: handle.lease_id.clone(),
@@ -122,7 +156,7 @@ pub fn commit(sandbox_dir: &Path, handle: RootfsHandle, report: PrepareReport) -
             .unwrap_or(0),
     };
     let json = serde_json::to_vec_pretty(&record)?;
-    fs::write(sandbox_dir.join(LEASE_FILE), json).map_err(ImageError::from)?;
+    write_lease_atomic(sandbox_dir, &json)?;
     fs::remove_file(sandbox_dir.join(INCOMPLETE_MARKER)).map_err(ImageError::from)?;
     Ok(RootfsLease {
         dir: sandbox_dir.to_path_buf(),
@@ -196,13 +230,25 @@ pub fn mount_leaks_under(path: &Path) -> Result<Vec<String>> {
 /// GC outcome — every classification is enumerated, no silent discards.
 #[derive(Debug, Default)]
 pub struct GcReport {
+    /// incomplete prepare debris removed this pass.
     pub removed: Vec<PathBuf>,
+    /// committed lease trees reclaimed this pass (round-03 MAJOR #2):
+    /// stale + id not active + owner pid dead + no live mount reference.
+    pub reclaimed_committed: Vec<PathBuf>,
     pub kept_active: Vec<PathBuf>,
     pub kept_fresh: Vec<PathBuf>,
+    /// committed leases kept ONLY because their owner pid is still alive.
+    pub kept_owner_live: Vec<PathBuf>,
     pub refused_mount_leak: Vec<PathBuf>,
+    /// per-entry failures collected without aborting the whole pass
+    /// (round-03 #5a). The top-level `read_dir(data_root)` failure is
+    /// still returned as `Err` — only ENTRY-scoped failures land here.
+    pub errors: Vec<(PathBuf, String)>,
 }
 
-/// Sweep `data_root`: remove only `sandbox-*` dirs that
+/// Sweep `data_root`. Two removal classes, everything else kept:
+///
+/// **Incomplete debris** — `sandbox-*` dirs that
 ///   (a) still carry `.incomplete` (prepared never committed), AND
 ///   (b) are NOT listed in `active_ids`, AND
 ///   (c) the marker is at least `cutoff` old — NOTE: `Duration::ZERO`
@@ -210,8 +256,41 @@ pub struct GcReport {
 ///       debris protection for in-flight prepares REQUIRES a nonzero
 ///       cutoff in production callers, AND
 ///   (d) have no live mount reference underneath.
-/// `bases/` and anything not named `sandbox-*` is never touched.
+///
+/// **Committed lease reconciliation** (round-03 MAJOR #2) — `sandbox-*`
+/// dirs carrying `lease.json` (no marker) that
+///   (a) are NOT listed in `active_ids`, AND
+///   (b) are stale (record `created_ms + cutoff <= now`; cutoff ZERO =
+///       force, matching the incomplete class), AND
+///   (c) have a DEAD owner (`/proc/<owner_pid>` absent) or an unreadable
+///       record — a live owner may legitimately hold paths into the tree;
+///       a dead one cannot. Caveat: PID REUSE could masquerade as a live
+///       owner; v1 accepts this (start-time matching is out of scope) and
+///       relies on the staleness cutoff plus the mount audit as mitigations.
+///   (d) have no live mount reference underneath.
+///
+/// Cutoff discipline (round-03 #5b): the `.incomplete` marker mtime is
+/// stamped ONCE at prepare start and never refreshed while work proceeds,
+/// so a production cutoff must be ≥ the LONGEST possible prepare —
+/// otherwise a slow, healthy prepare is misclassified as debris. The same
+/// rule applies to the committed class via `created_ms` (stamped once at
+/// commit): a cutoff forces reclamation of any dead-owner lease older than
+/// it, regardless of how recently the sandbox ran.
+///
+/// `bases/` and anything not named `sandbox-*` is never touched. One bad
+/// entry never aborts the pass: failures are collected into `report.errors`.
 pub fn sweep(data_root: &Path, active_ids: &[&str], cutoff: Duration) -> Result<GcReport> {
+    sweep_impl(data_root, active_ids, cutoff, &|p| fs::remove_dir_all(p))
+}
+
+/// Sweep core with the removal primitive injected (tests inject failures to
+/// prove per-entry collection; production uses `fs::remove_dir_all`).
+fn sweep_impl(
+    data_root: &Path,
+    active_ids: &[&str],
+    cutoff: Duration,
+    remove: &dyn Fn(&Path) -> std::io::Result<()>,
+) -> Result<GcReport> {
     let mut report = GcReport::default();
     let active: HashSet<&str> = active_ids.iter().copied().collect();
     let now = SystemTime::now();
@@ -222,52 +301,130 @@ pub fn sweep(data_root: &Path, active_ids: &[&str], cutoff: Duration) -> Result<
         Err(e) => return Err(ImageError::from(e)),
     };
     for ent in rd {
-        let ent = ent.map_err(ImageError::from)?;
+        let ent = match ent {
+            Ok(e) => e,
+            Err(e) => {
+                report
+                    .errors
+                    .push((data_root.to_path_buf(), format!("read_dir entry: {e}")));
+                continue;
+            }
+        };
         let name = ent.file_name().to_string_lossy().to_string();
         let Some(id) = name.strip_prefix("sandbox-") else {
             continue; // bases/, stray files: out of sweep scope
         };
         let dir = ent.path();
         let marker = dir.join(INCOMPLETE_MARKER);
-        if !marker.is_file() {
-            continue; // committed lease (or empty): not crash debris
+        if marker.is_file() {
+            // ---- class 1: incomplete prepare debris
+            if active.contains(id) {
+                report.kept_active.push(dir);
+                continue;
+            }
+            if !stale_mtime(&marker, now, cutoff) {
+                report.kept_fresh.push(dir);
+                continue;
+            }
+            match mount_leaks_under(&dir) {
+                Ok(leaks) if !leaks.is_empty() => {
+                    report.refused_mount_leak.push(dir);
+                    continue; // audit ahead of deletion, always
+                }
+                Ok(_) => {}
+                Err(e) => {
+                    report.errors.push((dir, format!("mountinfo audit: {e}")));
+                    continue;
+                }
+            }
+            match remove(&dir) {
+                Ok(()) => report.removed.push(dir),
+                Err(e) => report
+                    .errors
+                    .push((dir, format!("incomplete debris removal: {e}"))),
+            }
+            continue;
         }
+        let lease_path = dir.join(LEASE_FILE);
+        if !lease_path.is_file() {
+            continue; // neither incomplete nor committed: out of sweep scope
+        }
+        // ---- class 2: committed lease reconciliation (round-03 MAJOR #2)
         if active.contains(id) {
             report.kept_active.push(dir);
             continue;
         }
-        let stale = marker
-            .metadata()
-            .and_then(|m| m.modified())
-            .ok()
-            .and_then(|t| now.duration_since(t).ok())
-            .map(|age| age >= cutoff)
-            .unwrap_or(false);
+        let record = read_lease(&dir).ok(); // corrupt record => unknown owner
+        let stale = match &record {
+            Some(r) => {
+                // cutoff ZERO = force; otherwise created_ms + cutoff <= now.
+                cutoff == Duration::ZERO
+                    || now
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .map(|t| t.as_millis() as u64 >= r.created_ms.saturating_add(cutoff.as_millis() as u64))
+                        .unwrap_or(false)
+            }
+            None => stale_mtime(&lease_path, now, cutoff),
+        };
         if !stale {
             report.kept_fresh.push(dir);
             continue;
         }
-        let leaks = mount_leaks_under(&dir)?;
-        if !leaks.is_empty() {
-            report.refused_mount_leak.push(dir);
-            continue; // audit ahead of deletion, always
+        if record.as_ref().is_some_and(|r| pid_alive(r.owner_pid)) {
+            report.kept_owner_live.push(dir);
+            continue;
         }
-        fs::remove_dir_all(&dir).map_err(ImageError::from)?;
-        report.removed.push(dir);
+        match mount_leaks_under(&dir) {
+            Ok(leaks) if !leaks.is_empty() => {
+                report.refused_mount_leak.push(dir);
+                continue;
+            }
+            Ok(_) => {}
+            Err(e) => {
+                report.errors.push((dir, format!("mountinfo audit: {e}")));
+                continue;
+            }
+        }
+        match remove(&dir) {
+            Ok(()) => report.reclaimed_committed.push(dir),
+            Err(e) => report
+                .errors
+                .push((dir, format!("committed lease reclamation: {e}"))),
+        }
     }
     // deterministic outcome ordering (read_dir order is fs-dependent)
     report.removed.sort();
+    report.reclaimed_committed.sort();
     report.kept_active.sort();
     report.kept_fresh.sort();
+    report.kept_owner_live.sort();
     report.refused_mount_leak.sort();
+    report.errors.sort();
     Ok(report)
+}
+
+/// Marker/lease file mtime-based staleness: `cutoff` ZERO matches ANY age
+/// (operator force-clean); unmeasurable mtime is NOT stale (fail closed).
+fn stale_mtime(path: &Path, now: SystemTime, cutoff: Duration) -> bool {
+    path.metadata()
+        .and_then(|m| m.modified())
+        .ok()
+        .and_then(|t| now.duration_since(t).ok())
+        .map(|age| age >= cutoff)
+        .unwrap_or(false)
+}
+
+/// Owner-pid liveness via `/proc` (Linux). See the sweep docs for the
+/// documented pid-reuse caveat.
+fn pid_alive(pid: u32) -> bool {
+    Path::new("/proc").join(pid.to_string()).exists()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::images::unpack::UmociUnpacker;
-    use crate::rootfs::prepare::{Driver, RootfsManager};
+    use crate::rootfs::prepare::{Driver, PrepareReport, RootfsManager};
     use crate::rootfs::testkit::{build_layout_with_layers, tar, tmpdir, Ent};
 
     #[test]
@@ -305,17 +462,137 @@ mod tests {
         dir
     }
 
+    /// A pid that is guaranteed dead: spawn + reap, falling back to a value
+    /// above any legal pid_max if the pid was recycled between wait and now.
+    fn dead_pid() -> u32 {
+        let mut c = std::process::Command::new("/bin/true")
+            .spawn()
+            .expect("spawn /bin/true");
+        let pid = c.id();
+        let _ = c.wait();
+        if Path::new("/proc").join(pid.to_string()).exists() {
+            u32::MAX // /proc/<u32::MAX> can never exist (pid_max <= 2^22)
+        } else {
+            pid
+        }
+    }
+
+    fn write_committed(dir_name: &Path, owner_pid: u32, created_ms: u64) {
+        fs::create_dir_all(dir_name).unwrap();
+        let rec = LeaseRecord {
+            lease_id: "lease-x".into(),
+            sandbox_id: dir_name
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_default(),
+            base_digest: format!("sha256:{}", "0".repeat(64)),
+            driver: "FULL_COPY".into(),
+            rootfs: dir_name.join("rootfs"),
+            owner_pid,
+            created_ms,
+        };
+        fs::write(dir_name.join(LEASE_FILE), serde_json::to_vec_pretty(&rec).unwrap()).unwrap();
+    }
+
+    /// Round-03 MAJOR #2: committed lease trees MUST have a reclamation
+    /// path. Dead owner + stale + inactive + no mounts => reclaimed; a live
+    /// owner keeps the tree (the sandbox may legitimately hold it open).
+    #[test]
+    fn c04_sweep_reclaims_committed_lease_of_dead_owner_keeps_live() {
+        let root = tmpdir("sweepcommit");
+        let dead = root.join("sandbox-gone");
+        write_committed(&dead, dead_pid(), 0); // epoch => stale under any cutoff
+        fs::write(dead.join("junk"), b"j").unwrap();
+        let live = root.join("sandbox-live");
+        write_committed(&live, std::process::id(), 0);
+
+        // cutoff ZERO = force path; staleness is exercised separately for
+        // the incomplete class in c04_fresh_marker_kept_under_nonzero_cutoff.
+        let rep = sweep(&root, &[], Duration::ZERO).unwrap();
+        assert_eq!(rep.reclaimed_committed, vec![dead.clone()]);
+        assert_eq!(rep.kept_owner_live, vec![live.clone()]);
+        assert!(rep.errors.is_empty(), "{:?}", rep.errors);
+        assert!(!dead.exists(), "dead-owner committed tree must be reclaimed");
+        assert!(live.exists(), "live-owner tree must survive even when stale");
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// Committed-class staleness: fresh leases (created_ms inside cutoff)
+    /// are kept even with a dead owner; an unreadable lease.json is debris
+    /// nobody can account for — reclaimed once stale (mtime-based).
+    #[test]
+    fn c04_committed_fresh_lease_kept_corrupt_record_reclaimed_when_stale() {
+        let root = tmpdir("sweepcommit2");
+        let now_ms = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+        let fresh = root.join("sandbox-fresh");
+        write_committed(&fresh, dead_pid(), now_ms);
+        let corrupt = root.join("sandbox-corrupt");
+        fs::create_dir_all(&corrupt).unwrap();
+        fs::write(corrupt.join(LEASE_FILE), b"{not-a-record").unwrap();
+
+        // nonzero cutoff: BOTH are fresh — the valid record via created_ms,
+        // the corrupt record via lease.json mtime fallback.
+        let rep = sweep(&root, &[], Duration::from_secs(3600)).unwrap();
+        assert_eq!(rep.kept_fresh, vec![corrupt.clone(), fresh.clone()]);
+        assert!(rep.reclaimed_committed.is_empty());
+        assert!(fresh.exists() && corrupt.exists());
+
+        // force cutoff (force-clean path): staleness lapses for every class
+        // alike, so the corrupt record AND the fresh-but-dead-owner lease
+        // are both reclaimed; only a LIVE owner still protects (covered in
+        // the sibling test above).
+        let rep2 = sweep(&root, &[], Duration::ZERO).unwrap();
+        assert_eq!(rep2.reclaimed_committed, vec![corrupt.clone(), fresh.clone()]);
+        assert!(!corrupt.exists() && !fresh.exists());
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// Round-03 #5a: one per-entry IO failure must NOT abort the whole
+    /// sweep; failures are collected into the report, other entries are
+    /// still processed. The removal primitive is injected to make the
+    /// failure deterministic on any host (permission tricks are root-flaky).
+    #[test]
+    fn c04_sweep_collects_per_entry_failures_and_continues() {
+        let root = tmpdir("sweeperr");
+        let bad = make_incomplete(&root, "bad");
+        let good = make_incomplete(&root, "good");
+        let bad_c = bad.clone();
+        let rep = sweep_impl(&root, &[], Duration::ZERO, &move |p: &Path| {
+            if p == bad_c {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::PermissionDenied,
+                    "injected refusal (test)",
+                ))
+            } else {
+                fs::remove_dir_all(p)
+            }
+        })
+        .expect("sweep must not abort on one bad entry");
+        assert!(
+            rep.errors.iter().any(|(p, _)| p == &bad),
+            "failure must be collected: {:?}",
+            rep.errors
+        );
+        assert_eq!(rep.removed, vec![good.clone()], "other entries still processed");
+        assert!(bad.exists());
+        assert!(!good.exists());
+        let _ = fs::remove_dir_all(&root);
+    }
+
     #[test]
     fn c04_sweep_removes_stale_incomplete_keeps_active_committed_and_bases() {
         let root = tmpdir("sweep");
         let stale = make_incomplete(&root, "old");
         fs::write(stale.join("junk"), b"j").unwrap();
         let active = make_incomplete(&root, "live");
-        // committed dir (lease.json, no marker) — must be left alone even
-        // though it looks like a sandbox dir
+        // committed dir (lease.json, no marker) with a LIVE owner — kept by
+        // the committed-reconciliation class even though it looks stale
+        // (round-03 MAJOR #2: kept via kept_owner_live, not by blind skip).
         let committed = root.join("sandbox-done");
-        fs::create_dir_all(&committed).unwrap();
-        fs::write(committed.join(LEASE_FILE), b"{}").unwrap();
+        write_committed(&committed, std::process::id(), 0);
         // shared bases must never be sweep scope
         let bases = root.join("bases");
         fs::create_dir_all(bases.join("abc")).unwrap();
@@ -325,9 +602,11 @@ mod tests {
         let rep = sweep(&root, &["live"], Duration::ZERO).unwrap();
         assert_eq!(rep.removed, vec![stale.clone()]);
         assert_eq!(rep.kept_active, vec![active.clone()]);
+        assert_eq!(rep.kept_owner_live, vec![committed.clone()]);
+        assert!(rep.errors.is_empty(), "{:?}", rep.errors);
         assert!(!stale.exists(), "stale incomplete must be removed");
         assert!(active.exists(), "active must survive even when stale");
-        assert!(committed.exists());
+        assert!(committed.exists(), "live-owner committed lease must survive");
         assert!(bases.join("abc").exists());
         let _ = fs::remove_dir_all(&root);
     }
@@ -343,10 +622,11 @@ mod tests {
         let _ = fs::remove_dir_all(&root);
     }
 
-    /// Real mount-leak evidence: on hosts where we may bind-mount (uid 0
-    /// here), a leaked mount under a stale sandbox dir must REFUSE deletion
-    /// and be reported — never silently removed. Skips honestly on hosts
-    /// without mount privilege.
+    /// Real mount-leak evidence: on hosts where we may bind-mount (e.g.
+    /// privileged hosts; THIS host denies mount(2) despite uid 0, so the
+    /// test skips there), a leaked mount under a stale sandbox dir must
+    /// REFUSE deletion and be reported — never silently removed. Skips
+    /// honestly on hosts without mount privilege.
     #[test]
     fn c04_mount_leak_refuses_silent_deletion() {
         let root = tmpdir("mountleak");
@@ -442,6 +722,50 @@ mod tests {
         let rep = sweep(&root, &[], Duration::ZERO).unwrap();
         assert!(rep.removed.is_empty());
         let _ = fs::remove_dir_all(&root);
+    }
+
+    /// Round-03 MAJOR #2 companion: commit publishes lease.json via
+    /// tmp-file + rename so a crash can never leave a torn record, and no
+    /// tmp residue remains on the happy path. Order is fixed: lease.json
+    /// lands FIRST, `.incomplete` is cleared LAST — a crash between the two
+    /// leaves a dir classified by the marker (incomplete debris), which is
+    /// the sweep-safe fail-closed state.
+    #[test]
+    fn c04_commit_publishes_lease_atomically_no_tmp_residue() {
+        let dir = tmpdir("commitatom");
+        mark_incomplete(&dir).unwrap();
+        let handle = RootfsHandle {
+            lease_id: "lease-atom".into(),
+            base_digest: format!("sha256:{}", "0".repeat(64)),
+            driver: Driver::FullCopy,
+            root: dir.join("rootfs"),
+        };
+        let report = PrepareReport {
+            driver: "FULL_COPY",
+            layer_count: 0,
+            unpack_wall_ms: 0,
+            copy_wall_ms: 0,
+            logical_bytes: 0,
+            allocated_delta_bytes: None,
+            estimated_shared_bytes: None,
+        };
+        let lease = commit(&dir, handle, report).unwrap();
+        assert_eq!(lease.record().lease_id, "lease-atom");
+        assert!(dir.join(LEASE_FILE).is_file());
+        assert!(!dir.join(INCOMPLETE_MARKER).exists());
+        let leftovers: Vec<_> = fs::read_dir(&dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_name().to_string_lossy().contains("tmp"))
+            .collect();
+        assert!(leftovers.is_empty(), "tmp residue after commit: {leftovers:?}");
+        let rec = read_lease(&dir).unwrap();
+        assert_eq!(rec.lease_id, "lease-atom");
+        assert_eq!(rec.owner_pid, std::process::id());
+        // dropping the lease without release leaves disk state for the sweep
+        drop(lease);
+        assert!(dir.join(LEASE_FILE).is_file());
+        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]

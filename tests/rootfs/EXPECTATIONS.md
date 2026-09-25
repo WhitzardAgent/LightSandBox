@@ -129,9 +129,12 @@ return `HOST_UNSUPPORTED`; there is no silent fallback to FULL_COPY.
   committed dirs, `bases/`, and non-`sandbox-*` entries are never touched;
 * `Duration::ZERO` cutoff = force-clean (matches any age); production
   callers must pass a nonzero cutoff so in-flight prepares are protected;
-* mount-leak audit: with bind-mount privilege (uid 0 here) a real leaked
-  bind mount under a stale sandbox dir makes the sweep REFUSE deletion and
-  enumerate the dir in `refused_mount_leak`; after umount the sweep removes
-  it. Without mount privilege the test skips with an explicit line;
+* mount-leak audit: with bind-mount privilege (on mount-capable hosts;
+  this host denies mount(2) even for uid 0 (skip prints 'SKIP c04-mount:
+  bind mount not permitted on this host') — a mount-capable run is still
+  owed externally) a real leaked bind mount under a stale sandbox dir
+  makes the sweep REFUSE deletion and enumerate the dir in
+  `refused_mount_leak`; after umount the sweep removes it. Without mount
+  privilege the test skips with an explicit line;
 * `Drop` on `RootfsLease` performs NO disk mutation: unreleased leases are
   reconciled by sweep/active-ids, never by an implicit destructor delete.

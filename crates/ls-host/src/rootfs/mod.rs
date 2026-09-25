@@ -8,9 +8,10 @@
 //! * a prepared rootfs is addressable ONLY via a [`RootfsLease`]; every
 //!   sandbox gets its OWN writable layer (workspace-writable-only is not a
 //!   substitute for a fully writable rootfs);
-//! * GC touches only objects with no valid lease marker and a stale
-//!   incomplete flag; it audits /proc/self/mountinfo and REFUSES silent
-//!   deletion when a mount reference exists under the data root;
+//! * GC owns two classes: stale incomplete debris AND stale committed
+//!   leases with dead owners (inactive + cutoff-expired). It audits
+//!   /proc/self/mountinfo and REFUSES silent deletion when a mount
+//!   reference exists under the data root;
 //! * sharing vs full-copy memory cost is reported honestly (review focus:
 //!   reflink sharing has a real cost advantage, Docker's same-inode sharing
 //!   has it too — FULL_COPY does not).

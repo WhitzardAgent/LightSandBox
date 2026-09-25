@@ -41,6 +41,11 @@ static SIDE_N: AtomicU64 = AtomicU64::new(0);
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnpackReport {
     pub wall_ms: u64,
+    /// Bounded stderr tail of the successful invocation (round-03 #16b):
+    /// umoci sanitize/audit warnings still leave a record on the success
+    /// path instead of being discarded with the sidecar. Empty when the
+    /// tool was quiet.
+    pub stderr_tail: String,
 }
 
 /// `UmociUnpacker`: pinned-path mature unpacker adapter.
@@ -81,6 +86,9 @@ impl UmociUnpacker {
 
     /// Exact argv (pure, unit-testable). `--image <layout>:<ref>` — the ref
     /// is passed verbatim; callers pass tag refs from the verified index.
+    /// `--rootless` is pinned EXPLICITLY (round-03 #13): umoci otherwise
+    /// auto-detects from euid, so a root-euid host would silently exercise
+    /// the root code path instead of the PORTABLE_ROOTLESS target mode.
     pub fn unpack_argv(layout_root: &Path, reference: &str, dest_bundle: &Path) -> Vec<OsString> {
         let binary = OsString::from("umoci"); // placeholder position 0, replaced by spawn
         let mut image = layout_root.as_os_str().to_os_string();
@@ -89,6 +97,7 @@ impl UmociUnpacker {
         vec![
             binary,
             OsString::from("unpack"),
+            OsString::from("--rootless"),
             OsString::from("--image"),
             image,
             dest_bundle.as_os_str().to_os_string(),
@@ -180,6 +189,9 @@ impl UmociUnpacker {
                 }
             }
         }
+        // success path: the stderr sidecar is read BEFORE removal so tool
+        // warnings are carried on the record (round-03 #16b), then removed.
+        let stderr_tail = read_tail(&side);
         let _ = fs::remove_file(&side);
 
         // Second-line containment audit (non-following). Failure here means
@@ -190,7 +202,10 @@ impl UmociUnpacker {
             return Err(e);
         }
 
-        Ok(UnpackReport { wall_ms })
+        Ok(UnpackReport {
+            wall_ms,
+            stderr_tail,
+        })
     }
 }
 
@@ -295,6 +310,9 @@ mod tests {
             vec![
                 "umoci".to_string(),
                 "unpack".to_string(),
+                // round-03 #13: pinned explicitly so the exercised code path
+                // is the PORTABLE_ROOTLESS target mode on every euid class
+                "--rootless".to_string(),
                 "--image".to_string(),
                 "/data/layout:fixture:latest".to_string(),
                 "/work/bundle".to_string(),
@@ -404,26 +422,73 @@ mod tests {
                     assert!(!dest.exists(), "partial bundle must be cleaned: {name}");
                     eprintln!("c01 {name}: mechanism=REJECT ({})", e.code());
                 }
-                Ok(_rep) => {
+                Ok(rep) => {
                     // sanitize arm: containment audit ran inside unpack; the
                     // resulting tree must still satisfy it, and the symlink
                     // (verbatim target) must not have been followed anywhere.
                     post_unpack_containment_walk(&dest.join("rootfs")).unwrap();
-                    eprintln!("c01 {name}: mechanism=SANITIZE-CONFINE (exit 0)");
+                    eprintln!(
+                        "c01 {name}: mechanism=SANITIZE-CONFINE (exit 0), stderr_tail={}B",
+                        rep.stderr_tail.len()
+                    );
                 }
             }
-            // THE INVARIANT (both arms): nothing named evil-t07 exists in
-            // the case dir outside the bundle, i.e. no host-side escape.
-            let outside: Vec<_> = fs::read_dir(&tmp)
-                .unwrap()
-                .filter_map(|e| e.ok())
-                .filter(|e| e.file_name().to_string_lossy().contains("evil-t07"))
+            // THE INVARIANT (both arms), round-03 #8: RECURSIVELY — nothing
+            // named evil-t07 exists anywhere under the case dir outside the
+            // bundle, and explicitly not at /etc, the tmpdir parent, or the
+            // process CWD. (The flat pre-review check listed only direct
+            // children of the case dir.)
+            let mut all = Vec::new();
+            collect_recursive(&tmp, &mut all);
+            let outside: Vec<_> = all
+                .iter()
+                .filter(|p| {
+                    p.file_name()
+                        .map(|n| n.to_string_lossy().contains("evil-t07"))
+                        .unwrap_or(false)
+                        && !p.starts_with(&dest)
+                })
                 .collect();
             assert!(
                 outside.is_empty(),
                 "escape artifact outside bundle: {outside:?} (case {name})"
             );
+            assert!(
+                !Path::new("/etc/evil-t07").exists(),
+                "host /etc carries an escape artifact (case {name})"
+            );
+            let no_sibling_named_evil = |dir: &Path, where_: &str| {
+                let hits: Vec<_> = fs::read_dir(dir)
+                    .unwrap()
+                    .filter_map(|e| e.ok())
+                    .filter(|e| e.file_name().to_string_lossy().contains("evil-t07"))
+                    .collect();
+                assert!(
+                    hits.is_empty(),
+                    "escape artifact at {where_}: {hits:?} (case {name})"
+                );
+            };
+            no_sibling_named_evil(&tmp.parent().unwrap().to_path_buf(), "tmpdir parent");
+            no_sibling_named_evil(
+                &std::env::current_dir().unwrap(),
+                "process CWD",
+            );
             let _ = fs::remove_dir_all(&tmp);
+        }
+    }
+
+    /// Recursive listing that never follows symlinks (dirs only), so an
+    /// escaping symlink cannot hide a host-side artifact from the audit.
+    fn collect_recursive(dir: &Path, out: &mut Vec<PathBuf>) {
+        let Ok(rd) = fs::read_dir(dir) else {
+            return;
+        };
+        for ent in rd.flatten() {
+            let p = ent.path();
+            out.push(p.clone());
+            if ent.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                collect_recursive(&p, out);
+            }
         }
     }
 }

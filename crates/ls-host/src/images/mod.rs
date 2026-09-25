@@ -16,6 +16,7 @@ pub mod error;
 pub mod layout;
 pub mod process_config;
 pub mod pull;
+mod sha256; // private streaming SHA-256 for blob verification (round-03 #12)
 pub mod store;
 pub mod unpack;
 
@@ -86,7 +87,6 @@ pub(crate) mod testkit {
     //! Deterministic OCI image-layout fixture builder. Layers are opaque
     //! byte blobs: T06 verifies digests and configs; unpacking layer content
     //! belongs to the rootfs task graph entry after this one.
-    use super::*;
     use serde_json::{json, Value};
     use std::fs;
     use std::path::PathBuf;

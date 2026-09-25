@@ -97,15 +97,17 @@ fn check_argv(items: &[String], field: &str) -> Result<()> {
 }
 
 impl ImageProcessConfig {
-    /// Parse the `config` object of a verified OCI image config.
+    /// Parse the `config` object of a verified OCI image config. OCI allows
+    /// `.config` to be ABSENT or null (the all-defaults shape); only a
+    /// non-object value is rejected (round-03 #6).
     pub fn from_config(config: &Value) -> Result<Self> {
-        let obj = config
-            .get("config")
-            .unwrap_or(&Value::Null)
-            .as_object()
-            .ok_or_else(|| ImageError::LayoutInvalid {
+        let empty = serde_json::Map::new();
+        let obj = match config.get("config") {
+            None | Some(Value::Null) => &empty,
+            Some(v) => v.as_object().ok_or_else(|| ImageError::LayoutInvalid {
                 detail: "image config .config must be an object when present".into(),
-            })?;
+            })?,
+        };
         let entrypoint = match obj.get("Entrypoint") {
             None | Some(Value::Null) => None,
             Some(v) => Some(string_list(v, "Entrypoint")?),
@@ -364,6 +366,30 @@ mod tests {
         // from image + explicit overrides (docs/v5/09_RUNTIME_DETAILS.md).
         let s = convert(&spec(None, None), &ProcessOverrides::none()).unwrap();
         assert!(s.env.is_empty());
+    }
+
+    /// Round-03 #6: OCI explicitly allows the image config to omit the
+    /// whole `.config` object or set it null — that is the valid "all
+    /// defaults" shape, not a malformed image. Only a NON-object .config
+    /// is an error.
+    #[test]
+    fn absent_or_null_config_object_is_empty_not_error() {
+        for cfg in [
+            json!({"architecture": "amd64", "os": "linux"}),                // key absent
+            json!({"architecture": "amd64", "os": "linux", "config": null}), // explicit null
+            json!({"architecture": "amd64", "os": "linux", "config": {}}),   // empty object
+        ] {
+            let img = ImageProcessConfig::from_config(&cfg).unwrap();
+            assert_eq!(img, ImageProcessConfig::default(), "cfg={cfg}");
+            let s = convert(&img, &ProcessOverrides::none()).unwrap();
+            assert!(s.argv.is_empty());
+            assert_eq!(s.cwd, "/");
+        }
+        // a non-object .config stays loudly rejected (never silently ignored)
+        let bad = ImageProcessConfig::from_config(&json!({
+            "architecture": "amd64", "os": "linux", "config": "oops"
+        }));
+        assert!(bad.is_err());
     }
 
     #[test]

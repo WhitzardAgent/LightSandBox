@@ -1,9 +1,17 @@
 [package]
 name = "ls-guest"
-description = "LightSandbox guest-side helpers (T00: idle-init argument contract only)"
+description = "LightSandbox guest-side helpers (T00 idle-init args; T08 tiny per-sandbox init)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+
+# T08: the tiny per-sandbox init runs as guest PID 1 (launch_mode=image). All
+# init logic lives in the lib module `init` so unit tests cover it without
+# namespaces; this target is only the process entry point. Zero external
+# dependencies — the binary must stay buildable from an offline tree.
+[[bin]]
+name = "lsguest-init"
+path = "src/init/main.rs"

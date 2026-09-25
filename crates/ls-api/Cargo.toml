@@ -1,9 +1,12 @@
 [package]
 name = "ls-api"
-description = "LightSandbox native API surface vocabulary (T00: stable error codes only)"
+description = "LightSandbox native API surface vocabulary (T00 error codes; T08 lifecycle wire vocabulary)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+ls-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

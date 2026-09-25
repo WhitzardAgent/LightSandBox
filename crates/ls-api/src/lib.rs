@@ -2,6 +2,10 @@
 //!
 //! T00 scope: the stable error-code mapping shared by the future HTTP façade
 //! and the CLI/SDK. No server, no mounts, no host-path access.
+//! T08 adds `lifecycle`: the create/inspect/execute/delete wire vocabulary
+//! shared by CLI/SDK and the T08 runtime slice.
+
+pub mod lifecycle;
 
 pub mod errors {
     /// Stable machine-facing error codes for the native v1 API.

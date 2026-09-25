@@ -2,6 +2,14 @@
 //!
 //! T00 scope: the strict argument contract for the per-sandbox idle init
 //! (`--sandbox-id <opaque>`). No resident HTTP service, no scheduler, no DB.
+//!
+//! T08 scope: `init` — the tiny per-sandbox init binary (`lsguest-init`)
+//! that runs as guest PID 1 under launch_mode=image: it spawns the image
+//! entrypoint as its child, forwards signals, reaps orphans, and atomically
+//! records the entrypoint's real wait status (observed by init itself) before
+//! exiting with the same semantics.
+
+pub mod init;
 
 pub mod initargs {
     use std::fmt;

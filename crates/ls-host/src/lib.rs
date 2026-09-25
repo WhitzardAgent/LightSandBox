@@ -5,9 +5,12 @@
 //! worker-authorized runtime checks; see plans/tasks/T03.md.
 //! T06 adds the OCI image module (`images`): digest-verified import store
 //! and image-config conversion, plans/tasks/T06.md.
+//! T08 adds the runtime slice (`runtime`): the create/inspect/execute/delete
+//! minimal API over a real runc backend, plans/tasks/T08.md.
 
 pub mod images;
 pub mod rootfs;
+pub mod runtime;
 
 pub mod probe {
     use ls_core::capability::{CapabilityFinding, CapabilityStatus};

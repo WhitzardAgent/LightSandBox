@@ -38,8 +38,10 @@ def load(root: Path, name: str):
     except (json.JSONDecodeError,UnicodeError) as exc:raise ValueError(f'JSON error {name}: {exc}') from exc
 
 def file_set(root: Path):
+    # spike/uml/work is derived UML build scratch: git-ignored, multi-GB, not manifest content.
     return {p.relative_to(root).as_posix():p for p in root.rglob('*')
-            if p.is_file() and '__pycache__' not in p.parts and '.git' not in p.parts and p.name!='MANIFEST.json'}
+            if p.is_file() and '__pycache__' not in p.parts and '.git' not in p.parts and p.name!='MANIFEST.json'
+            and p.relative_to(root).parts[:3]!=('spike','uml','work')}
 
 def indexed(values, label: str, errors: list[str]):
     result={}

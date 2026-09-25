@@ -18,7 +18,10 @@ EXCLUDE = {'.git', 'target', '.check-runs', '.venv', '__pycache__'}
 
 
 def ignore(dirpath, names):
-    return {n for n in names if n in EXCLUDE}
+    dropped = {n for n in names if n in EXCLUDE}
+    # spike/uml/work is derived UML build scratch (git-ignored, multi-GB), never copied.
+    if Path(dirpath).relative_to(ROOT).as_posix() == 'spike/uml': dropped.add('work')
+    return dropped
 
 
 class CleanWorktreeBuildTests(unittest.TestCase):

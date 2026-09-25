@@ -1,0 +1,47 @@
+{
+ "spike": "uml round-03",
+ "created_utc": "2026-09-25T03:52:28.405488+00:00",
+ "mirror": "https://mirrors.tuna.tsinghua.edu.cn",
+ "network_note": "kernel.org/busybox.net unreachable (TCP timeout) on this host 2026-09-25 ~03:30Z; all sources via the TUNA mirror of the upstream projects.",
+ "integrity": "sha256 cross-checked against the mirror copy of the upstream-published checksum files where available; PGP signatures NOT verified (no keyring on host). Self-recorded otherwise.",
+ "kernel": {
+  "version": "6.19.14",
+  "path": "kernel/v6.x/"
+ },
+ "busybox": {
+  "version": "1.37.0",
+  "path": "busybox/releases/"
+ },
+ "tools": {
+  "m4": "1.4.19",
+  "bison": "3.8.2",
+  "flex": "2.6.4 (debian orig tarball)",
+  "bc": "1.07.1"
+ },
+ "hashes": [
+  {
+   "sha256": "cde8bf6739be4a0777fedbbba5330b8188c55680c45a922a4dfa289cbec6f185",
+   "file": "linux.tar.xz"
+  },
+  {
+   "sha256": "3311dff32e746499f4df0d5df04d7eb396382d7e108bb9250e7b519b837043a4",
+   "file": "busybox.tar.bz2"
+  },
+  {
+   "sha256": "63aede5c6d33b6d9b13511cd0be2cac046f2e70fd0a07aa9573a04a82783af96",
+   "file": "m4.tar.xz"
+  },
+  {
+   "sha256": "9bba0214ccf7f1079c5d59210045227bcf619519840ebfa80cd3849cff5a5bf2",
+   "file": "bison.tar.xz"
+  },
+  {
+   "sha256": "e87aae032bf07c26f85ac0ed3250998c37621d95f8bd748b31f15b33c45ee995",
+   "file": "flex.tar.gz"
+  },
+  {
+   "sha256": "62adfca89b0a1c0164c2cdca59ca210c1d44c3ffc46daf9931cf4942664cb02a",
+   "file": "bc.tar.gz"
+  }
+ ]
+}

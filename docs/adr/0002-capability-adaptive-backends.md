@@ -178,9 +178,36 @@ Native/UML/Machine/Unknown candidate census.
 | Backend | Verdict | Basis |
 |---|---|---|
 | Native (runc) | **ACCEPTED** | ADR 0001 evidence; T08 vertical slice (round-03) |
-| Kernel (UML) | **PENDING SPIKE** | round-03 `spike/results/uml-*.json`; success criteria: boots on CONTAINERIZED+PORTABLE_ROOTLESS, no sudo/KVM, own /proc, true multi-UID, OCI materialization fidelity, base+COW, basic exec/control, clean cleanup, full perf table |
-| Machine (QEMU TCG) | **CONDITIONAL** | smoke only if UML is hard-blocked by the outer container |
+| Kernel (UML) | **EXPERIMENTAL** (was PENDING SPIKE) | §12.1: feasibility gate PASSED on this host — boots CONTAINERIZED+PORTABLE_ROOTLESS, no sudo/KVM, own /proc, true multi-UID + guest DAC (`spike/results/uml-boot.json` BOOT_OK). ACCEPTED still requires: OCI materialization fidelity, base+COW, exec/control transport, clean-cleanup confirmation, full perf table |
+| Machine (QEMU TCG) | **CONDITIONAL** | smoke only if UML is hard-blocked by the outer container; not needed so far (UML boots) |
 | Sentry (gVisor) | **DEFERRED** | doesn't solve decisive gaps; outer-seccomp sensitivity; revisit post-stability |
+
+### 12.1 Round-03 UML spike facts (2026-09-25, host: CONTAINERIZED + PORTABLE_ROOTLESS)
+
+- Kernel 6.19.14 (`ARCH=um`, static, initramfs, defconfig + DEVTMPFS/MAGIC_SYSRQ)
+  boots as an unprivileged host process; source-locked via
+  `spike/uml/source-lock.json`; binary sha256 recorded per run.
+- Guest evidence (`uml-boot.json`, verdict `BOOT_OK`, markers all true):
+  `LSB_PROC_OWN=yes` (guest owns /proc), `LSB_HOSTNAME=lsbx-uml`,
+  `LSB_CHOWN_OK` + `LSB_STAT=1000:999 644` (chown to arbitrary uid/gid —
+  impossible under the host's single-ID map), `su user -c id` →
+  `uid=1000(user)`, `LSB_USER_WRITE_OK`, `LSB_DAC_ISOLATION_OK` (uid 999
+  refused a uid-1000 0600 file — guest DAC enforced), `LSB_CGROUPS=6`,
+  `LSB_UML_EXPERIMENT_DONE`, orderly `reboot: Power down`, host rc=0.
+- Console plumbing root causes (both instrumented, both proven):
+  (a) `/dev/console` **opens** but silently **drops userspace writes** on this
+  host (kernel-side `console_on_rootfs` fails likewise) — evidence and any
+  guest control channel MUST NOT rely on console tty writes; use `/dev/kmsg`
+  (evidence) and a to-be-validated channel (serial `ssl0` or mconsole) for
+  control. (b) `kernel.printk_devkmsg=ratelimit` (guest boot default) silently
+  throttled userspace kmsg writes after the initial burst — evidence plumbing
+  disables it (`echo on`) before emitting markers. A "missing marker" anomaly
+  was bisected to this; a sleep-drain hypothesis was falsified first.
+- Cleanup: orderly shutdown removes `~/.uml/<id>/`; the one observed residue
+  came from an intentionally-panicked diagnostic run and was reaped manually —
+  `KernelInstanceSupervisor` must reap `~/.uml/<id>` on abnormal exit.
+- Performance table: NOT yet measured (boot latency, exec latency, fork-heavy,
+  COW create/delete, RSS) — gating item for ACCEPTED.
 
 ## 13. UML security boundary (honest note)
 

@@ -13,11 +13,17 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / 'tools' / 'packctl.py'
 
+def copytree_ignore(directory, names):
+    ignored = set(shutil.ignore_patterns('__pycache__', 'MANIFEST.json')(directory, names))
+    # spike/uml/work is derived UML build scratch (git-ignored, multi-GB), never pack content.
+    if Path(directory).relative_to(ROOT).as_posix() == 'spike/uml': ignored.add('work')
+    return ignored
+
 class PackTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name) / 'pack'
-        shutil.copytree(ROOT, self.root, ignore=shutil.ignore_patterns('__pycache__', 'MANIFEST.json'))
+        shutil.copytree(ROOT, self.root, ignore=copytree_ignore)
     def tearDown(self):
         self.tmp.cleanup()
     def call(self, *args):

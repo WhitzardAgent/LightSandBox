@@ -1,0 +1,85 @@
+Core dump limits :
+	soft - NONE
+	hard - NONE
+Checking environment variables for a tempdir...none found
+Checking if /dev/shm is on tmpfs...OK
+Checking PROT_EXEC mmap in /dev/shm...OK
+Checking that ptrace can change system call numbers...OK
+Checking syscall emulation for ptrace...OK
+Linux version 6.19.14 (root@cyber-copy-copy-c-copy--23b7716a310a-vgtowbpznu) (gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0, GNU ld (GNU Binutils for Ubuntu) 2.38) #8 Fri Sep 25 05:46:46 UTC 2026
+Zone ranges:
+  Normal   [mem 0x0000000000000000-0x000000006fffffff]
+Movable zone start for each node
+Early memory node ranges
+  node   0: [mem 0x0000000000000000-0x000000000fffffff]
+Initmem setup node 0 [mem 0x0000000000000000-0x000000000fffffff]
+random: crng init done
+Kernel command line: con0=fd:0,fd:1 root=98:0 console=tty0
+printk: log buffer data + meta data: 16384 + 57344 = 73728 bytes
+Dentry cache hash table entries: 32768 (order: 6, 262144 bytes, linear)
+Inode-cache hash table entries: 16384 (order: 5, 131072 bytes, linear)
+Sorting __ex_table...
+Built 1 zonelists, mobility grouping on.  Total pages: 65536
+mem auto-init: stack:off, heap alloc:off, heap free:off
+SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 64
+clocksource: timer: mask: 0xffffffffffffffff max_cycles: 0x1cd42e205, max_idle_ns: 881590404426 ns
+Calibrating delay loop... 5289.57 BogoMIPS (lpj=26447872)
+Checking that host ptys support output SIGIO...Yes
+pid_max: default: 32768 minimum: 301
+Mount-cache hash table entries: 512 (order: 0, 4096 bytes, linear)
+Mountpoint-cache hash table entries: 512 (order: 0, 4096 bytes, linear)
+Memory: 248652K/262144K available (4479K kernel code, 2320K rwdata, 1296K rodata, 185K init, 202K bss, 12636K reserved, 0K cma-reserved)
+devtmpfs: initialized
+Could not create executable memfd, using temporary file!
+clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+posixtimers hash table entries: 512 (order: 0, 4096 bytes, linear)
+futex hash table entries: 256 (8192 bytes on 1 NUMA nodes, total 8 KiB, linear).
+NET: Registered PF_NETLINK/PF_ROUTE protocol family
+pps_core: LinuxPPS API ver. 1 registered
+pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+PTP clock support registered
+clocksource: Switched to clocksource timer
+VFS: Disk quotas dquot_6.6.0
+VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+NET: Registered PF_INET protocol family
+IP idents hash table entries: 4096 (order: 3, 32768 bytes, linear)
+tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 4096 bytes, linear)
+Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+TCP established hash table entries: 2048 (order: 2, 16384 bytes, linear)
+TCP bind hash table entries: 2048 (order: 3, 32768 bytes, linear)
+TCP: Hash tables configured (established 2048 bind 2048)
+UDP hash table entries: 256 (order: 2, 16384 bytes, linear)
+UDP-Lite hash table entries: 256 (order: 2, 16384 bytes, linear)
+NET: Registered PF_UNIX/PF_LOCAL protocol family
+printk: legacy console [stderr0] disabled
+mconsole (version 2) initialized on /root/.uml/9aNZc1/mconsole
+Checking host MADV_REMOVE support...OK
+workingset: timestamp_bits=62 max_order=16 bucket_order=0
+io scheduler mq-deadline registered
+io scheduler kyber registered
+NET: Registered PF_PACKET protocol family
+Initialized stdio console driver
+Console initialized on /dev/tty0
+printk: legacy console [tty0] enabled
+Initializing software serial port version 1
+printk: legacy console [mc-1] enabled
+Failed to initialize ubd device 0 :Couldn't determine size of device's file
+Warning: unable to open an initial console.
+Run /init as init process
+LSB_DEVKMSG_MODE_BEFORE=ratelimit
+LSB_CONSOLE_PROBE=open-ok
+LSB_UML_BOOT_OK
+LSB_PROC_OWN=yes
+LSB_HOSTNAME=lsbx-uml
+LSB_CHOWN_OK
+LSB_STAT=1000:999 644
+uid=1000(user) gid=1000(user) groups=1000(user)
+LSB_SU_OK
+-rw-r--r--    1 user     user             0 Sep 25 05:46 /workspace/by-user
+LSB_USER_WRITE_OK
+LSB_DAC_ISOLATION_OK
+LSB_CGROUPS=6
+LSB_UML_EXPERIMENT_DONE
+reboot: Power down
+

@@ -8,6 +8,7 @@
 //! T08 adds the runtime slice (`runtime`): the create/inspect/execute/delete
 //! minimal API over a real runc backend, plans/tasks/T08.md.
 
+pub mod exec;
 pub mod images;
 pub mod resources;
 pub mod rootfs;

@@ -5,6 +5,7 @@
 //! T08 adds `lifecycle`: the create/inspect/execute/delete wire vocabulary
 //! shared by CLI/SDK and the T08 runtime slice.
 
+pub mod commands;
 pub mod lifecycle;
 
 pub mod errors {

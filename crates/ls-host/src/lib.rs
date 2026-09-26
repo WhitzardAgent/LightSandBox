@@ -9,6 +9,7 @@
 //! minimal API over a real runc backend, plans/tasks/T08.md.
 
 pub mod images;
+pub mod resources;
 pub mod rootfs;
 pub mod runtime;
 

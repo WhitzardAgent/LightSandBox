@@ -16,7 +16,12 @@ SCRIPT = ROOT / 'tools' / 'packctl.py'
 def copytree_ignore(directory, names):
     ignored = set(shutil.ignore_patterns('__pycache__', 'MANIFEST.json')(directory, names))
     # spike/uml/work is derived UML build scratch (git-ignored, multi-GB), never pack content.
-    if Path(directory).relative_to(ROOT).as_posix() == 'spike/uml': ignored.add('work')
+    rel = Path(directory).relative_to(ROOT).as_posix()
+    if rel == 'spike/uml': ignored.add('work')
+    # target/ is cargo build scratch (git-ignored, multi-GB), never pack
+    # content: 34 tests each copied+hashed it, and verify-manifest's 20 s
+    # budget timed out on contended hosts (round-05 baseline flake root cause).
+    if rel == '.': ignored.add('target')
     return ignored
 
 class PackTests(unittest.TestCase):

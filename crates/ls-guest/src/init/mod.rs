@@ -481,7 +481,7 @@ fn establish_supervision(requested: bool) -> Supervision {
 ///   nested — kernel then wipes that whole world). Receipt stays the
 ///   honest wait observation (SIGNALED 9); host-side attribution of who
 ///   ordered the kill is the host's own affair, never guessed here.
-/// * supervision (subreaper mode): a 200 ms drain window after the child is
+/// * supervision (subreaper mode): a 1 s drain window after the child is
 ///   reaped adopts+reaps escape descendants; a window closing with live
 ///   descendants reports residual_risk (fork-bomb truth, never hidden).
 pub fn run_child(args: &InitArgs) -> Result<(i32, RunOutcome, SupervisionReport), SpawnFailure> {

@@ -15,7 +15,7 @@ ADR 0001 A1(/proc 宿主 rbind 只读,v1 不声称 private_proc)。
   `establish_supervision` 为薄 syscall 壳,stderr 如实报告所落模式。
   v2 的 `setsid_escape=required → unshare 失败即 SpawnFailure` 策略被 v2.1 **取代**:
   降级还要 article,不许假死。
-- **`--ctrl <abs-host-path>` 杀开关**:非阻塞 waitpid + 25ms 轮询 ctrl 文件;
+- **`--ctrl <abs-host-path>` 杀开关**:非阻塞 waitpid + 20ms 轮询 ctrl 文件;
   `cancel\n` 前缀写 → exact-once SIGKILL 直系子(ESRCH 容忍),随后继续收割以留下真 waitpid 证据。
 - **逃逸后代 drain(仅 Subreaper 模式)**:payload 终了后进入 1s 预算的 drain 窗口:
   WNOHANG 收割被收养的孤儿;`kill_adopted_descendants` 对 /proc 中**当前 ppid==me** 的表项

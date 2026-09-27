@@ -112,7 +112,7 @@ def chk(name, want, obs):
                    "verdict": "MATCH" if want == obs else "MISMATCH"})
 
 
-def main():
+def run():
     rebuild_initramfs()
 
     umid = "lsbxctl1"
@@ -186,6 +186,7 @@ def main():
     chk("supervisor reap removes residue", True, reaped)
     g2.close()
 
+def finalize():
     n_mis = sum(1 for c in checks if c["verdict"] == "MISMATCH")
     out = {
         "experiment": "uml phase-d guest-control transport (round-04 21-26)",
@@ -210,6 +211,19 @@ def main():
     print("checks match/mismatch:", out["summary"]["checks_match"], "/", n_mis)
     print("written:", dest)
     return 0 if n_mis == 0 else 1
+
+
+def main():
+    # harness discipline (round-05 review fix): a crash mid-experiment is
+    # still a verdict — never leave the run as a bare traceback with no JSON
+    try:
+        run()
+    except Exception as exc:
+        checks.append({"check": "harness completes without crash",
+                       "expected": "no unhandled exception",
+                       "observed": f"{type(exc).__name__}: {exc}",
+                       "verdict": "MISMATCH"})
+    return finalize()
 
 
 if __name__ == "__main__":

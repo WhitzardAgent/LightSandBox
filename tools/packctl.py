@@ -136,12 +136,18 @@ def validate(root: Path) -> list[str]:
             if f.get('test_id') not in cases or cases[f['test_id']].get('task_id')!=f.get('owner_task'):
                 errors.append(f'feature {f.get("id")}: invalid test mapping')
         # Parse all JSON, including schemas and source files, not only catalogs.
+        # spike/uml/work is excluded for the same reason as in file_set():
+        # derived git-ignored build scratch (kernel/go tool trees carry
+        # intentionally malformed testdata JSON).
         for p in root.rglob('*.json'):
-            if '.git' not in p.parts and p.name!='MANIFEST.json':load(root,p.relative_to(root).as_posix())
+            if ('.git' not in p.parts and p.name!='MANIFEST.json'
+                    and p.relative_to(root).parts[:3]!=('spike','uml','work')):
+                load(root,p.relative_to(root).as_posix())
         # Internal Markdown file links, excluding external URLs and anchors.
         link=re.compile(r'(?<!!)\[[^\]]+\]\(([^\s)]+)(?:\s+"[^"]*")?\)')
         for p in root.rglob('*.md'):
             if '.git' in p.parts:continue
+            if p.relative_to(root).parts[:3]==('spike','uml','work'):continue
             for target in link.findall(p.read_text(encoding='utf-8')):
                 u=urlsplit(target)
                 if u.scheme or u.netloc or not u.path:continue

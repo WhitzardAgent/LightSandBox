@@ -1,0 +1,192 @@
+{
+ "experiment": "uml phase-c UBD COW correctness + cost (T47-C02)",
+ "utc": "2026-09-27T12:31:09.675960+00:00",
+ "base_disk_sha256_all_legs_equal": true,
+ "base_sha256": "104c3389ea6927dc98b383558fb656a749fde3b5df550e65e7d4c7e26c98a17b",
+ "cow_syntax": "ubd0=<cow-file>,<backing-file> (official UBD driver)",
+ "verdict": "COW_OK",
+ "summary": {
+  "checks_match": 28,
+  "checks_mismatch": 0
+ },
+ "checks": [
+  {
+   "check": "A: /cow/a-marker presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A: /cow/a-marker content",
+   "expected": "7acdf3a35077d1f3",
+   "observed": "7acdf3a35077d1f3",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A: /etc/motd.conf presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A: /etc/motd.conf content",
+   "expected": "e0fb89376c84ba60",
+   "observed": "e0fb89376c84ba60",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A: /opt/svc/bin/flag presence",
+   "expected": "absent",
+   "observed": "absent",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A: /cow/big100 presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "B: /cow/a-marker presence",
+   "expected": "absent",
+   "observed": "absent",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "B: /cow/big1 presence",
+   "expected": "absent",
+   "observed": "absent",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "B: /cow/big100 presence",
+   "expected": "absent",
+   "observed": "absent",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "B: /etc/motd.conf presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "B: /etc/motd.conf content",
+   "expected": "ba38d1fa1f713cc6",
+   "observed": "ba38d1fa1f713cc6",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "B: /opt/svc/bin/flag presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "B: /cow-b-marker presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "B: /cow-b-marker content",
+   "expected": "acee727b28cc9a2f",
+   "observed": "acee727b28cc9a2f",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A2: /cow/a-marker presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A2: /cow/a-marker content",
+   "expected": "7acdf3a35077d1f3",
+   "observed": "7acdf3a35077d1f3",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A2: /cow/big1 presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A2: /cow/big100 presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A2: /etc/motd.conf presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A2: /etc/motd.conf content",
+   "expected": "e0fb89376c84ba60",
+   "observed": "e0fb89376c84ba60",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A2: /opt/svc/bin/flag presence",
+   "expected": "absent",
+   "observed": "absent",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "A2: /cow-b-marker presence",
+   "expected": "absent",
+   "observed": "absent",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "C: /cow/a-marker presence",
+   "expected": "absent",
+   "observed": "absent",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "C: /cow-b-marker presence",
+   "expected": "absent",
+   "observed": "absent",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "C: /cow-c-marker presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "C: /cow-c-marker content",
+   "expected": "922bc154fea17b6d",
+   "observed": "922bc154fea17b6d",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "C: /etc/motd.conf presence",
+   "expected": "present",
+   "observed": "present",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "C: /etc/motd.conf content",
+   "expected": "ba38d1fa1f713cc6",
+   "observed": "ba38d1fa1f713cc6",
+   "verdict": "MATCH"
+  }
+ ],
+ "cost": {
+  "cow_a_first_boot_wall_ms_includes_writes_1M_100M": 2207,
+  "cow_delete_file_ms": 12,
+  "cow_create_empty_file_ms": 1,
+  "a_cow_logical_bytes": 100696064,
+  "a_cow_allocated_bytes_after_101M_writes": 46137344,
+  "b_cow_allocated_bytes_after_b_marker_write": 12615680,
+  "base_disk_logical_bytes": 100663296,
+  "note": "allocated bytes from stat(2) st_blocks*512 of the cow file; delete latency is unlink(2) of the cow file on the host fs. first-boot wall includes kernel boot (~1.3s measured in phase-b)."
+ }
+}

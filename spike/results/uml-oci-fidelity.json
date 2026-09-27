@@ -1,0 +1,735 @@
+{
+ "experiment": "uml phase-b OCI materialization fidelity (T47-C01)",
+ "utc": "2026-09-27T12:15:13.932790+00:00",
+ "kernel_binary_sha256": "477a39b5012db687608d32730392069e0ad0891fb7cb16bf4ad53f109c7fcbb4",
+ "build_boot_rc": 0,
+ "runtime_boot_rc": 0,
+ "manifest_digest": "sha256:977295b30d5bf7ae520a9f2074aaf7aca33d7e986a68dcf01fe6e5fa6935e162",
+ "config_digest": "sha256:2b6846ec021a9f83d51574e67dfb0c00d3749a3f100ee6834a60ecad9e4a74c2",
+ "hostfs_boundary": "read-only hostfs exposing ONLY spike/uml/work/phase-b/oci-cache (dedicated dir)",
+ "verdict": "FIDELITY_OK",
+ "summary": {
+  "fields_match": 108,
+  "fields_mismatch": 0,
+  "entries": 21,
+  "runtime_checks": 5
+ },
+ "entries": [
+  {
+   "path": "/etc/passwd",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "644",
+     "observed": "644",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "06c304f79c5dc939c9aef7c5194c300a7e002e93e4e6c9e3b61096d407fc3517",
+     "observed": "06c304f79c5dc939c9aef7c5194c300a7e002e93e4e6c9e3b61096d407fc3517",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/etc/group",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "644",
+     "observed": "644",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "50999a02b2d593c8d7cfc56d4f699fda50cf295c38c70ac6d442ef665cea22db",
+     "observed": "50999a02b2d593c8d7cfc56d4f699fda50cf295c38c70ac6d442ef665cea22db",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/etc/motd.conf",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "644",
+     "observed": "644",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "ba38d1fa1f713cc6f8ee9e7bead514c246aaff315ab6e97f6b0caeada8849665",
+     "observed": "ba38d1fa1f713cc6f8ee9e7bead514c246aaff315ab6e97f6b0caeada8849665",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH",
+   "note": "layer-2 overwrite must win"
+  },
+  {
+   "path": "/root/secret",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "600",
+     "observed": "600",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "6bd1f251f93704669e0f7ad55bac3aad28a69faa3ae671f65721d2375d970a0b",
+     "observed": "6bd1f251f93704669e0f7ad55bac3aad28a69faa3ae671f65721d2375d970a0b",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/home/user",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "dir",
+     "observed": "dir",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "1000",
+     "observed": "1000",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "1000",
+     "observed": "1000",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "755",
+     "observed": "755",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/home/user/note",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "1000",
+     "observed": "1000",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "1000",
+     "observed": "1000",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "600",
+     "observed": "600",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "74844277d09da40016de4664d9f3673af1701005504a58e3153c0733b833111a",
+     "observed": "74844277d09da40016de4664d9f3673af1701005504a58e3153c0733b833111a",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/srv/data",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "dir",
+     "observed": "dir",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "999",
+     "observed": "999",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "999",
+     "observed": "999",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "755",
+     "observed": "755",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH",
+   "note": "WORKDIR target for USER 1000"
+  },
+  {
+   "path": "/opt/svc/bin/svc",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "999",
+     "observed": "999",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "999",
+     "observed": "999",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "755",
+     "observed": "755",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "19724c7ec2d0679fb730deaba40b3938c5ed1add17541b8c4b969693b2443cdd",
+     "observed": "19724c7ec2d0679fb730deaba40b3938c5ed1add17541b8c4b969693b2443cdd",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/usr/bin/suid-id",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "4755",
+     "observed": "4755",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "0633a520b376db630857cf9a0a752758ff109d2c3a152b21ab2fe31bd20876df",
+     "observed": "0633a520b376db630857cf9a0a752758ff109d2c3a152b21ab2fe31bd20876df",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH",
+   "note": "setuid bit"
+  },
+  {
+   "path": "/usr/bin/svctool",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "symlink",
+     "observed": "symlink",
+     "verdict": "MATCH"
+    },
+    "link_target": {
+     "expected": "/opt/svc/bin/svc",
+     "observed": "/opt/svc/bin/svc",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/bin/sh",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "symlink",
+     "observed": "symlink",
+     "verdict": "MATCH"
+    },
+    "link_target": {
+     "expected": "busybox",
+     "observed": "busybox",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/bin/id",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "symlink",
+     "observed": "symlink",
+     "verdict": "MATCH"
+    },
+    "link_target": {
+     "expected": "busybox",
+     "observed": "busybox",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/bin/su",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "symlink",
+     "observed": "symlink",
+     "verdict": "MATCH"
+    },
+    "link_target": {
+     "expected": "busybox",
+     "observed": "busybox",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/bin/busybox",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "755",
+     "observed": "755",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "3462d9a5f9d3a77a6f9540e37f24db233075321c36d36fe66cdb2cec1ed8d9dc",
+     "observed": "3462d9a5f9d3a77a6f9540e37f24db233075321c36d36fe66cdb2cec1ed8d9dc",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/a/x",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "644",
+     "observed": "644",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "ee4e677213ebf3cd069ca50f7c07ffc658fe410a1e0ba6c34755da6400384308",
+     "observed": "ee4e677213ebf3cd069ca50f7c07ffc658fe410a1e0ba6c34755da6400384308",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/a/y",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "644",
+     "observed": "644",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "ee4e677213ebf3cd069ca50f7c07ffc658fe410a1e0ba6c34755da6400384308",
+     "observed": "ee4e677213ebf3cd069ca50f7c07ffc658fe410a1e0ba6c34755da6400384308",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/a/z",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "0",
+     "observed": "0",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "644",
+     "observed": "644",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "ee4e677213ebf3cd069ca50f7c07ffc658fe410a1e0ba6c34755da6400384308",
+     "observed": "ee4e677213ebf3cd069ca50f7c07ffc658fe410a1e0ba6c34755da6400384308",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH",
+   "note": "cross-layer hardlink"
+  },
+  {
+   "path": "/tmp/gone",
+   "fields": {
+    "absence": {
+     "expected": "ABSENT",
+     "observed": "ABSENT",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH",
+   "note": "layer-2 whiteout deletion"
+  },
+  {
+   "path": "/opt/svc/bin/flag",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "999",
+     "observed": "999",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "999",
+     "observed": "999",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "400",
+     "observed": "400",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "b43e45d96334948df36b666f73bee65fb500cb7af6b83cc6d7f42f72f4d7cf67",
+     "observed": "b43e45d96334948df36b666f73bee65fb500cb7af6b83cc6d7f42f72f4d7cf67",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/deep/a/b/c",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "dir",
+     "observed": "dir",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "1000",
+     "observed": "1000",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "999",
+     "observed": "999",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "700",
+     "observed": "700",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/deep/a/b/c/leaf",
+   "fields": {
+    "presence": {
+     "expected": "present",
+     "observed": "OK",
+     "verdict": "MATCH"
+    },
+    "type": {
+     "expected": "file",
+     "observed": "file",
+     "verdict": "MATCH"
+    },
+    "uid": {
+     "expected": "1000",
+     "observed": "1000",
+     "verdict": "MATCH"
+    },
+    "gid": {
+     "expected": "999",
+     "observed": "999",
+     "verdict": "MATCH"
+    },
+    "mode": {
+     "expected": "600",
+     "observed": "600",
+     "verdict": "MATCH"
+    },
+    "content_sha256": {
+     "expected": "64896f89fd11190013b70103e603a1c5826e56b7fb7d2197ab279b0690043599",
+     "observed": "64896f89fd11190013b70103e603a1c5826e56b7fb7d2197ab279b0690043599",
+     "verdict": "MATCH"
+    }
+   },
+   "verdict": "MATCH"
+  }
+ ],
+ "hardlink_identity": [
+  {
+   "path": "/a/y",
+   "target": "/a/x",
+   "inode_path": "37",
+   "inode_target": "37",
+   "verdict": "MATCH"
+  },
+  {
+   "path": "/a/z",
+   "target": "/a/x",
+   "inode_path": "37",
+   "inode_target": "37",
+   "verdict": "MATCH"
+  }
+ ],
+ "runtime": {
+  "cwd": {
+   "expected": "/srv/data",
+   "observed": "/srv/data",
+   "verdict": "MATCH"
+  },
+  "argv_from_entrypoint_plus_cmd": {
+   "expected_suffix": "--serve --default",
+   "observed": "--serve --default",
+   "verdict": "MATCH"
+  },
+  "uid": {
+   "expected": 1000,
+   "observed": "uid=1000(user) gid=1000(user) groups=1000(user)",
+   "verdict": "MATCH"
+  },
+  "env_SVC_HOME": {
+   "expected": "/opt/svc",
+   "observed": "/opt/svc",
+   "verdict": "MATCH"
+  },
+  "env_MARK": {
+   "expected": "round04",
+   "observed": "round04",
+   "verdict": "MATCH"
+  }
+ },
+ "boot_markers": {
+  "hostfs_read_only": true,
+  "hostfs_mount": true,
+  "ubd_mount": true,
+  "umoci_unpack": true,
+  "runtime_config_write": true,
+  "build_phase_done": true,
+  "runtime_mount": true,
+  "runtime_phase_done": true,
+  "observed_config_sha_build": "f15f7fbc51fc129f9f4ddb6d739b7b6c89f6c24874fc22bb1f5aab78edd8c052",
+  "observed_config_sha_runtime": "f15f7fbc51fc129f9f4ddb6d739b7b6c89f6c24874fc22bb1f5aab78edd8c052"
+ }
+}

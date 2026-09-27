@@ -1,0 +1,328 @@
+Core dump limits :
+	soft - NONE
+	hard - NONE
+Checking environment variables for a tempdir...none found
+Checking if /dev/shm is on tmpfs...OK
+Checking PROT_EXEC mmap in /dev/shm...OK
+Checking that ptrace can change system call numbers...OK
+Checking syscall emulation for ptrace...OK
+Linux version 6.19.14 (root@cyber-copy-copy-c-copy--23b7716a310a-vgtowbpznu) (gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0, GNU ld (GNU Binutils for Ubuntu) 2.38) #8 Fri Sep 25 05:46:46 UTC 2026
+Zone ranges:
+  Normal   [mem 0x0000000000000000-0x000000006fffffff]
+Movable zone start for each node
+Early memory node ranges
+  node   0: [mem 0x0000000000000000-0x000000000fffffff]
+Initmem setup node 0 [mem 0x0000000000000000-0x000000000fffffff]
+random: crng init done
+Kernel command line: con0=fd:0,fd:1 ssl0=fd:4 lsbx.mode=control lsbx.ocipath=/inspire/qb-ilm/project/control-technology/25015/lightsandbox_v5_2026-09-24/spike/uml/work/phase-b/oci-cache root=98:0 console=tty0
+printk: log buffer data + meta data: 16384 + 57344 = 73728 bytes
+Dentry cache hash table entries: 32768 (order: 6, 262144 bytes, linear)
+Inode-cache hash table entries: 16384 (order: 5, 131072 bytes, linear)
+Sorting __ex_table...
+Built 1 zonelists, mobility grouping on.  Total pages: 65536
+mem auto-init: stack:off, heap alloc:off, heap free:off
+SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 64
+clocksource: timer: mask: 0xffffffffffffffff max_cycles: 0x1cd42e205, max_idle_ns: 881590404426 ns
+Calibrating delay loop... 5274.82 BogoMIPS (lpj=26374144)
+Checking that host ptys support output SIGIO...Yes
+pid_max: default: 32768 minimum: 301
+Mount-cache hash table entries: 512 (order: 0, 4096 bytes, linear)
+Mountpoint-cache hash table entries: 512 (order: 0, 4096 bytes, linear)
+Memory: 237620K/262144K available (4479K kernel code, 2320K rwdata, 1296K rodata, 185K init, 202K bss, 23668K reserved, 0K cma-reserved)
+devtmpfs: initialized
+Could not create executable memfd, using temporary file!
+clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+posixtimers hash table entries: 512 (order: 0, 4096 bytes, linear)
+futex hash table entries: 256 (8192 bytes on 1 NUMA nodes, total 8 KiB, linear).
+NET: Registered PF_NETLINK/PF_ROUTE protocol family
+pps_core: LinuxPPS API ver. 1 registered
+pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+PTP clock support registered
+clocksource: Switched to clocksource timer
+VFS: Disk quotas dquot_6.6.0
+VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+NET: Registered PF_INET protocol family
+IP idents hash table entries: 4096 (order: 3, 32768 bytes, linear)
+tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 4096 bytes, linear)
+Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+TCP established hash table entries: 2048 (order: 2, 16384 bytes, linear)
+TCP bind hash table entries: 2048 (order: 3, 32768 bytes, linear)
+TCP: Hash tables configured (established 2048 bind 2048)
+UDP hash table entries: 256 (order: 2, 16384 bytes, linear)
+UDP-Lite hash table entries: 256 (order: 2, 16384 bytes, linear)
+NET: Registered PF_UNIX/PF_LOCAL protocol family
+printk: legacy console [stderr0] disabled
+mconsole (version 2) initialized on /root/.uml/lsbxres/mconsole
+Checking host MADV_REMOVE support...OK
+workingset: timestamp_bits=62 max_order=16 bucket_order=0
+io scheduler mq-deadline registered
+io scheduler kyber registered
+NET: Registered PF_PACKET protocol family
+Initialized stdio console driver
+Console initialized on /dev/tty0
+printk: legacy console [tty0] enabled
+Initializing software serial port version 1
+Unpacking initramfs...
+printk: legacy console [mc-1] enabled
+Failed to initialize ubd device 0 :Couldn't determine size of device's file
+Freeing initrd memory: 11032K
+epollctl add err fd 1, Operation not permitted
+epollctl add err fd 0, Operation not permitted
+Run /init as init process
+LSB_PHASE_INIT mode=control ocipath=/inspire/qb-ilm/project/control-technology/25015/lightsandbox_v5_2026-09-24/spike/uml/work/phase-b/oci-cache
+LSB_HOSTFS_MOUNT_OK
+LSB_HOSTFS_RO_OK
+fidelity
+probe-paths.txt
+LSB_CTL_TTYMODE=raw
+LSB_CTL_READY
+sh invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0
+CPU: 0 UID: 0 PID: 95 Comm: sh Not tainted 6.19.14 #8 NONE 
+Stack:
+ 00000000 00000001 ffffff00 6058b312
+ 60ffb480 600cbbba 708b7aa0 6002be39
+ 6073aad0 708b7c00 600246bd 6055719c
+Call Trace:
+ [<600246bd>] ? _printk+0x0/0x49
+ [<6002f27d>] show_stack+0x10e/0x11a
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<6002be39>] dump_stack_lvl+0x63/0x7e
+ [<600246bd>] ? _printk+0x0/0x49
+ [<6002be72>] dump_stack+0x1e/0x20
+ [<60024dde>] dump_header+0x7a/0x225
+ [<60024d64>] ? dump_header+0x0/0x225
+ [<600246bd>] ? _printk+0x0/0x49
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<600cc4ad>] oom_kill_process+0x92/0x345
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<600ccc9a>] out_of_memory+0x39e/0x3bf
+ [<6010940b>] __alloc_frozen_pages_noprof+0x6e8/0x865
+ [<6010959c>] __alloc_pages_noprof+0x14/0x22
+ [<601099e8>] __folio_alloc_noprof+0x1a/0x24
+ [<600e8e3b>] folio_prealloc.constprop.0.isra.0+0x27/0x70
+ [<600ee1ce>] __handle_mm_fault+0x285/0x8cb
+ [<603d7e32>] ? mas_state_walk+0x0/0x33
+ [<600ee927>] handle_mm_fault+0x113/0x16d
+ [<6002fd27>] handle_page_fault+0x22f/0x38f
+ [<60030097>] segv+0x1ce/0x311
+ [<60030291>] segv_handler+0xb7/0xc1
+ [<600301da>] ? segv_handler+0x0/0xc1
+ [<6003f468>] userspace+0x4dc/0x6ca
+ [<6002e65e>] ? interrupt_end+0x0/0x9d
+ [<6002e5a3>] fork_handler+0x5a/0x5e
+Mem-Info:
+active_anon:1 inactive_anon:57593 isolated_anon:0
+ active_file:0 inactive_file:0 isolated_file:0
+ unevictable:2797 dirty:0 writeback:0
+ slab_reclaimable:64 slab_unreclaimable:594
+ mapped:514 shmem:0 pagetables:143
+ sec_pagetables:0 bounce:0
+ kernel_misc_reclaimable:0
+ free:294 free_pcp:665 free_cma:0
+Node 0 active_anon:4kB inactive_anon:230372kB active_file:0kB inactive_file:0kB unevictable:11188kB isolated(anon):0kB isolated(file):0kB mapped:2056kB dirty:0kB writeback:0kB shmem:0kB kernel_stack:368kB pagetables:572kB sec_pagetables:0kB all_unreclaimable? yes Balloon:0kB
+Normal free:1176kB boost:0kB min:1952kB low:2440kB high:2928kB reserved_highatomic:0KB free_highatomic:0KB active_anon:4kB inactive_anon:230372kB active_file:0kB inactive_file:0kB unevictable:11188kB writepending:0kB zspages:0kB present:262144kB managed:249508kB mlocked:0kB bounce:0kB free_pcp:2660kB local_pcp:2660kB free_cma:0kB
+lowmem_reserve[]: 0 0
+Normal: 0*4kB 1*8kB (M) 1*16kB (M) 0*32kB 0*64kB 1*128kB (M) 0*256kB 0*512kB 1*1024kB (M) 0*2048kB 0*4096kB = 1176kB
+2797 total pagecache pages
+0 pages in swap cache
+Free swap  = 0kB
+Total swap = 0kB
+65536 pages RAM
+0 pages HighMem/MovableOnly
+3159 pages reserved
+Tasks state (memory values in pages):
+[  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[     95]     0    95   111303    57993    57559      434         0   499712        0             0 sh
+[     96]     0    96      710      385       15      370         0    28672        0             0 busybox
+oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),task=sh,pid=95,uid=0
+Out of memory: Killed process 95 (sh) total-vm:445212kB, anon-rss:230236kB, file-rss:1736kB, shmem-rss:0kB, UID:0 pgtables:488kB oom_score_adj:0
+Killed
+dd invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0
+CPU: 0 UID: 0 PID: 125 Comm: dd Not tainted 6.19.14 #8 NONE 
+Stack:
+ 00000000 00000001 ffffff00 6058b312
+ 60ff8000 600cbbba 7094ba50 6002be39
+ 6073aad0 7094bbb0 600246bd 6055719c
+Call Trace:
+ [<600246bd>] ? _printk+0x0/0x49
+ [<6002f27d>] show_stack+0x10e/0x11a
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<6002be39>] dump_stack_lvl+0x63/0x7e
+ [<600246bd>] ? _printk+0x0/0x49
+ [<6002be72>] dump_stack+0x1e/0x20
+ [<60024dde>] dump_header+0x7a/0x225
+ [<60024d64>] ? dump_header+0x0/0x225
+ [<600246bd>] ? _printk+0x0/0x49
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<600cc4ad>] oom_kill_process+0x92/0x345
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<600ccc9a>] out_of_memory+0x39e/0x3bf
+ [<6010940b>] __alloc_frozen_pages_noprof+0x6e8/0x865
+ [<6010959c>] __alloc_pages_noprof+0x14/0x22
+ [<601099e8>] __folio_alloc_noprof+0x1a/0x24
+ [<600d88eb>] folio_alloc_noprof+0x18/0x1a
+ [<600db3dd>] shmem_get_folio_gfp.constprop.0+0x1e1/0x4d1
+ [<600db785>] shmem_get_folio+0x28/0x2a
+ [<600db7f4>] shmem_write_begin+0x6d/0x82
+ [<600c67e0>] generic_perform_write+0xaf/0x1d2
+ [<600d86c1>] shmem_file_write_iter+0x8c/0xaf
+ [<60120a5f>] vfs_write+0x112/0x1d3
+ [<60120c54>] ksys_write+0x75/0xa9
+ [<60120c9c>] sys_write+0x14/0x16
+ [<60030cf4>] handle_syscall+0x81/0xac
+ [<6003f44d>] userspace+0x4c1/0x6ca
+ [<6002e65e>] ? interrupt_end+0x0/0x9d
+ [<6002e5a3>] fork_handler+0x5a/0x5e
+Mem-Info:
+active_anon:1 inactive_anon:56758 isolated_anon:0
+ active_file:0 inactive_file:0 isolated_file:0
+ unevictable:2797 dirty:0 writeback:0
+ slab_reclaimable:188 slab_unreclaimable:594
+ mapped:514 shmem:56475 pagetables:33
+ sec_pagetables:0 bounce:0
+ kernel_misc_reclaimable:0
+ free:1007 free_pcp:768 free_cma:0
+Node 0 active_anon:4kB inactive_anon:227032kB active_file:0kB inactive_file:0kB unevictable:11188kB isolated(anon):0kB isolated(file):0kB mapped:2056kB dirty:0kB writeback:0kB shmem:225900kB kernel_stack:368kB pagetables:132kB sec_pagetables:0kB all_unreclaimable? yes Balloon:0kB
+Normal free:4028kB boost:4096kB min:6048kB low:6536kB high:7024kB reserved_highatomic:0KB free_highatomic:0KB active_anon:4kB inactive_anon:227032kB active_file:0kB inactive_file:0kB unevictable:11188kB writepending:0kB zspages:0kB present:262144kB managed:249508kB mlocked:0kB bounce:0kB free_pcp:3072kB local_pcp:3072kB free_cma:0kB
+lowmem_reserve[]: 0 0
+Normal: 1*4kB (U) 1*8kB (U) 1*16kB (U) 1*32kB (U) 0*64kB 1*128kB (U) 1*256kB (M) 1*512kB (U) 1*1024kB (M) 1*2048kB (M) 0*4096kB = 4028kB
+59272 total pagecache pages
+0 pages in swap cache
+Free swap  = 0kB
+Total swap = 0kB
+65536 pages RAM
+0 pages HighMem/MovableOnly
+3159 pages reserved
+Tasks state (memory values in pages):
+[  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[    124]     0   124      710      435       14      421         0    32768        0             0 sh
+[    125]     0   125      966      655      269      386         0    40960        0             0 dd
+oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),task=dd,pid=125,uid=0
+Out of memory: Killed process 125 (dd) total-vm:3864kB, anon-rss:1076kB, file-rss:1544kB, shmem-rss:0kB, UID:0 pgtables:40kB oom_score_adj:0
+dd invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0
+CPU: 0 UID: 0 PID: 144 Comm: dd Not tainted 6.19.14 #8 NONE 
+Stack:
+ 00000000 00000001 ffffff00 6058b312
+ 61e58000 600cbbba 708b7a50 6002be39
+ 6073aad0 708b7bb0 600246bd 6055719c
+Call Trace:
+ [<600246bd>] ? _printk+0x0/0x49
+ [<6002f27d>] show_stack+0x10e/0x11a
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<6002be39>] dump_stack_lvl+0x63/0x7e
+ [<600246bd>] ? _printk+0x0/0x49
+ [<6002be72>] dump_stack+0x1e/0x20
+ [<60024dde>] dump_header+0x7a/0x225
+ [<60024d64>] ? dump_header+0x0/0x225
+ [<600246bd>] ? _printk+0x0/0x49
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<600cc4ad>] oom_kill_process+0x92/0x345
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<600ccc9a>] out_of_memory+0x39e/0x3bf
+ [<6010940b>] __alloc_frozen_pages_noprof+0x6e8/0x865
+ [<6010959c>] __alloc_pages_noprof+0x14/0x22
+ [<601099e8>] __folio_alloc_noprof+0x1a/0x24
+ [<600d88eb>] folio_alloc_noprof+0x18/0x1a
+ [<600db3dd>] shmem_get_folio_gfp.constprop.0+0x1e1/0x4d1
+ [<600db785>] shmem_get_folio+0x28/0x2a
+ [<600db7f4>] shmem_write_begin+0x6d/0x82
+ [<600c67e0>] generic_perform_write+0xaf/0x1d2
+ [<600d86c1>] shmem_file_write_iter+0x8c/0xaf
+ [<60120a5f>] vfs_write+0x112/0x1d3
+ [<60120c54>] ksys_write+0x75/0xa9
+ [<60120c9c>] sys_write+0x14/0x16
+ [<60030cf4>] handle_syscall+0x81/0xac
+ [<6003f44d>] userspace+0x4c1/0x6ca
+ [<6002e65e>] ? interrupt_end+0x0/0x9d
+ [<6002e5a3>] fork_handler+0x5a/0x5e
+Mem-Info:
+active_anon:1 inactive_anon:56665 isolated_anon:0
+ active_file:0 inactive_file:0 isolated_file:0
+ unevictable:2797 dirty:0 writeback:0
+ slab_reclaimable:188 slab_unreclaimable:604
+ mapped:514 shmem:56388 pagetables:34
+ sec_pagetables:0 bounce:0
+ kernel_misc_reclaimable:0
+ free:1345 free_pcp:504 free_cma:0
+Node 0 active_anon:4kB inactive_anon:226660kB active_file:0kB inactive_file:0kB unevictable:11188kB isolated(anon):0kB isolated(file):0kB mapped:2056kB dirty:0kB writeback:0kB shmem:225552kB kernel_stack:368kB pagetables:136kB sec_pagetables:0kB all_unreclaimable? yes Balloon:0kB
+Normal free:5380kB boost:4096kB min:6048kB low:6536kB high:7024kB reserved_highatomic:0KB free_highatomic:0KB active_anon:4kB inactive_anon:226660kB active_file:0kB inactive_file:0kB unevictable:11188kB writepending:0kB zspages:0kB present:262144kB managed:249508kB mlocked:0kB bounce:0kB free_pcp:2016kB local_pcp:2016kB free_cma:0kB
+lowmem_reserve[]: 0 0
+Normal: 1*4kB (M) 2*8kB (UE) 1*16kB (M) 1*32kB (U) 5*64kB (UM) 3*128kB (U) 2*256kB (U) 2*512kB (UE) 1*1024kB (E) 1*2048kB (E) 0*4096kB = 5380kB
+59185 total pagecache pages
+0 pages in swap cache
+Free swap  = 0kB
+Total swap = 0kB
+65536 pages RAM
+0 pages HighMem/MovableOnly
+3159 pages reserved
+Tasks state (memory values in pages):
+[  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[    143]     0   143      710      435       14      421         0    32768        0             0 sh
+[    144]     0   144      966      655      269      386         0    40960        0             0 dd
+oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),task=dd,pid=144,uid=0
+Out of memory: Killed process 144 (dd) total-vm:3864kB, anon-rss:1076kB, file-rss:1544kB, shmem-rss:0kB, UID:0 pgtables:40kB oom_score_adj:0
+dd invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0
+CPU: 0 UID: 0 PID: 163 Comm: dd Not tainted 6.19.14 #8 NONE 
+Stack:
+ 00000000 00000001 ffffff00 6058b312
+ 60df3480 600cbbba 7094ba50 6002be39
+ 6073aad0 7094bbb0 600246bd 6055719c
+Call Trace:
+ [<600246bd>] ? _printk+0x0/0x49
+ [<6002f27d>] show_stack+0x10e/0x11a
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<6002be39>] dump_stack_lvl+0x63/0x7e
+ [<600246bd>] ? _printk+0x0/0x49
+ [<6002be72>] dump_stack+0x1e/0x20
+ [<60024dde>] dump_header+0x7a/0x225
+ [<60024d64>] ? dump_header+0x0/0x225
+ [<600246bd>] ? _printk+0x0/0x49
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<600cc4ad>] oom_kill_process+0x92/0x345
+ [<600cbbba>] ? oom_unkillable_task+0x0/0x19
+ [<600ccc9a>] out_of_memory+0x39e/0x3bf
+ [<6010940b>] __alloc_frozen_pages_noprof+0x6e8/0x865
+ [<6010959c>] __alloc_pages_noprof+0x14/0x22
+ [<601099e8>] __folio_alloc_noprof+0x1a/0x24
+ [<600d88eb>] folio_alloc_noprof+0x18/0x1a
+ [<600db3dd>] shmem_get_folio_gfp.constprop.0+0x1e1/0x4d1
+ [<600db785>] shmem_get_folio+0x28/0x2a
+ [<600db7f4>] shmem_write_begin+0x6d/0x82
+ [<600c67e0>] generic_perform_write+0xaf/0x1d2
+ [<600d86c1>] shmem_file_write_iter+0x8c/0xaf
+ [<60120a5f>] vfs_write+0x112/0x1d3
+ [<60120c54>] ksys_write+0x75/0xa9
+ [<60120c9c>] sys_write+0x14/0x16
+ [<60030cf4>] handle_syscall+0x81/0xac
+ [<6003f44d>] userspace+0x4c1/0x6ca
+ [<6002e65e>] ? interrupt_end+0x0/0x9d
+ [<6002e5a3>] fork_handler+0x5a/0x5e
+Mem-Info:
+active_anon:1 inactive_anon:56665 isolated_anon:0
+ active_file:0 inactive_file:0 isolated_file:0
+ unevictable:2797 dirty:0 writeback:0
+ slab_reclaimable:188 slab_unreclaimable:604
+ mapped:514 shmem:56388 pagetables:35
+ sec_pagetables:0 bounce:0
+ kernel_misc_reclaimable:0
+ free:1342 free_pcp:504 free_cma:0
+Node 0 active_anon:4kB inactive_anon:226660kB active_file:0kB inactive_file:0kB unevictable:11188kB isolated(anon):0kB isolated(file):0kB mapped:2056kB dirty:0kB writeback:0kB shmem:225552kB kernel_stack:368kB pagetables:140kB sec_pagetables:0kB all_unreclaimable? yes Balloon:0kB
+Normal free:5368kB boost:4096kB min:6048kB low:6536kB high:7024kB reserved_highatomic:0KB free_highatomic:0KB active_anon:4kB inactive_anon:226660kB active_file:0kB inactive_file:0kB unevictable:11188kB writepending:0kB zspages:0kB present:262144kB managed:249508kB mlocked:0kB bounce:0kB free_pcp:2016kB local_pcp:2016kB free_cma:0kB
+lowmem_reserve[]: 0 0
+Normal: 2*4kB (UM) 2*8kB (UM) 2*16kB (UM) 0*32kB 5*64kB (UM) 3*128kB (U) 2*256kB (U) 2*512kB (UE) 1*1024kB (E) 1*2048kB (E) 0*4096kB = 5368kB
+59185 total pagecache pages
+0 pages in swap cache
+Free swap  = 0kB
+Total swap = 0kB
+65536 pages RAM
+0 pages HighMem/MovableOnly
+3159 pages reserved
+Tasks state (memory values in pages):
+[  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[    162]     0   162      710      435       14      421         0    32768        0             0 sh
+[    163]     0   163      966      655      269      386         0    40960        0             0 dd
+oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),task=dd,pid=163,uid=0
+Out of memory: Killed process 163 (dd) total-vm:3864kB, anon-rss:1076kB, file-rss:1544kB, shmem-rss:0kB, UID:0 pgtables:40kB oom_score_adj:0
+reboot: Power down
+

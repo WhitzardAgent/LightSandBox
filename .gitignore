@@ -17,3 +17,7 @@ __pycache__/
 .venv/
 venv/
 spike/uml/work/
+
+# Host-side process core dumps (e.g. SIGKILLed UML guests; core_pattern=core)
+core
+core.*

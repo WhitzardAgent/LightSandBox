@@ -1,0 +1,113 @@
+{
+ "experiment": "uml resource semantics (round-04 30-32), v2",
+ "utc": "2026-09-27T13:32:28.149613+00:00",
+ "boundary_notice": "guest-internal cgroup enforcement is GUEST-KERNEL truth, not a host guarantee; host hard limits on the UML process itself remain unavailable on this host (cgroupfs ro), exactly as in T09-C01 for Native",
+ "verdict": "RESOURCE_SEMANTICS_OK",
+ "summary": {
+  "checks_match": 12,
+  "checks_mismatch": 0
+ },
+ "facts": {
+  "guest_mem_total_kib": 249508,
+  "guest_cpu_fields": [
+   "1",
+   "0"
+  ],
+  "guest_cgroup_controllers": "cpu io",
+  "memcg_present": false,
+  "host_vmhwm_kib_after_150mib_write": 178816,
+  "r4b_shmem_oversubscribe_outcomes": [
+   "attempt1: big_rc=137",
+   "attempt2: big_rc=137",
+   "attempt3: big_rc=137"
+  ]
+ },
+ "notes": [
+  "v1 finding: CONFIG_MEMCG absent in this defconfig kernel",
+  "hog journey: awk doubling starved the single CPU (v2a); busybox tail -c preflights and exits rc=1 without allocating (v2b); shell $( ) accumulation is the deterministic anon hog (v3)"
+ ],
+ "checks": [
+  {
+   "check": "R1 mem=256M guest MemTotal KiB in (204800, 262144]",
+   "expected": "(204800, 262144]",
+   "observed": 249508,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R5 nproc recorded",
+   "expected": ">=1 field",
+   "observed": [
+    "1",
+    "0"
+   ],
+   "verdict": "MATCH"
+  },
+  {
+   "check": "cgroup2 mounts in guest",
+   "expected": "mount_rc=0",
+   "observed": "mount_rc=0\ncpu io",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "MEMCG offered in guest cgroup.controllers",
+   "expected": "recorded (drives R3)",
+   "observed": "cpu io",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R3 guest memory.max enforcement",
+   "expected": "MEMCG present",
+   "observed": "NOT_TESTED \u2014 'memory' not in guest cgroup.controllers (kernel build fact)",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R2 150MiB tmpfs write fits in 256MiB guest",
+   "expected": "dd_rc=0",
+   "observed": "dd_rc=0",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R2 host VmHWM >= 140MiB after 150MiB guest write",
+   "expected": ">=143360 KiB",
+   "observed": 178816,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R4a 300MiB anon hog OOM-killed (rc=137)",
+   "expected": "frame rc=137 or hog_rc=137",
+   "observed": {
+    "frame_rc": 137,
+    "body": ""
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R4a host UML process survives guest OOM",
+   "expected": true,
+   "observed": null,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R4a init+channel survive anon OOM",
+   "expected": "echo ok",
+   "observed": "alive-after-anon-oom",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R4b shmem oversubscribe behavior recorded (allocator killed or guest down every time)",
+   "expected": "every attempt: big_rc=137|channel-death|guest-exit",
+   "observed": [
+    "attempt1: big_rc=137",
+    "attempt2: big_rc=137",
+    "attempt3: big_rc=137"
+   ],
+   "verdict": "MATCH"
+  },
+  {
+   "check": "orderly poweroff rc",
+   "expected": 0,
+   "observed": 0,
+   "verdict": "MATCH"
+  }
+ ]
+}

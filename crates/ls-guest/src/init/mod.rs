@@ -645,12 +645,8 @@ fn reap_with_ctrl(child_pid: i32, ctrl: &str) -> (i32, RunOutcome, bool) {
 /// settles it). Unreadable /proc degrades to wait-only with residual risk
 /// reported. The 1 s window bounds kill+reap cycles; survivors past it are
 /// fork-bomb truth — reported, never hidden.
-fn drain_escapes() -> (u32, bool) {
-    drain_escapes_logged(None)
-}
-
 fn drain_escapes_logged(log: Option<&std::path::Path>) -> (u32, bool) {
-    let mut note = |msg: String| {
+    let note = |msg: String| {
         if let Some(p) = log {
             use std::io::Write;
             if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(p) {

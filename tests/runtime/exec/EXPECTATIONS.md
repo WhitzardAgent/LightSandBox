@@ -42,7 +42,9 @@
 ## 证据(真实宿主,2026-09-26)
 
 宿主:PORTABLE_ROOTLESS 全链(65534:65534),cgroupfs 只读(T09 测量),runc 钉装
-`/opt/toolchains/lightsandbox/bin/runc`,witness 为 static-pie `target/debug/lsguest-init`。
+`/opt/toolchains/lightsandbox/bin/runc`,witness 为 musl static-pie
+`target/x86_64-unknown-linux-musl/debug/lsguest-init`(ADR 0001 A4;替代过渡期的 gnu
+crt-static 路径)。
 
 ### 真实层(LSB_T10_REAL=1;`cargo test -p ls-host --test exec -- --test-threads=1`)
 

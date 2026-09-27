@@ -661,24 +661,26 @@ fn real_gate(tag: &str) -> Option<(PathBuf, PathBuf)> {
         return None;
     }
     let runc = PathBuf::from("/opt/toolchains/lightsandbox/bin/runc");
-    let init = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/debug/lsguest-init");
+    let init = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/x86_64-unknown-linux-musl/debug/lsguest-init");
     if !runc.is_file() || !init.is_file() {
         eprintln!(
-            "SKIP {tag}: pinned runc ({}) or lsguest-init ({}) missing — build ls-guest first",
+            "SKIP {tag}: pinned runc ({}) or lsguest-init ({}) missing — build with \
+                 cargo build -p ls-guest --target x86_64-unknown-linux-musl",
             runc.display(),
             init.display()
         );
         return None;
     }
     // Freshness/runtime guards: `cargo test -p ls-guest` does NOT refresh
-    // the main bin artifact, and a bare `cargo build -p ls-guest` reverts
-    // it to a dynamic link — both failure modes burned REAL evidence runs.
+    // the runtime bin artifact. The canonical witness target is
+    // x86_64-unknown-linux-musl (static-pie, no loader dependency); the
+    // gnu debug artifact is NOT used by REAL gates.
     let bin_mtime = std::fs::metadata(&init).and_then(|m| m.modified()).ok();
     match (bin_mtime, newest_guest_src_mtime()) {
         (Some(bm), Some(sm)) if bm < sm => {
             eprintln!(
                 "SKIP {tag}: lsguest-init ({}) is STALE vs crates/ls-guest/src — rebuild with \
-                 RUSTFLAGS=\"-C target-feature=+crt-static\" cargo build -p ls-guest",
+                 cargo build -p ls-guest --target x86_64-unknown-linux-musl",
                 init.display()
             );
             return None;

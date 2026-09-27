@@ -48,10 +48,12 @@ ORCHESTRATION LAWS without a kernel:
 Arm with `LSB_T08_REAL=1`. Prerequisites, all checked loudly at run time:
 
 - pinned runc at `/opt/toolchains/lightsandbox/bin/runc` (1.5.0-rc.1);
-- **statically linked** `target/debug/lsguest-init` — build with
-  `RUSTFLAGS="-C target-feature=+crt-static" cargo build -p ls-guest`
-  (a plain `cargo build` produces a DYNAMIC binary that cannot start inside an
-  arbitrary user image — measured defect, see fixes below);
+- **statically linked** `target/x86_64-unknown-linux-musl/debug/lsguest-init` —
+  build with `cargo build -p ls-guest --target x86_64-unknown-linux-musl`
+  (the musl target is the canonical witness contract, ADR 0001 A4: true
+  static-PIE, no loader dependency; supersedes the interim gnu crt-static
+  path. A plain `cargo build` produces a DYNAMIC binary that cannot start
+  inside an arbitrary user image — measured defect, see fixes below);
 - a user image assembled by the test itself: `/bin/dash` + libc + ld-linux
   (hand-rolled POSIX ustar fixture, checksum field computed with the space
   convention; layout annotation `"runtime"`);
@@ -98,7 +100,8 @@ exec MUST reach the STILL-RUNNING sandbox; delete converges.
 
 1. **lsguest-init MUST be statically linked.** First real boot:
    `/.lsbx/init: error while loading shared libraries: libgcc_s.so.1` — an
-   arbitrary user image guarantees no glibc. Fixed by crt-static build
+   arbitrary user image guarantees no glibc. Fixed first by crt-static build,
+   now formalized as the musl target (ADR 0001 A4)
    (musl-target migration is a follow-up discussion, not a blocker).
 2. **The backend must chown the `.lsbx/` DIRECTORY, not just the init file.**
    First real receipt: `receipt write failed: Permission denied` — the

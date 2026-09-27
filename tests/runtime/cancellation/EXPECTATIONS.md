@@ -75,15 +75,17 @@ residual_risk==false + 逃逸者 dead——判据文本已在断言注释中钉�
 三份 REAL 门禁(cancellation/exec/lifecycle)的 `real_gate` 统一带:
 
 - **staleness 检查**:`target/debug/lsguest-init` mtime < guest 源 mtime →
-  **SKIP + eprintln 提示 crt-static 重建**(`cargo test -p ls-guest` **不刷新主 bin 产物**)。
+  **SKIP + eprintln 提示按 musl 契约重建**(`cargo test -p ls-guest` **不刷新主 bin 产物**)。
 - **ELF 静态检查**:纯字节扫 PT_INTERP,动态链接产物 → SKIP(裸 `cargo build` 会把
   debug 产物回退成动态链接;fixture 无 libgcc_s,PID1 加载必败)。
-- 权威重建:`RUSTFLAGS="-C target-feature=+crt-static" cargo build -p ls-guest`。
+- 权威重建(witness 正式 target = musl,ADR 0001 A4):
+  `cargo build -p ls-guest --target x86_64-unknown-linux-musl`。
 
 ## 证据(真实宿主,2026-09-27)
 
 宿主:PORTABLE_ROOTLESS 全链(65534:65534),cgroupfs 只读,runc 钉装
-`/opt/toolchains/lightsandbox/bin/runc`,witness 为 crt-static `target/debug/lsguest-init`。
+`/opt/toolchains/lightsandbox/bin/runc`,witness 为 musl static-pie
+`target/x86_64-unknown-linux-musl/debug/lsguest-init`(ADR 0001 A4)。
 
 ### 真实层(LSB_T11_REAL=1;`cargo test -p ls-host --test cancellation -- --test-threads=1`)
 
@@ -120,7 +122,7 @@ residual_risk==false + 逃逸者 dead——判据文本已在断言注释中钉�
 ## 门禁命令(复跑)
 
 ```bash
-RUSTFLAGS="-C target-feature=+crt-static" cargo build -p ls-guest   # fixture 权威重建
+cargo build -p ls-guest --target x86_64-unknown-linux-musl          # fixture 权威重建(ADR 0001 A4)
 cargo test -p ls-guest                                              # 19/19
 cargo test -p ls-host --lib                                         # 118/118
 LSB_T11_REAL=1 cargo test -p ls-host --test cancellation -- --test-threads=1 --nocapture

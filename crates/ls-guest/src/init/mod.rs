@@ -43,6 +43,18 @@ pub struct InitArgs {
     pub sandbox_id: String,
     /// Absolute guest path where the exit receipt is written.
     pub receipt: String,
+    /// T11: absolute guest path of the cancel control file. When present,
+    /// the wait loop polls it; content beginning with `cancel` orders this
+    /// witness to SIGKILL its child (the nested-pidns init when
+    /// `nested_pidns` is set — i.e. THIS execution's whole world, never a
+    /// neighbour's). The file is host-writable within the same trust domain
+    /// as the receipt path; the payload may self-cancel (own blast radius).
+    pub ctrl: Option<String>,
+    /// T11: run the payload as PID 1 of a freshly unshared NESTED PID
+    /// namespace. Killing the namespace init wipes every descendant —
+    /// doublefork/setsid progeny included — by kernel law, not by a
+    /// volatile PID-tree scan. Cancellation scope = exactly this exec.
+    pub nested_pidns: bool,
     /// Image entrypoint argv (entrypoint ++ cmd), never empty.
     pub argv: Vec<String>,
 }
@@ -98,9 +110,30 @@ pub fn parse_args(argv: &[String]) -> Result<InitArgs, InitArgError> {
         None => return Err(InitArgError::BadShape("missing value after --receipt")),
     };
     validate_receipt_path(&receipt)?;
-    match it.next().map(String::as_str) {
-        Some("--") => {}
-        _ => return Err(InitArgError::BadShape("missing `--` separator before entrypoint argv")),
+    // T11 (protocol v2, additive): zero or more optional flags before `--`.
+    let mut ctrl = None;
+    let mut nested_pidns = false;
+    loop {
+        match it.next().map(String::as_str) {
+            Some("--") => break,
+            Some("--ctrl") => {
+                let path = match it.next() {
+                    Some(v) => v.clone(),
+                    None => return Err(InitArgError::BadShape("missing value after --ctrl")),
+                };
+                validate_receipt_path(&path).map_err(|e| match e {
+                    InitArgError::InvalidReceiptPath(why) => InitArgError::InvalidReceiptPath(why),
+                    other => other,
+                })?;
+                ctrl = Some(path);
+            }
+            Some("--nested-pidns") => nested_pidns = true,
+            _ => {
+                return Err(InitArgError::BadShape(
+                    "missing `--` separator before entrypoint argv (unknown flag?)",
+                ))
+            }
+        }
     }
     let argv: Vec<String> = it.cloned().collect();
     if argv.is_empty() {
@@ -109,6 +142,8 @@ pub fn parse_args(argv: &[String]) -> Result<InitArgs, InitArgError> {
     Ok(InitArgs {
         sandbox_id,
         receipt,
+        ctrl,
+        nested_pidns,
         argv,
     })
 }
@@ -251,12 +286,18 @@ mod sys {
         pub fn waitpid(pid: pid_t, status: *mut c_int, options: c_int) -> pid_t;
         pub fn kill(pid: pid_t, sig: c_int) -> c_int;
         pub fn sigaction(signum: c_int, act: *const SigAction, oldact: *mut SigAction) -> c_int;
+        pub fn unshare(flags: c_int) -> c_int;
         pub fn _exit(status: c_int) -> !;
         pub fn __errno_location() -> *mut c_int;
     }
 
     pub const EINTR: c_int = 4;
     pub const ECHILD: c_int = 10;
+    pub const ESRCH: c_int = 3;
+    pub const WNOHANG: c_int = 1;
+    pub const SIGKILL: c_int = 9;
+    /// linux/sched.h: children of the caller enter a fresh PID namespace.
+    pub const CLONE_NEWPID: c_int = 0x2000_0000;
     pub const SIGHUP: c_int = 1;
     pub const SIGINT: c_int = 2;
     pub const SIGQUIT: c_int = 3;
@@ -340,8 +381,29 @@ impl RunOutcome {
 /// the reap/forward loop until the child exits. stdio inside the guest is
 /// inherited exactly as the runtime arranged it for PID 1. Returns the
 /// child pid and the outcome; the caller writes the receipt and exits.
+///
+/// T11 v2 semantics (additive, only when the flags are present):
+/// * `nested_pidns`: `unshare(CLONE_NEWPID)` BEFORE the spawn — the payload
+///   becomes PID 1 of a fresh nested namespace. Its entire progeny (incl.
+///   doublefork/setsid escapees) lives and dies inside that namespace.
+/// * `ctrl`: the wait loop polls the cancel control file every 20 ms with
+///   WNOHANG; a `cancel` prefix SIGKILLs OUR child (the namespace init when
+///   nested — kernel then wipes that whole world). Receipt stays the
+///   honest wait observation (SIGNALED 9); host-side attribution of who
+///   ordered the kill is the host's own affair, never guessed here.
 pub fn run_child(args: &InitArgs) -> Result<(i32, RunOutcome), SpawnFailure> {
     install_forward_handlers();
+    // Nested namespace first: an unshare failure is a PRE-payload
+    // infrastructure truth — reported as spawn failure (payload never ran).
+    if args.nested_pidns {
+        let rc = unsafe { sys::unshare(sys::CLONE_NEWPID) };
+        if rc != 0 {
+            return Err(SpawnFailure {
+                argv0: args.argv[0].clone(),
+                detail: format!("unshare(CLONE_NEWPID) failed: errno {}", sys::errno()),
+            });
+        }
+    }
     let child = Command::new(&args.argv[0])
         .args(&args.argv[1..])
         .spawn()
@@ -354,14 +416,27 @@ pub fn run_child(args: &InitArgs) -> Result<(i32, RunOutcome), SpawnFailure> {
     // must never also reap it; dropping without wait is the documented way.
     drop(child);
 
+    match &args.ctrl {
+        None => Ok(reap_blocking(child_pid)),
+        Some(ctrl) => Ok(reap_with_ctrl(child_pid, ctrl)),
+    }
+}
+
+/// Decode the reaped status of OUR child into a RunOutcome::Child.
+fn child_outcome(child_pid: i32, status: sys::c_int) -> (i32, RunOutcome) {
+    (
+        child_pid,
+        RunOutcome::Child(decode_wait_status(status).unwrap_or(ObservedExit::Exited(255))),
+    )
+}
+
+/// T10 semantics: blocking reap/forward loop (no control file).
+fn reap_blocking(child_pid: i32) -> (i32, RunOutcome) {
     loop {
         let mut status: sys::c_int = 0;
         let reaped = unsafe { sys::waitpid(-1, &mut status, 0) };
         if reaped == child_pid {
-            return Ok((
-                child_pid,
-                RunOutcome::Child(decode_wait_status(status).unwrap_or(ObservedExit::Exited(255))),
-            ));
+            return child_outcome(child_pid, status);
         }
         if reaped > 0 {
             // Orphaned grandchild reaped (PID 1 adopts). Keep looping.
@@ -378,17 +453,76 @@ pub fn run_child(args: &InitArgs) -> Result<(i32, RunOutcome), SpawnFailure> {
             continue;
         }
         if err == sys::ECHILD {
-            return Ok((
+            return (
                 child_pid,
                 RunOutcome::WaitInvariantBroken(
                     "waitpid(-1) returned ECHILD while the entrypoint child was unseen".to_string(),
                 ),
-            ));
+            );
         }
-        return Ok((
+        return (
             child_pid,
             RunOutcome::WaitInvariantBroken(format!("waitpid(-1) failed with errno {err}")),
-        ));
+        );
+    }
+}
+
+/// T11 semantics: WNOHANG + 20 ms ctrl poll. A `cancel`-prefixed ctrl file
+/// SIGKILLs our child (idempotent: ESRCH is ignored, reap settles truth).
+fn reap_with_ctrl(child_pid: i32, ctrl: &str) -> (i32, RunOutcome) {
+    let mut kill_sent = false;
+    loop {
+        let mut status: sys::c_int = 0;
+        let reaped = unsafe { sys::waitpid(-1, &mut status, sys::WNOHANG) };
+        if reaped == child_pid {
+            return child_outcome(child_pid, status);
+        }
+        if reaped > 0 {
+            continue; // adopted orphan reaped; keep supervising our child
+        }
+        if reaped < 0 {
+            let err = sys::errno();
+            if err == sys::EINTR {
+                if let Some(sig) = take_pending_signal() {
+                    let _ = unsafe { sys::kill(child_pid, sig) };
+                }
+            } else if err == sys::ECHILD {
+                return (
+                    child_pid,
+                    RunOutcome::WaitInvariantBroken(
+                        "waitpid(-1) returned ECHILD while the entrypoint child was unseen"
+                            .to_string(),
+                    ),
+                );
+            } else {
+                return (
+                    child_pid,
+                    RunOutcome::WaitInvariantBroken(format!("waitpid(-1) failed with errno {err}")),
+                );
+            }
+        }
+        if !kill_sent {
+            match std::fs::read_to_string(ctrl) {
+                Ok(body) if body.starts_with("cancel") => {
+                    kill_sent = true;
+                    let rc = unsafe { sys::kill(child_pid, sys::SIGKILL) };
+                    if rc != 0 && sys::errno() != sys::ESRCH {
+                        // Kill of OUR OWN child failed for a non-race reason:
+                        // surface it as a broken invariant rather than claim a
+                        // cancel that did not happen.
+                        return (
+                            child_pid,
+                            RunOutcome::WaitInvariantBroken(format!(
+                                "cancel kill({child_pid}, SIGKILL) failed: errno {}",
+                                sys::errno()
+                            )),
+                        );
+                    }
+                }
+                _ => {} // missing/empty/short-lived read error: keep polling
+            }
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
     }
 }
 

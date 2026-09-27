@@ -26,7 +26,10 @@ if sys.version_info < (3, 11):
 
 _LOCAL_CARGO = Path.home() / '.cargo' / 'bin'
 if shutil.which('cargo') is None and (_LOCAL_CARGO / 'cargo').exists():
-    os.environ['PATH'] = f"{_LOCAL_CARGO}{os.pathsep}" + os.environ.get('PATH', '')
+    # Round-04 §4: never REPLACE the caller's PATH with cargo-only — under
+    # `env -i` that hides every system tool (git!) from our own subprocesses.
+    _base = os.environ.get('PATH') or os.defpath
+    os.environ['PATH'] = f"{_LOCAL_CARGO}{os.pathsep}{_base}"
 
 from checklib import main  # noqa: E402
 

@@ -50,8 +50,57 @@ ALLOWED_EDGES = {
 FORBIDDEN_VOCABULARY = re.compile(r'\b(Trial|Verifier|Reward|Evaluation)\b')
 
 
+def child_env():
+    """Controlled environment for every check subprocess (round-04 §4).
+
+    The repo entry (`dev/check ...`) must produce results independent of the
+    calling shell. Root cause history: bare `python3` = 3.10 has different
+    unittest/asyncio semantics and lacks tomllib; a caller-exported PYTHONPATH
+    or locale can also change collection/results. Children therefore receive a
+    WHITELIST environment, never raw caller inheritance:
+
+    * PATH/HOME/TMPDIR (+ cargo bin dir ensured) for tool lookup;
+    * LC_ALL/LANG pinned to C.UTF-8, TZ pinned to UTC;
+    * LSB_* pass-through (REAL-test gates and toolchain overrides by design);
+    * CARGO_HOME/RUSTUP_HOME + proxy vars when present (rustup/cargo network);
+    * PYTHONPATH/PYTHONHOME/PYTHONSTARTUP/VIRTUAL_ENV are DROPPED on purpose —
+      every python child inserts its own required sys.path entries explicitly.
+    """
+    env = {
+        'LC_ALL': 'C.UTF-8',
+        'LANG': 'C.UTF-8',
+        'TZ': 'UTC',
+    }
+    path = os.environ.get('PATH')
+    if not path:
+        path = os.defpath
+    cargo_bin = str(Path.home() / '.cargo' / 'bin')
+    if shutil.which('cargo', path=path) is None and (Path(cargo_bin) / 'cargo').exists():
+        path = f"{cargo_bin}{os.pathsep}{path}"
+    env['PATH'] = path
+    home = os.environ.get('HOME') or str(Path.home())
+    env['HOME'] = home
+    if os.environ.get('TMPDIR'):
+        env['TMPDIR'] = os.environ['TMPDIR']
+    for key, value in os.environ.items():
+        if key.startswith('LSB_'):
+            env[key] = value
+    for key in ('CARGO_HOME', 'RUSTUP_HOME', 'CARGO_NET_OFFLINE',
+                'http_proxy', 'https_proxy', 'no_proxy',
+                'HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY'):
+        if os.environ.get(key):
+            env[key] = os.environ[key]
+    return env
+
+
 def run_command(argv, cwd=None, env=None, timeout=1200):
-    """Run one argv command, capture output, preserve the raw exit code."""
+    """Run one argv command, capture output, preserve the raw exit code.
+
+    env=None (the default for suites) means the CONTROLLED child_env(), not
+    caller inheritance — only an explicit non-None env replaces it.
+    """
+    if env is None:
+        env = child_env()
     start = time.monotonic()
     proc = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True,
                           timeout=timeout, errors='replace')
@@ -106,7 +155,9 @@ def python_unittest(start_dir, top_dir=None, patterns=None, label=None):
     argv = [sys.executable, '-m', 'unittest', 'discover', '-s', str(start_dir), '-t', str(top_dir)]
     for pat in (patterns or []):
         argv += ['-p', pat]
-    res = run_command(argv)
+    # cwd pinned to the repository root: suite results must not depend on
+    # the directory the caller happened to invoke dev/check from.
+    res = run_command(argv, cwd=str(ROOT))
     match = re.search(r'Ran (\d+) test', res['output'])
     tests = int(match.group(1)) if match else 0
     out = {'argv': res['argv'], 'label': label or start_dir.name,
@@ -122,7 +173,8 @@ def python_unittest(start_dir, top_dir=None, patterns=None, label=None):
 
 
 def python_script(path, label):
-    res = run_command([sys.executable, str(path)])
+    # cwd pinned to the repository root (same law as python_unittest).
+    res = run_command([sys.executable, str(path)], cwd=str(ROOT))
     return {'argv': res['argv'], 'label': label, 'exit': res['exit'], 'tests': 0,
             'duration_ms': res['duration_ms'], 'output': res['output']}
 
@@ -147,7 +199,8 @@ def suite_fast(root):
     commands.append(python_script(root / 'dev' / 'check_seeds.py', 'seed-reference'))
     commands.append(python_unittest(root / 'tests' / 'pack', root, label='pack-tools'))
     commands.append(python_unittest(root / 'tests' / 'contracts', root, label='contract-locks'))
-    res = run_command([sys.executable, str(root / 'tools' / 'packctl.py'), 'validate'])
+    res = run_command([sys.executable, str(root / 'tools' / 'packctl.py'), 'validate'],
+                      cwd=str(root))
     commands.append({'argv': res['argv'], 'label': 'packctl-validate', 'exit': res['exit'],
                      'tests': 0, 'duration_ms': res['duration_ms'], 'output': res['output']})
     return commands
@@ -315,8 +368,13 @@ TEST_COLLECTING = ('unit', 'fast', 'contracts')
 
 def _git_state(root):
     def git(*args):
-        proc = subprocess.run(['git', '-C', str(root), *args],
-                              capture_output=True, text=True)
+        try:
+            proc = subprocess.run(['git', '-C', str(root), *args],
+                                  capture_output=True, text=True)
+        except OSError:
+            # git absent from PATH (e.g. extreme clean env): metadata, not a
+            # suite verdict — never crash the whole run for it.
+            return None
         return proc.stdout.strip() if proc.returncode == 0 else None
     commit = git('rev-parse', 'HEAD')
     status = git('status', '--porcelain')

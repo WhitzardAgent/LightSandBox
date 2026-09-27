@@ -169,6 +169,50 @@ if [ "$MODE" = runtime ]; then
     $B poweroff -f
 fi
 
+if [ "$MODE" = control ]; then
+    # T47 phase-d guest-control transport. Channel = serial ttyS0 bound to a
+    # host fd (ssl0=fd:N) — NEVER the console (Round-03: console opens but
+    # silently drops userspace writes on this host).
+    # Frame v1 (documented):
+    #   REQ  = "LSBXQ" + 8 lowercase hex chars (payload length) + payload
+    #   RESP = "LSBXR" + 8 hex chars + payload ("rc=N\n" + raw output bytes)
+    #   payload of REQ: line 1 = cwd, following lines = one argv element per
+    #   line. Design restriction (recorded): argv elements must not contain
+    #   '\n' or NUL — shell line framing; binary-safe RESP payload via file
+    #   handoff (command output goes to a file, never through $(...)).
+    TTY=/dev/ttyS0
+    [ -e "$TTY" ] || $B mknod "$TTY" c 4 64 2>/dev/null
+    $B mkdir -p /tmp
+    if $B stty raw -echo < "$TTY" 2>/dev/null; then
+        echo "LSB_CTL_TTYMODE=raw"
+    else
+        $B stty -icanon -isig -iexten -ixon -ixoff -icrnl -inlcr -igncr \
+              -opost -echo -echoe -echok -echoctl -echoke < "$TTY" 2>/dev/null \
+            && echo "LSB_CTL_TTYMODE=fallback" || echo "LSB_CTL_TTYMODE=fail"
+    fi
+    exec 3<>"$TTY" 4>"$TTY"
+    echo "LSB_CTL_READY"
+    while true; do
+        hdr=$($B dd bs=1 count=13 <&3 2>/dev/null)
+        # empty read = channel disturbance (or peer gone): back off, do NOT
+        # spin-log (observed: BADHDR storm after a bad-control verb)
+        [ -z "$hdr" ] && { $B sleep 1; continue; }
+        case "$hdr" in
+            LSBXQ????????) len=$((0x${hdr#LSBXQ})) ;;
+            *) echo "LSB_CTL_BADHDR" ; continue ;;
+        esac
+        $B dd bs=1 count=$len <&3 > /tmp/ctlreq 2>/dev/null
+        workdir=$($B sed -n '1p' /tmp/ctlreq)
+        set --
+        $B sed -n '2,$p' /tmp/ctlreq > /tmp/ctlargv
+        while IFS= read -r a; do set -- "$@" "$a"; done < /tmp/ctlargv
+        ( cd "$workdir" 2>/dev/null && "$@" ) > /tmp/ctlout 2>&1
+        rc=$?
+        { printf 'rc=%s\n' "$rc"; $B cat /tmp/ctlout; } > /tmp/ctlresp
+        { $B printf 'LSBXR%08x' $($B wc -c < /tmp/ctlresp); $B cat /tmp/ctlresp; } >&4
+    done
+fi
+
 echo "LSB_PHASE_UNKNOWN_MODE"
 $B sleep 1
 $B poweroff -f

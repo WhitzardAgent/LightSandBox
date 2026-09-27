@@ -12,7 +12,7 @@ BUSYBOX="$WORK/rootfs/bin/busybox"
 UMOCI="$WORK/tools/umoci-static"
 GEN="$WORK/bin/gen_init_cpio"
 CPIO="$PB/phase-b.cpio"
-APPS="sh cat echo mkdir mknod mount umount awk sed tr cut touch rm ls stat su id env poweroff sleep sync sha256sum readlink chroot dd"
+APPS="sh cat echo mkdir mknod mount umount awk sed tr cut touch rm ls stat su id env poweroff sleep sync sha256sum readlink chroot dd od stty wc head"
 
 mkdir -p "$PB/initrd/bin" "$PB/initrd/tools"
 cp "$BUSYBOX" "$PB/initrd/bin/busybox"

@@ -1,0 +1,110 @@
+{
+ "experiment": "uml phase-d guest-control transport (round-04 21-26)",
+ "utc": "2026-09-27T13:00:06.306804+00:00",
+ "channel": "ssl0=fd:N over host socketpair; console NEVER used (ADR 0002 12.1: console silently drops userspace writes)",
+ "framing_v1": "REQ 'LSBXQ'+%08x len+payload(cwd\\n argv lines); RESP 'LSBXR'+%08x len+('rc=N\\n'+raw output). argv elements must not contain \\n/NUL (shell line framing); response payload binary-safe via file handoff",
+ "mconsole": "NOT the exec path (management socket: halt/sysrq candidates only); uml_mconsole tool not built in this spike \u2014 lifecycle-side evaluation stays open",
+ "verdict": "GUEST_CONTROL_OK",
+ "summary": {
+  "checks_match": 12,
+  "checks_mismatch": 0
+ },
+ "checks": [
+  {
+   "check": "exec echo rc",
+   "expected": 0,
+   "observed": 0,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "exec echo out",
+   "expected": {
+    "len": 14,
+    "sha256": "d5611a846d8d7cbe37fb93e4dd5371de2df1017ce409b82997fbc78bfd0ad3d3",
+    "preview": "hello-control\n"
+   },
+   "observed": {
+    "len": 14,
+    "sha256": "d5611a846d8d7cbe37fb93e4dd5371de2df1017ce409b82997fbc78bfd0ad3d3",
+    "preview": "hello-control\n"
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "check": "exec false rc",
+   "expected": 1,
+   "observed": 1,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "binary 300B len",
+   "expected": 300,
+   "observed": 300,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "cwd /tmp pwd",
+   "expected": {
+    "len": 5,
+    "sha256": "1785cbdfcace2004c0d21cbc262071adf07ca0cd61f14fe5c66e737103025f3f",
+    "preview": "/tmp\n"
+   },
+   "observed": {
+    "len": 5,
+    "sha256": "1785cbdfcace2004c0d21cbc262071adf07ca0cd61f14fe5c66e737103025f3f",
+    "preview": "/tmp\n"
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "check": "large 64KB sha256",
+   "expected": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+   "observed": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "large 64KB rc",
+   "expected": 0,
+   "observed": 0,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "argv spaces preserved",
+   "expected": {
+    "len": 7,
+    "sha256": "3fa9210b646641a6b6dd4f1a5ab89f4bc325af9bcd201634eb378588f96c362f",
+    "preview": "a b  c\n"
+   },
+   "observed": {
+    "len": 7,
+    "sha256": "3fa9210b646641a6b6dd4f1a5ab89f4bc325af9bcd201634eb378588f96c362f",
+    "preview": "a b  c\n"
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "check": "orderly poweroff rc",
+   "expected": 0,
+   "observed": 0,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "orderly shutdown reaps ~/.uml/<umid>",
+   "expected": false,
+   "observed": false,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "SIGKILL leaves residue (honest)",
+   "expected": true,
+   "observed": true,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "supervisor reap removes residue",
+   "expected": true,
+   "observed": true,
+   "verdict": "MATCH"
+  }
+ ]
+}

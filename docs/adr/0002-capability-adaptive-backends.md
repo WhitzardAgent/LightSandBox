@@ -178,7 +178,7 @@ Native/UML/Machine/Unknown candidate census.
 | Backend | Verdict | Basis |
 |---|---|---|
 | Native (runc) | **ACCEPTED** | ADR 0001 evidence; T08 vertical slice (round-03) |
-| Kernel (UML) | **EXPERIMENTAL** (was PENDING SPIKE) | §12.1: feasibility gate PASSED on this host — boots CONTAINERIZED+PORTABLE_ROOTLESS, no sudo/KVM, own /proc, true multi-UID + guest DAC (`spike/results/uml-boot.json` BOOT_OK). ACCEPTED still requires: OCI materialization fidelity, base+COW, exec/control transport, clean-cleanup confirmation, full perf table |
+| Kernel (UML) | **ACCEPTED-WITH-CONDITIONS** (round-04; was EXPERIMENTAL) | §12.1 feasibility + §12.2 round-04 acceptance: the five named gates ALL passed with committed evidence. Conditions before any PRODUCTION claim: `kernel-candidate-2` flips (MEMCG, CGROUP_PIDS, UML_NET family), guest networking legs, systemd smoke, `lsguest serve` cancel semantics, §13 hardening exercise |
 | Machine (QEMU TCG) | **CONDITIONAL** | smoke only if UML is hard-blocked by the outer container; not needed so far (UML boots) |
 | Sentry (gVisor) | **DEFERRED** | doesn't solve decisive gaps; outer-seccomp sensitivity; revisit post-stability |
 
@@ -208,6 +208,46 @@ Native/UML/Machine/Unknown candidate census.
   `KernelInstanceSupervisor` must reap `~/.uml/<id>` on abnormal exit.
 - Performance table: NOT yet measured (boot latency, exec latency, fork-heavy,
   COW create/delete, RSS) — gating item for ACCEPTED.
+
+### 12.2 Round-04 acceptance evidence (2026-09-27, same host class)
+
+All five gates named in the Kernel(UML) status row are now PASSED with
+committed, independently re-runnable evidence:
+
+1. **OCI materialization fidelity** — `spike/results/uml-oci-fidelity.json`
+   `FIDELITY_OK`: 108/108 in-guest stat checks + 5/5 runtime checks
+   (cwd/argv/uid/env/marker from the ON-DISK config). Builder never exposes
+   more than a dedicated OCI cache dir, hostfs-proven read-only.
+2. **Base+COW** — `spike/results/uml-ubd-cow.json` `COW_OK`: 28/28 isolation
+   checks across legs A/B/A2/C; base sha256 unchanged after every leg;
+   official UBD syntax. Cost measured (delete 12ms, ~12MB COW
+   initial-allocation floor/instance).
+3. **Exec/control transport** — `spike/results/uml-guest-control.json`
+   `GUEST_CONTROL_OK`: serial `ssl0=fd` framed channel (console NEVER used,
+   per §12.1); rc/cwd/argv faithful; binary-safe (300B entropy, 64KB
+   sha256-exact); mconsole recorded NOT the exec path.
+4. **Clean-cleanup confirmation** — same JSON: orderly `poweroff -f` over
+   the channel → rc=0 + `~/.uml/<umid>` self-reaped; SIGKILL → residue →
+   single supervisor `rmtree` reaps. `reboot -f` recorded NOT a power-down
+   verb on UML.
+5. **Full perf table** — `spike/results/uml-perf.json` `PERF_OK`: boot
+   (≤400ms control-initramfs, quantized 0.2s; ~1.3-1.5s with disk
+   materialization), exec RTT n=20 median 66.5ms, fork 100× 648.7ms, idle
+   RSS ~34.6MB/instance independent of mem=, density 8×64M total 276MB
+   with a 211.9ms exec RTT under contention (this-host truths).
+
+Plus `spike/results/uml-resource-semantics.json` `RESOURCE_SEMANTICS_OK`:
+mem=/cgroup/nproc semantics and their boundaries measured (see the file's
+boundary notice: guest-internal enforcement is GUEST-KERNEL truth, not a
+host guarantee); `CONFIG_MEMCG`/`CONFIG_CGROUP_PIDS`/`CONFIG_UML_NET_*`/
+`CONFIG_SLIP=m` findings land in `images/kernel/uml/` (config artifact +
+module policy, round-04 §47-48).
+
+NOT yet (honest): guest networking (kernel lacks transports), systemd
+full-init smoke, `lsguest serve` cancel semantics over a persistent guest
+(shell handler is synchronous), Native↔UML per-op differential (Native
+side belongs to the T12 harness), §13 hardening exercise. These are the
+CONDITIONS of ACCEPTED-WITH-CONDITIONS, not hidden debt.
 
 ## 13. UML security boundary (honest note)
 

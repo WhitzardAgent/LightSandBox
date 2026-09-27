@@ -1,0 +1,41 @@
+{
+ "experiment": "uml performance + density (round-04 35-36)",
+ "utc": "2026-09-27T13:39:37.935402+00:00",
+ "host_note": "numbers are THIS-HOST truths (container, shared CPU); they anchor the acceptance table shape, not absolutes",
+ "verdict": "PERF_OK",
+ "facts": {
+  "boot_latency_ms_3x": [
+   400.7,
+   400.7,
+   200.4
+  ],
+  "exec_rtt_ms_n20": {
+   "min": 55.68,
+   "median": 66.52,
+   "p95": 68.78,
+   "max": 69.73
+  },
+  "fork_100x_true_wall_ms": 648.7,
+  "idle_rss_kib_after_boot": 34640,
+  "density_8x64M_boot_all_wall_ms": 2631.6,
+  "density_8x64M_rss_kib_each": [
+   34520,
+   34524,
+   34524,
+   34532,
+   34524,
+   34524,
+   34520,
+   34520
+  ],
+  "density_8x64M_rss_kib_total": 276188,
+  "density_exec_rtt_ms_while_8_alive": 211.86,
+  "density_exec_content_ok": true,
+  "cow_cost_reference": "from spike/results/uml-ubd-cow.json (this round): delete=unlink 12ms, empty-create 1ms, a.cow allocated 46MB after 101M writes, b.cow 12.6MB after 9B write (~12MB UBD COW floor per instance)"
+ },
+ "differential_37": {
+  "uml": "facts above }",
+  "native": "NOT re-measured in this spike: Native per-op costs belong to the T-harness REAL gates (this round: cancellation 4/4 10.9s suite, lifecycle 11/11, exec 4/4 \u2014 suite-level timing, not per-op). Per-op Native latency lands with T12; the UML side of the table is ready to receive it.",
+  "status": "PARTIAL-UML-SIDE-DONE"
+ }
+}

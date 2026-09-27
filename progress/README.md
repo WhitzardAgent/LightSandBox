@@ -9,6 +9,7 @@
 |---|---|---|---|---|---|---|---|---|
 | 01 | 2026-09-24 | bc69c5c | 39200e3 | 首发宿主定位 + T00/T01/T03 + Portable Rootless feasibility + ADR 0001 | T00, T01, T03, spike(9 实验), ADR 0001 | COMPLETED | v1 backend = native rootless runc + 显式降级(ADR 0001 选项 B) | [2026-09-24-round-01.md](2026-09-24-round-01.md) |
 | 02 | 2026-09-24 | 39200e3 | 本记录提交(代码至 `5bf3792`) | T41 合同冻结 + T04 核心域 + 安全补强 + runtime spine 至 rootfs(T06/T07);T08 授权阻塞 | T00–T03 review, P2.1, seccomp spike, T41, T04, reflink/proctree 证据, T06, T07 | COMPLETED | 解包只封装 pinned umoci;FullCopy 禁 copy_file_range(offload 实测);lease+mount-audit GC;argv 保密=单信任域 | [2026-09-24-round-02.md](2026-09-24-round-02.md) |
+| 03 | 2026-09-25 | d0fbba6 | Code `f6151de` / Closeout 见 round-04 记录 | ADR 0002 能力自适应多后端 + Native spine T08/T09/T10 + UML BOOT_OK 可行性 | review(T41/T04/T06/T07)+修复, ADR 0002, T45–T49 catalog, T08, T09, T10, UML spike | PARTIAL | capability planner 纯域逻辑;PORTABLE_ROOTLESS=65534 全链;witness init 裁决真实退出;超时→Unknown 不伪造;lsguest-init 静态链接 | [2026-09-25-round-03.md](2026-09-25-round-03.md) |
 
 ## Status 词汇(只允许这四个)
 

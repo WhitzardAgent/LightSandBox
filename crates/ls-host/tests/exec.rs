@@ -248,6 +248,55 @@ fn real_world(rig: Rig, runc: &Path, init: &Path) -> RealWorld {
     }
 }
 
+
+/// Newest mtime across the guest source tree (staleness input).
+fn newest_guest_src_mtime() -> Option<std::time::SystemTime> {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../ls-guest/src");
+    let mut newest: Option<std::time::SystemTime> = None;
+    let mut stack = vec![root];
+    while let Some(d) = stack.pop() {
+        for e in std::fs::read_dir(&d).ok()?.flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                stack.push(p);
+            } else if p.extension().is_some_and(|x| x == "rs") {
+                let mt = e.metadata().ok()?.modified().ok()?;
+                if newest.is_none_or(|n| mt > n) {
+                    newest = Some(mt);
+                }
+            }
+        }
+    }
+    newest
+}
+
+/// Static-link guard: scan the ELF program headers for PT_INTERP. A
+/// dynamically linked witness silently breaks REAL evidence in minimal
+/// fixtures (libgcc_s is famously absent); refuse to run on one.
+fn lsguest_init_is_static(path: &std::path::Path) -> Option<bool> {
+    let b = std::fs::read(path).ok()?;
+    if b.len() < 64 || &b[0..4] != b"\x7fELF" {
+        return None;
+    }
+    if b[4] != 2 || b[5] != 1 {
+        return None; // fixture host is x86_64 little-endian linux
+    }
+    let phoff = u64::from_le_bytes(b[32..40].try_into().ok()?) as usize;
+    let phentsize = u16::from_le_bytes(b[54..56].try_into().ok()?) as usize;
+    let phnum = u16::from_le_bytes(b[56..58].try_into().ok()?) as usize;
+    for i in 0..phnum {
+        let off = phoff + i * phentsize;
+        if off + 4 > b.len() {
+            return None;
+        }
+        let p_type = u32::from_le_bytes(b[off..off + 4].try_into().ok()?);
+        if p_type == 3 {
+            return Some(false); // PT_INTERP present → dynamically linked
+        }
+    }
+    Some(true)
+}
+
 fn real_gate(tag: &str) -> Option<(PathBuf, PathBuf)> {
     if std::env::var("LSB_T10_REAL").ok().as_deref() != Some("1") {
         eprintln!("SKIP {tag}: set LSB_T10_REAL=1 to run the real rootless-runc exec slice");
@@ -259,6 +308,33 @@ fn real_gate(tag: &str) -> Option<(PathBuf, PathBuf)> {
         eprintln!(
             "SKIP {tag}: pinned runc ({}) or lsguest-init ({}) missing — build ls-guest first",
             runc.display(),
+            init.display()
+        );
+        return None;
+    }
+    // Freshness/runtime guards: `cargo test -p ls-guest` does NOT refresh
+    // the main bin artifact, and a bare `cargo build -p ls-guest` reverts
+    // it to a dynamic link — both failure modes burned REAL evidence runs.
+    let bin_mtime = std::fs::metadata(&init).and_then(|m| m.modified()).ok();
+    match (bin_mtime, newest_guest_src_mtime()) {
+        (Some(bm), Some(sm)) if bm < sm => {
+            eprintln!(
+                "SKIP {tag}: lsguest-init ({}) is STALE vs crates/ls-guest/src — rebuild with \
+                 RUSTFLAGS=\"-C target-feature=+crt-static\" cargo build -p ls-guest",
+                init.display()
+            );
+            return None;
+        }
+        (None, _) => {
+            eprintln!("SKIP {tag}: cannot stat lsguest-init mtime ({})", init.display());
+            return None;
+        }
+        _ => {}
+    }
+    if lsguest_init_is_static(&init) != Some(true) {
+        eprintln!(
+            "SKIP {tag}: lsguest-init ({}) is not static-pie — rebuild with \
+             RUSTFLAGS=\"-C target-feature=+crt-static\" cargo build -p ls-guest",
             init.display()
         );
         return None;

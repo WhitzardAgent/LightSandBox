@@ -483,6 +483,22 @@ pub fn parse_receipt(text: &str) -> Option<InitReceipt> {
     }
     let sandbox_id = v.get("sandbox_id")?.as_str()?.to_string();
     let child_pid = v.get("child_pid").and_then(|p| p.as_i64());
+    // v2.1: optional supervision evidence. Absent on legacy and
+    // spawn-failure receipts; malformed-when-present invalidates the whole
+    // receipt (strict parse law).
+    let supervision = match v.get("supervision") {
+        None => None,
+        Some(s) => Some(crate::runtime::backend::SupervisionInfo {
+            mode: match s.get("mode")?.as_str()? {
+                "nested_pidns" => crate::runtime::backend::SupervisionMode::NestedPidns,
+                "subreaper" => crate::runtime::backend::SupervisionMode::Subreaper,
+                "direct" => crate::runtime::backend::SupervisionMode::Direct,
+                _ => return None,
+            },
+            reaped_escapes: s.get("reaped_escapes")?.as_u64()?,
+            residual_risk: s.get("residual_risk")?.as_bool()?,
+        }),
+    };
     let t = v.get("termination")?;
     let kind = t.get("kind")?.as_str()?;
     let termination = match kind {
@@ -505,6 +521,7 @@ pub fn parse_receipt(text: &str) -> Option<InitReceipt> {
         sandbox_id,
         child_pid,
         termination,
+        supervision,
     })
 }
 
@@ -547,5 +564,30 @@ mod tests {
         // malformed never parses as success
         assert!(parse_receipt("{}").is_none());
         assert!(parse_receipt("not json").is_none());
+    }
+
+    #[test]
+    fn receipt_supervision_field_is_optional_and_strict_when_present() {
+        // legacy receipts (no supervision) keep parsing
+        let legacy = "{\"version\":1,\"sandbox_id\":\"s\",\"child_pid\":1,\
+\"termination\":{\"kind\":\"EXITED\",\"exit_code\":0},\"source\":\"init_waitpid\"}";
+        assert_eq!(parse_receipt(legacy).unwrap().supervision, None);
+        // v2.1 subreaper evidence parses exactly
+        let v21 = "{\"version\":1,\"sandbox_id\":\"s\",\"child_pid\":9,\
+\"termination\":{\"kind\":\"SIGNALED\",\"signal\":9},\"source\":\"init_waitpid\",\
+\"supervision\":{\"mode\":\"subreaper\",\"reaped_escapes\":3,\"residual_risk\":true}}";
+        let sup = parse_receipt(v21).unwrap().supervision.unwrap();
+        assert_eq!(sup.mode, crate::runtime::backend::SupervisionMode::Subreaper);
+        assert_eq!(sup.reaped_escapes, 3);
+        assert!(sup.residual_risk);
+        // present-but-malformed supervision invalidates (strict parse law)
+        let bad = "{\"version\":1,\"sandbox_id\":\"s\",\"child_pid\":9,\
+\"termination\":{\"kind\":\"EXITED\",\"exit_code\":0},\"source\":\"init_waitpid\",\
+\"supervision\":{\"mode\":\"subreaper\"}}";
+        assert!(parse_receipt(bad).is_none());
+        let unknown_mode = "{\"version\":1,\"sandbox_id\":\"s\",\"child_pid\":9,\
+\"termination\":{\"kind\":\"EXITED\",\"exit_code\":0},\"source\":\"init_waitpid\",\
+\"supervision\":{\"mode\":\"magic\",\"reaped_escapes\":0,\"residual_risk\":false}}";
+        assert!(parse_receipt(unknown_mode).is_none());
     }
 }

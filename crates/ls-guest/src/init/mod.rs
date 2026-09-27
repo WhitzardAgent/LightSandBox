@@ -208,14 +208,23 @@ pub fn decode_wait_status(raw: i32) -> Option<ObservedExit> {
 /// Render the exit receipt JSON. Field order is deterministic; values come
 /// only from the direct waitpid observation. `sandbox_id` is pre-validated
 /// to `[A-Za-z0-9_-]` so plain interpolation is injection-safe.
-pub fn render_receipt(sandbox_id: &str, child_pid: i32, exit: ObservedExit) -> String {
+pub fn render_receipt(
+    sandbox_id: &str,
+    child_pid: i32,
+    exit: ObservedExit,
+    supervision: &SupervisionReport,
+) -> String {
     let termination = match exit {
         ObservedExit::Exited(code) => format!("{{\"kind\":\"EXITED\",\"exit_code\":{code}}}"),
         ObservedExit::Signaled(sig) => format!("{{\"kind\":\"SIGNALED\",\"signal\":{sig}}}"),
     };
     format!(
         "{{\"version\":1,\"sandbox_id\":\"{sandbox_id}\",\"child_pid\":{child_pid},\
-\"termination\":{termination},\"source\":\"init_waitpid\"}}\n"
+\"termination\":{termination},\"source\":\"init_waitpid\",\
+\"supervision\":{{\"mode\":\"{}\",\"reaped_escapes\":{},\"residual_risk\":{}}}}}\n",
+        supervision.mode.as_str(),
+        supervision.reaped_escapes,
+        supervision.residual_risk
     )
 }
 
@@ -287,6 +296,7 @@ mod sys {
         pub fn kill(pid: pid_t, sig: c_int) -> c_int;
         pub fn sigaction(signum: c_int, act: *const SigAction, oldact: *mut SigAction) -> c_int;
         pub fn unshare(flags: c_int) -> c_int;
+        pub fn prctl(option: c_int, arg2: usize, arg3: usize, arg4: usize, arg5: usize) -> c_int;
         pub fn _exit(status: c_int) -> !;
         pub fn __errno_location() -> *mut c_int;
     }
@@ -298,6 +308,8 @@ mod sys {
     pub const SIGKILL: c_int = 9;
     /// linux/sched.h: children of the caller enter a fresh PID namespace.
     pub const CLONE_NEWPID: c_int = 0x2000_0000;
+    /// linux/prctl.h: orphaned descendants are adopted by THIS process.
+    pub const PR_SET_CHILD_SUBREAPER: c_int = 36;
     pub const SIGHUP: c_int = 1;
     pub const SIGINT: c_int = 2;
     pub const SIGQUIT: c_int = 3;
@@ -333,7 +345,7 @@ extern "C" fn forward_handler(sig: sys::c_int) {
 pub fn install_forward_handlers() {
     for &sig in &FORWARDED {
         let act = sys::SigAction {
-            sa_handler: forward_handler as usize,
+            sa_handler: forward_handler as *const () as usize,
             sa_mask: [0u64; 16],
             sa_flags: 0, // no SA_RESTART: waitpid must return EINTR promptly
             sa_restorer: 0, // glibc sets the restorer on the rt_sigaction path
@@ -377,33 +389,104 @@ impl RunOutcome {
     }
 }
 
+/// How this execution's progeny surface is supervised (v2.1). Receipt
+/// evidence only — attribution of kills stays host-side.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Supervision {
+    /// Nested PID namespace: the kernel wipes the whole world at kill.
+    NestedPidns,
+    /// PR_SET_CHILD_SUBREAPER adoption: escapes are reaped in the drain
+    /// window; fork-bomb survivors are reported as residual risk.
+    Subreaper,
+    /// No adoption authority on this host: post-kill escape cleanup is the
+    /// host's best-effort fallback; residual risk is reported on any kill.
+    Direct,
+}
+
+impl Supervision {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Supervision::NestedPidns => "nested_pidns",
+            Supervision::Subreaper => "subreaper",
+            Supervision::Direct => "direct",
+        }
+    }
+}
+
+/// Pure capability decision table (syscall-free, unit-testable): a
+/// requested nested namespace that the host denies degrades to subreaper,
+/// never to a fabricated spawn failure.
+pub fn supervision_mode(requested: bool, unshare_rc: i32, prctl_rc: i32) -> Supervision {
+    if requested && unshare_rc == 0 {
+        Supervision::NestedPidns
+    } else if requested && prctl_rc == 0 {
+        Supervision::Subreaper
+    } else {
+        Supervision::Direct
+    }
+}
+
+/// What the run actually supervised, reported alongside the exit truth.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SupervisionReport {
+    pub mode: Supervision,
+    /// Escape descendants reaped in the drain window (subreaper mode).
+    pub reaped_escapes: u32,
+    /// true = escape descendants may still be alive (drain window closed,
+    /// waitpid broke, or a kill was ordered without adoption authority).
+    pub residual_risk: bool,
+}
+
+/// Syscall shell around [`supervision_mode`]: attempt the nested namespace;
+/// on denial try subreaper adoption; report the chosen mode on stderr.
+fn establish_supervision(requested: bool) -> Supervision {
+    if !requested {
+        return Supervision::Direct;
+    }
+    let unshare_rc = unsafe { sys::unshare(sys::CLONE_NEWPID) };
+    if unshare_rc == 0 {
+        return Supervision::NestedPidns;
+    }
+    let err = sys::errno();
+    let prctl_rc = unsafe { sys::prctl(sys::PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0) };
+    let mode = supervision_mode(true, unshare_rc, prctl_rc);
+    match mode {
+        Supervision::NestedPidns => unreachable!("unshare_rc != 0 on this branch"),
+        Supervision::Subreaper => eprintln!(
+            "lsguest-init: nested pidns unavailable (errno {err}); subreaper supervision active"
+        ),
+        Supervision::Direct => eprintln!(
+            "lsguest-init: nested pidns unavailable (errno {err});              subreaper unavailable (errno {}); escape cleanup is best-effort",
+            sys::errno()
+        ),
+    }
+    mode
+}
+
 /// Spawn the entrypoint as a direct child (argv only — no shell), then run
 /// the reap/forward loop until the child exits. stdio inside the guest is
 /// inherited exactly as the runtime arranged it for PID 1. Returns the
 /// child pid and the outcome; the caller writes the receipt and exits.
 ///
 /// T11 v2 semantics (additive, only when the flags are present):
-/// * `nested_pidns`: `unshare(CLONE_NEWPID)` BEFORE the spawn — the payload
-///   becomes PID 1 of a fresh nested namespace. Its entire progeny (incl.
-///   doublefork/setsid escapees) lives and dies inside that namespace.
+/// * `nested_pidns`: attempt `unshare(CLONE_NEWPID)` BEFORE the spawn. v2.1
+///   degradation chain: a denied unshare (e.g. runc exec MINIMAL_CAPS drops
+///   CAP_SYS_ADMIN, observed errno 1 on the current host) is NOT a spawn
+///   failure — the witness degrades to subreaper adoption (or direct
+///   best-effort), still runs the payload, and reports the real mode in the
+///   receipt. Only pre-payload evidence that the ENTRYPOINT ITSELF could not
+///   be exec'd remains a spawn failure.
 /// * `ctrl`: the wait loop polls the cancel control file every 20 ms with
 ///   WNOHANG; a `cancel` prefix SIGKILLs OUR child (the namespace init when
 ///   nested — kernel then wipes that whole world). Receipt stays the
 ///   honest wait observation (SIGNALED 9); host-side attribution of who
 ///   ordered the kill is the host's own affair, never guessed here.
-pub fn run_child(args: &InitArgs) -> Result<(i32, RunOutcome), SpawnFailure> {
+/// * supervision (subreaper mode): a 200 ms drain window after the child is
+///   reaped adopts+reaps escape descendants; a window closing with live
+///   descendants reports residual_risk (fork-bomb truth, never hidden).
+pub fn run_child(args: &InitArgs) -> Result<(i32, RunOutcome, SupervisionReport), SpawnFailure> {
     install_forward_handlers();
-    // Nested namespace first: an unshare failure is a PRE-payload
-    // infrastructure truth — reported as spawn failure (payload never ran).
-    if args.nested_pidns {
-        let rc = unsafe { sys::unshare(sys::CLONE_NEWPID) };
-        if rc != 0 {
-            return Err(SpawnFailure {
-                argv0: args.argv[0].clone(),
-                detail: format!("unshare(CLONE_NEWPID) failed: errno {}", sys::errno()),
-            });
-        }
-    }
+    let mode = establish_supervision(args.nested_pidns);
     let child = Command::new(&args.argv[0])
         .args(&args.argv[1..])
         .spawn()
@@ -416,10 +499,30 @@ pub fn run_child(args: &InitArgs) -> Result<(i32, RunOutcome), SpawnFailure> {
     // must never also reap it; dropping without wait is the documented way.
     drop(child);
 
-    match &args.ctrl {
-        None => Ok(reap_blocking(child_pid)),
-        Some(ctrl) => Ok(reap_with_ctrl(child_pid, ctrl)),
-    }
+    let (pid, outcome, kill_sent) = match &args.ctrl {
+        None => {
+            let (p, o) = reap_blocking(child_pid);
+            (p, o, false)
+        }
+        Some(ctrl) => reap_with_ctrl(child_pid, ctrl),
+    };
+    let (reaped_escapes, residual_risk) = match mode {
+        Supervision::Subreaper => {
+            let sidecar = std::path::PathBuf::from(format!("{}.drain.log", args.receipt));
+            drain_escapes_logged(Some(&sidecar))
+        }
+        Supervision::NestedPidns => (0, false), // the kernel wipes the world
+        Supervision::Direct => (0, kill_sent), // kill without adoption: unknown tail
+    };
+    Ok((
+        pid,
+        outcome,
+        SupervisionReport {
+            mode,
+            reaped_escapes,
+            residual_risk,
+        },
+    ))
 }
 
 /// Decode the reaped status of OUR child into a RunOutcome::Child.
@@ -469,13 +572,15 @@ fn reap_blocking(child_pid: i32) -> (i32, RunOutcome) {
 
 /// T11 semantics: WNOHANG + 20 ms ctrl poll. A `cancel`-prefixed ctrl file
 /// SIGKILLs our child (idempotent: ESRCH is ignored, reap settles truth).
-fn reap_with_ctrl(child_pid: i32, ctrl: &str) -> (i32, RunOutcome) {
+/// Third tuple member: a cancel kill was ordered (drain/residual input).
+fn reap_with_ctrl(child_pid: i32, ctrl: &str) -> (i32, RunOutcome, bool) {
     let mut kill_sent = false;
     loop {
         let mut status: sys::c_int = 0;
         let reaped = unsafe { sys::waitpid(-1, &mut status, sys::WNOHANG) };
         if reaped == child_pid {
-            return child_outcome(child_pid, status);
+            let (p, o) = child_outcome(child_pid, status);
+            return (p, o, kill_sent);
         }
         if reaped > 0 {
             continue; // adopted orphan reaped; keep supervising our child
@@ -493,11 +598,13 @@ fn reap_with_ctrl(child_pid: i32, ctrl: &str) -> (i32, RunOutcome) {
                         "waitpid(-1) returned ECHILD while the entrypoint child was unseen"
                             .to_string(),
                     ),
+                    kill_sent,
                 );
             } else {
                 return (
                     child_pid,
                     RunOutcome::WaitInvariantBroken(format!("waitpid(-1) failed with errno {err}")),
+                    kill_sent,
                 );
             }
         }
@@ -516,6 +623,7 @@ fn reap_with_ctrl(child_pid: i32, ctrl: &str) -> (i32, RunOutcome) {
                                 "cancel kill({child_pid}, SIGKILL) failed: errno {}",
                                 sys::errno()
                             )),
+                            kill_sent,
                         );
                     }
                 }
@@ -524,6 +632,142 @@ fn reap_with_ctrl(child_pid: i32, ctrl: &str) -> (i32, RunOutcome) {
         }
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
+}
+
+/// Post-exit drain for the subreaper mode. Two duties, one honest report:
+/// (a) REAP adopted escape descendants as they die; (b) SIGKILL the ones
+/// still ALIVE — the execution's world is over, and under subreaper adoption
+/// the witness is the only in-guest authority that can still reach
+/// reparented escapees (a nested pidns would have let the kernel wipe them
+/// atomically; we only have adoption, so we must aim). The kill list comes
+/// from /proc/<pid>/stat's ppid field scanned for OUR pid; ESRCH on kill is
+/// a win, not an error (the child raced us into the grave and waitpid
+/// settles it). Unreadable /proc degrades to wait-only with residual risk
+/// reported. The 1 s window bounds kill+reap cycles; survivors past it are
+/// fork-bomb truth — reported, never hidden.
+fn drain_escapes() -> (u32, bool) {
+    drain_escapes_logged(None)
+}
+
+fn drain_escapes_logged(log: Option<&std::path::Path>) -> (u32, bool) {
+    let mut note = |msg: String| {
+        if let Some(p) = log {
+            use std::io::Write;
+            if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(p) {
+                let _ = writeln!(f, "{msg}");
+            }
+        }
+    };
+    const DRAIN_BUDGET: std::time::Duration = std::time::Duration::from_millis(1000);
+    const STEP: std::time::Duration = std::time::Duration::from_millis(20);
+    let me = std::process::id() as i32;
+    let start = std::time::Instant::now();
+    let mut reaped: u32 = 0;
+    note(format!(
+        "drain start: me={me} proc_faithful={}",
+        proc_is_faithful(me)
+    ));
+    loop {
+        // 1) reap everything already dead; ECHILD means a clean world.
+        loop {
+            let mut status: sys::c_int = 0;
+            let r = unsafe { sys::waitpid(-1, &mut status, sys::WNOHANG) };
+            if r > 0 {
+                reaped = reaped.saturating_add(1);
+                continue;
+            }
+            if r < 0 {
+                let err = sys::errno();
+                if err == sys::ECHILD {
+                    note(format!("drain: ECHILD clean world, reaped={reaped}"));
+                    return (reaped, false);
+                }
+                if err == sys::EINTR {
+                    continue;
+                }
+                note(format!("drain: waitpid error errno={err}, reaped={reaped}"));
+                return (reaped, true); // waitpid broken: cannot know
+            }
+            break; // r == 0: live descendants exist below us
+        }
+        if start.elapsed() >= DRAIN_BUDGET {
+            note(format!(
+                "drain budget closed: reaped={reaped}, LIVE descendants remain"
+            ));
+            return (reaped, true);
+        }
+        // 2) aim at every live adopted descendant, then let them die.
+        let landed = kill_adopted_descendants(me);
+        note(format!(
+            "drain sweep: killed={landed} reaped={reaped} elapsed_ms={}",
+            start.elapsed().as_millis()
+        ));
+        std::thread::sleep(STEP);
+    }
+}
+
+/// /proc fidelity self-check: /proc/self must describe THIS process with
+/// THIS pid. A host-rbind /proc (Native v1, ADR 0001 A1) shows the HOST
+/// process table: pid fields are foreign-namespace values and aiming by
+/// `me` would either miss or — worse — aim at a host process that happens
+/// to share the number. Untrusted /proc means wait-only + residual risk.
+fn proc_is_faithful(me: i32) -> bool {
+    let Ok(stat) = std::fs::read_to_string("/proc/self/stat") else {
+        return false;
+    };
+    let Some(open) = stat.find('(') else {
+        return false;
+    };
+    stat[..open]
+        .trim()
+        .parse::<i32>()
+        .map(|pid| pid == me)
+        .unwrap_or(false)
+}
+
+/// SIGKILL every /proc entry whose CURRENT ppid is `me` (our adopted
+/// escapees — never the whole container, never a guessed process group).
+/// The count is observational only; ESRCH is a corpse the next waitpid
+/// reaps, any other error still lands in the residual-risk accounting via
+/// the caller's window.
+fn kill_adopted_descendants(me: i32) -> u32 {
+    let mut landed = 0u32;
+    if !proc_is_faithful(me) {
+        return 0; // foreign /proc: cannot aim honestly — wait-only
+    }
+    let Ok(rd) = std::fs::read_dir("/proc") else {
+        return 0; // no /proc: no visibility — wait-only, residual risk
+    };
+    for entry in rd.flatten() {
+        let name = entry.file_name();
+        let Ok(pid) = name.to_string_lossy().parse::<i32>() else {
+            continue;
+        };
+        if pid == me {
+            continue;
+        }
+        let Ok(stat) = std::fs::read_to_string(format!("/proc/{pid}/stat")) else {
+            continue; // raced out of existence
+        };
+        // pid (comm) state ppid ... — comm may contain spaces/parens; the
+        // state+ppid pair begins after the LAST ')'.
+        let Some(close) = stat.rfind(')') else {
+            continue;
+        };
+        let mut fields = stat[close + 1..].split_whitespace();
+        let _state = fields.next();
+        let Some(ppid) = fields.next().and_then(|f| f.parse::<i32>().ok()) else {
+            continue;
+        };
+        if ppid != me {
+            continue;
+        }
+        let rc = unsafe { sys::kill(pid, sys::SIGKILL) };
+        if rc == 0 || sys::errno() == sys::ESRCH {
+            landed = landed.saturating_add(1);
+        }
+    }
+    landed
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -562,8 +806,8 @@ pub fn main_entry(argv: Vec<String>) -> i32 {
         }
     };
     match run_child(&parsed) {
-        Ok((child_pid, RunOutcome::Child(exit))) => {
-            let body = render_receipt(&parsed.sandbox_id, child_pid, exit);
+        Ok((child_pid, RunOutcome::Child(exit), supervision)) => {
+            let body = render_receipt(&parsed.sandbox_id, child_pid, exit, &supervision);
             if let Err(e) = write_receipt_atomic(&receipt_path, &body) {
                 // The wait-observation is real but persistently unrecordable;
                 // never fake a receipt. The exit code still carries truth.
@@ -574,7 +818,7 @@ pub fn main_entry(argv: Vec<String>) -> i32 {
             }
             exit.init_exit_code()
         }
-        Ok((_, RunOutcome::WaitInvariantBroken(detail))) => {
+        Ok((_, RunOutcome::WaitInvariantBroken(detail), _)) => {
             report_spawn_fail(&format!("wait invariant broken: {detail}"));
             RunOutcome::WaitInvariantBroken(detail).init_exit_code()
         }
@@ -682,15 +926,27 @@ mod tests {
         assert_eq!(ObservedExit::Signaled(9).init_exit_code(), 137);
     }
 
+    fn sup_report(mode: Supervision) -> SupervisionReport {
+        SupervisionReport {
+            mode,
+            reaped_escapes: 0,
+            residual_risk: false,
+        }
+    }
+
     #[test]
     fn receipt_rendering_is_deterministic_and_typed() {
-        let body = render_receipt("sbx_01234567", 4242, ObservedExit::Exited(7));
+        let body = render_receipt("sbx_01234567", 4242, ObservedExit::Exited(7), &sup_report(Supervision::Direct));
         assert!(body.contains("\"sandbox_id\":\"sbx_01234567\""));
         assert!(body.contains("\"child_pid\":4242"));
         assert!(body.contains("\"termination\":{\"kind\":\"EXITED\",\"exit_code\":7}"));
         assert!(body.contains("\"source\":\"init_waitpid\""));
-        let sig = render_receipt("sbx_01234567", 4242, ObservedExit::Signaled(15));
+        assert!(body.contains(
+            "\"supervision\":{\"mode\":\"direct\",\"reaped_escapes\":0,\"residual_risk\":false}"
+        ));
+        let sig = render_receipt("sbx_01234567", 4242, ObservedExit::Signaled(15), &sup_report(Supervision::Subreaper));
         assert!(sig.contains("\"termination\":{\"kind\":\"SIGNALED\",\"signal\":15}"));
+        assert!(sig.contains("\"mode\":\"subreaper\""));
         let failed = render_spawn_failed_receipt("sbx_01234567", "spawn failed: \"no such file\"\nline2");
         assert!(failed.contains("\"kind\":\"SPAWN_FAILED\""));
         assert!(failed.contains("\\\""));
@@ -706,7 +962,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let target = dir.join("sub").join("receipt.json");
-        let body = render_receipt("sbx_01234567", 1, ObservedExit::Exited(3));
+        let body = render_receipt("sbx_01234567", 1, ObservedExit::Exited(3), &sup_report(Supervision::Direct));
         write_receipt_atomic(&target, &body).unwrap();
         assert_eq!(std::fs::read_to_string(&target).unwrap(), body);
         // no tmp file lingers next to the receipt
@@ -729,6 +985,8 @@ mod tests {
                 .join(format!("lsguest-init-spawnfail-{}.json", std::process::id()))
                 .to_string_lossy()
                 .to_string(),
+            ctrl: None,
+            nested_pidns: false,
             argv: vec!["/definitely/not-present-lsguest".to_string()],
         };
         let err = run_child(&args).unwrap_err();
@@ -739,4 +997,165 @@ mod tests {
         write_receipt_atomic(Path::new(&args.receipt), &body).unwrap();
         let _ = std::fs::remove_file(&args.receipt);
     }
+
+    // T11 protocol v2: parse + ctrl kill-switch behaviour. The two
+    // child-spawning tests serialize on REAP_LOCK: waitpid(-1) is
+    // process-global and parallel tests must not eat each other's children.
+    static REAP_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    fn base_args(ctrl: Option<String>, nested: bool, argv: &[&str]) -> InitArgs {
+        InitArgs {
+            sandbox_id: "sbx_01234567".to_string(),
+            receipt: "/tmp/lsguest-test-unused-receipt.json".to_string(),
+            ctrl,
+            nested_pidns: nested,
+            argv: argv.iter().map(ToString::to_string).collect(),
+        }
+    }
+
+    #[test]
+    fn parse_v1_shape_without_new_flags_is_unchanged() {
+        let parsed = parse_args(&[
+            "--sandbox-id".into(),
+            "sbx_01234567".into(),
+            "--receipt".into(),
+            "/.lsbx/exec/e1.receipt.json".into(),
+            "--".into(),
+            "/bin/echo".into(),
+            "hi".into(),
+        ])
+        .unwrap();
+        assert_eq!(parsed.ctrl, None);
+        assert!(!parsed.nested_pidns);
+        assert_eq!(parsed.argv, vec!["/bin/echo", "hi"]);
+    }
+
+    #[test]
+    fn parse_v2_flags_and_rejects_bad_shapes() {
+        let parsed = parse_args(&[
+            "--sandbox-id".into(),
+            "sbx_01234567".into(),
+            "--receipt".into(),
+            "/.lsbx/exec/e1.receipt.json".into(),
+            "--nested-pidns".into(),
+            "--ctrl".into(),
+            "/.lsbx/exec/e1.ctrl".into(),
+            "--".into(),
+            "/bin/sleep".into(),
+            "9".into(),
+        ])
+        .unwrap();
+        assert_eq!(parsed.ctrl.as_deref(), Some("/.lsbx/exec/e1.ctrl"));
+        assert!(parsed.nested_pidns);
+        assert_eq!(parsed.argv, vec!["/bin/sleep", "9"]);
+        assert!(parse_args(&[
+            "--sandbox-id".into(),
+            "sbx_01234567".into(),
+            "--receipt".into(),
+            "/r".into(),
+            "--ctrl".into(),
+        ])
+        .is_err());
+        assert!(parse_args(&[
+            "--sandbox-id".into(),
+            "sbx_01234567".into(),
+            "--receipt".into(),
+            "/r".into(),
+            "--surprise".into(),
+            "--".into(),
+            "/bin/true".into(),
+        ])
+        .is_err());
+        assert!(parse_args(&[
+            "--sandbox-id".into(),
+            "sbx_01234567".into(),
+            "--receipt".into(),
+            "/r".into(),
+            "--ctrl".into(),
+            "relative.ctrl".into(),
+            "--".into(),
+            "/bin/true".into(),
+        ])
+        .is_err());
+    }
+
+    #[test]
+    fn ctrl_file_missing_keeps_natural_exit_observation() {
+        let _g = REAP_LOCK.lock().unwrap();
+        let args = base_args(
+            Some("/definitely/not-present-lsguest.ctrl".to_string()),
+            false,
+            &["/bin/true"],
+        );
+        let (_pid, outcome, sup) = run_child(&args).unwrap();
+        match outcome {
+            RunOutcome::Child(ObservedExit::Exited(0)) => {}
+            other => panic!("expected natural Exited(0), observed {other:?}"),
+        }
+        assert_eq!(sup.mode, Supervision::Direct, "no nested request: direct");
+        assert!(!sup.residual_risk);
+    }
+
+    #[test]
+    fn ctrl_cancel_kills_child_and_reports_signaled_not_exit() {
+        let _g = REAP_LOCK.lock().unwrap();
+        let ctrl_path = std::env::temp_dir()
+            .join(format!("lsguest-init-cancel-{}.ctrl", std::process::id()))
+            .to_string_lossy()
+            .to_string();
+        std::fs::write(&ctrl_path, "cancel\n").unwrap();
+        let args = base_args(Some(ctrl_path.clone()), false, &["/bin/sleep", "30"]);
+        let (_pid, outcome, sup) = run_child(&args).unwrap();
+        let _ = std::fs::remove_file(&ctrl_path);
+        match outcome {
+            RunOutcome::Child(ObservedExit::Signaled(9)) => {}
+            other => panic!("expected observed Signaled(9), got {other:?}"),
+        }
+        // Direct mode + ordered kill: the escape tail is honestly unknown.
+        assert_eq!(sup.mode, Supervision::Direct);
+        assert!(sup.residual_risk, "kill without adoption authority must report residual risk");
+    }
+
+    #[test]
+    fn nested_pidns_request_degrades_and_payload_runs() {
+        // v2.1 contract: a denied unshare is a DOWNGRADE, never a fabricated
+        // spawn failure. Whatever this host permits, the payload runs and the
+        // receipt names the real mode.
+        let _g = REAP_LOCK.lock().unwrap();
+        let args = base_args(None, true, &["/bin/true"]);
+        let (_pid, outcome, sup) = run_child(&args).expect("payload runs under any mode");
+        match outcome {
+            RunOutcome::Child(ObservedExit::Exited(0)) => {}
+            other => panic!("unexpected nested run outcome {other:?}"),
+        }
+        if sup.mode != Supervision::NestedPidns {
+            // denial path (rootless CI / runc exec MINIMAL_CAPS): a clean
+            // natural exit must not lie about residuals.
+            assert!(
+                !sup.residual_risk,
+                "clean exit under {:?} must not report residual risk",
+                sup.mode
+            );
+        }
+    }
+
+    #[test]
+    fn proc_fidelity_self_check_accepts_own_linux_proc() {
+        // The gate must at least accept the REAL /proc when it describes
+        // this very process (container/UML namespaces keep this true; a
+        // host-rbind /proc lying about pids is what the gate catches).
+        assert!(proc_is_faithful(std::process::id() as i32));
+        assert!(!proc_is_faithful(-1));
+    }
+
+    #[test]
+    fn supervision_mode_degrades_in_exact_order() {
+        assert_eq!(supervision_mode(false, 0, 0), Supervision::Direct);
+        assert_eq!(supervision_mode(true, 0, -1), Supervision::NestedPidns);
+        assert_eq!(supervision_mode(true, -1, 0), Supervision::Subreaper);
+        assert_eq!(supervision_mode(true, -1, -1), Supervision::Direct);
+        // denial + subreaper success degrades, never pretends isolation
+        assert_ne!(supervision_mode(true, -1, 0), Supervision::NestedPidns);
+    }
 }
+

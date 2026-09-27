@@ -49,6 +49,9 @@ use crate::runtime::backend::InitReceiptTermination;
 use crate::runtime::native::bundle::GUEST_INIT_PATH;
 use crate::runtime::native::parse_receipt;
 
+pub mod background;
+use background::{BackgroundClock, BackgroundExecPort, BackgroundStart};
+
 // ------------------------------------------------------------------ bounds
 
 /// Per-stream capture bound. Anything beyond it is drained (so the guest
@@ -279,18 +282,33 @@ impl RuncWitnessExecPort {
             .join(format!("{exec_id}.receipt.json"))
     }
 
-    /// The witness argv as the guest sees it.
-    fn witness_argv(instance: &ActiveInstance, spec: &ExecSpec, exec_id: &str) -> Vec<String> {
+    /// The witness argv as the guest sees it. Protocol-v2 flags (`extra`)
+    /// land BEFORE the `--` separator; the foreground path passes none, so
+    /// the T10 wire stays byte-identical.
+    fn witness_argv_with(
+        instance: &ActiveInstance,
+        spec: &ExecSpec,
+        exec_id: &str,
+        extra: &[String],
+    ) -> Vec<String> {
         let mut v = vec![
             GUEST_INIT_PATH.to_string(),
             "--sandbox-id".to_string(),
             instance.sandbox_id.as_str().to_string(),
             "--receipt".to_string(),
             Self::guest_receipt_path(exec_id),
-            "--".to_string(),
         ];
+        v.extend(extra.iter().cloned());
+        v.push("--".to_string());
         v.extend(spec.argv.iter().cloned());
         v
+    }
+
+    /// The witness argv as the guest sees it (T10 foreground: no extra flags).
+    /// Used only by the argv-drift regression tests.
+    #[cfg(test)]
+    fn witness_argv(instance: &ActiveInstance, spec: &ExecSpec, exec_id: &str) -> Vec<String> {
+        Self::witness_argv_with(instance, spec, exec_id, &[])
     }
 
     /// The shared segment builder — the drift-guarded mirror. Exposed as one
@@ -302,7 +320,18 @@ impl RuncWitnessExecPort {
         spec: &ExecSpec,
         exec_id: &str,
     ) -> Command {
-        let guest = Self::witness_argv(instance, spec, exec_id);
+        self.build_command_with(instance, spec, exec_id, &[])
+    }
+
+    /// The parameterized builder used by the background (protocol-v2) path.
+    fn build_command_with(
+        &self,
+        instance: &ActiveInstance,
+        spec: &ExecSpec,
+        exec_id: &str,
+        extra: &[String],
+    ) -> Command {
+        let guest = Self::witness_argv_with(instance, spec, exec_id, extra);
         let mut cmd = Command::new(&self.binary);
         cmd.arg("--root")
             .arg(&self.state_root)
@@ -318,24 +347,27 @@ impl RuncWitnessExecPort {
             .env("HOME", &self.home)
             .env("XDG_RUNTIME_DIR", &self.home)
             .stdin(Stdio::null());
-        if let Some((uid, gid)) = self.identity {
-            unsafe {
-                cmd.pre_exec(move || {
+        // Own process group FIRST, unconditionally (review F-01): a
+        // frontend timeout must be able to SIGKILL the runc CLI AND any
+        // in-container descendants it spawned (`kill -pgid`), in every
+        // identity profile — gating this on `identity.is_some()` silently
+        // broke the timeout kill-switch whenever no drop-identity was set.
+        unsafe {
+            let identity = self.identity;
+            cmd.pre_exec(move || {
+                if sys::setpgid(0, 0) != 0 {
+                    return Err(io::Error::last_os_error());
+                }
+                if let Some((uid, gid)) = identity {
                     if sys::setgid(gid) != 0 {
                         return Err(io::Error::last_os_error());
                     }
                     if sys::setuid(uid) != 0 {
                         return Err(io::Error::last_os_error());
                     }
-                    // Own process group: a frontend timeout must be able to
-                    // SIGKILL the runc CLI AND any in-container descendants
-                    // it spawned (`kill -pgid`), never just the CLI shell.
-                    if sys::setpgid(0, 0) != 0 {
-                        return Err(io::Error::last_os_error());
-                    }
-                    Ok(())
-                });
-            }
+                }
+                Ok(())
+            });
         }
         cmd
     }
@@ -415,6 +447,46 @@ impl RuncWitnessExecPort {
             // parse failure OR foreign sandbox_id: never trust it.
             _ => Ok(None),
         }
+    }
+
+    /// Receipt → ExitTruth with the CLI cross-check (T10 law, verbatim).
+    /// Shared by the foreground tail and the T11 background finish path.
+    fn truth_from_receipt(
+        &self,
+        cli_exit: Option<i32>,
+        receipt: &crate::runtime::backend::InitReceipt,
+        receipt_text: &str,
+    ) -> Result<ExitTruth, DomainError> {
+        let expected: i32 = match &receipt.termination {
+            InitReceiptTermination::Exited { exit_code } => (exit_code & 0xff) as i32,
+            InitReceiptTermination::Signaled { signal } => 128 + (signal & 0x7f) as i32,
+            InitReceiptTermination::SpawnFailed { .. } => 127,
+            InitReceiptTermination::WaitInvariantBroken { .. } => {
+                return Err(DomainError::new(
+                    ErrorCode::InternalFailure,
+                    "witness receipt reports a broken wait invariant",
+                ))
+            }
+        };
+        if let Some(c) = cli_exit {
+            if c != expected {
+                return Err(DomainError::new(
+                    ErrorCode::InternalFailure,
+                    format!(
+                        "witness/CLI disagreement: runc exit {c} but receipt implies {expected} (receipt: {receipt_text})"
+                    ),
+                ));
+            }
+        }
+        Ok(match &receipt.termination {
+            InitReceiptTermination::Exited { exit_code } => ExitTruth::Exited(*exit_code as i32),
+            InitReceiptTermination::Signaled { signal } => ExitTruth::Signaled(*signal as u32),
+            InitReceiptTermination::SpawnFailed { detail } => ExitTruth::SpawnFailed {
+                detail: detail.clone(),
+                source: TruthSource::WitnessReceipt,
+            },
+            InitReceiptTermination::WaitInvariantBroken { .. } => unreachable!(),
+        })
     }
 }
 
@@ -538,37 +610,7 @@ impl ExecPort for RuncWitnessExecPort {
         };
 
         // 6) cross-check CLI code against receipt-implied init code.
-        let expected: i32 = match &receipt.termination {
-            InitReceiptTermination::Exited { exit_code } => (exit_code & 0xff) as i32,
-            InitReceiptTermination::Signaled { signal } => 128 + (signal & 0x7f) as i32,
-            InitReceiptTermination::SpawnFailed { .. } => 127,
-            InitReceiptTermination::WaitInvariantBroken { .. } => {
-                return Err(DomainError::new(
-                    ErrorCode::InternalFailure,
-                    "witness receipt reports a broken wait invariant",
-                ))
-            }
-        };
-        if let Some(c) = cli_exit {
-            if c != expected {
-                return Err(DomainError::new(
-                    ErrorCode::InternalFailure,
-                    format!(
-                        "witness/CLI disagreement: runc exit {c} but receipt implies {expected} (receipt: {receipt_text})"
-                    ),
-                ));
-            }
-        }
-
-        let truth = match receipt.termination {
-            InitReceiptTermination::Exited { exit_code } => ExitTruth::Exited(exit_code as i32),
-            InitReceiptTermination::Signaled { signal } => ExitTruth::Signaled(signal as u32),
-            InitReceiptTermination::SpawnFailed { detail } => ExitTruth::SpawnFailed {
-                detail,
-                source: TruthSource::WitnessReceipt,
-            },
-            InitReceiptTermination::WaitInvariantBroken { .. } => unreachable!(),
-        };
+        let truth = self.truth_from_receipt(cli_exit, &receipt, &receipt_text)?;
         Ok(ExecOutcome {
             truth,
             output,
@@ -608,6 +650,32 @@ struct Registration {
     execution: Execution,
     outcome: Option<ExecOutcome>,
     backend_error: Option<String>,
+    /// T11 background only: cancel-attribution flag shared with the
+    /// supervising waiter thread. The witness receipt stays the exit truth;
+    /// this flag only selects Cancelled vs natural attribution.
+    cancel: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    /// T11 background only: terminal-publication gate for `wait_execution`.
+    bg_gate: Option<std::sync::Arc<(Mutex<bool>, std::sync::Condvar)>>,
+    /// T11 background only: host rootfs for the ctrl kill-switch write.
+    ctrl_rootfs: Option<PathBuf>,
+}
+
+/// Identity-decision result of the shared front-door gate (T10 foreground
+/// and T11 background use the identical idempotency law).
+enum MintOutcome {
+    Replay(StartOutcome),
+    Fresh { key: String, exec_id: ExecutionId },
+}
+
+/// What kind of registration the gate mints. Foreground registrations carry
+/// no T11 extras; the wire-visible behavior is unchanged.
+enum MintMode {
+    Foreground,
+    Background {
+        cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        gate: std::sync::Arc<(Mutex<bool>, std::sync::Condvar)>,
+        rootfs: PathBuf,
+    },
 }
 
 #[derive(Default)]
@@ -622,7 +690,10 @@ struct Registry {
 /// rather than double-firing the effect.
 pub struct ExecService<P: ExecPort> {
     port: P,
-    reg: Mutex<Registry>,
+    /// Arc-shared so a T11 supervising waiter thread can publish terminals
+    /// after the request thread returned. All mutating paths still funnel
+    /// through this one lock.
+    reg: std::sync::Arc<Mutex<Registry>>,
     seq: std::sync::atomic::AtomicU64,
 }
 
@@ -630,7 +701,7 @@ impl<P: ExecPort> ExecService<P> {
     pub fn new(port: P) -> Self {
         ExecService {
             port,
-            reg: Mutex::new(Registry::default()),
+            reg: std::sync::Arc::new(Mutex::new(Registry::default())),
             seq: std::sync::atomic::AtomicU64::new(0),
         }
     }
@@ -688,16 +759,21 @@ impl<P: ExecPort> ExecService<P> {
         }
     }
 
-    /// The one front door (spec §幂等与超时).
-    pub fn start_execution(
+    /// Shared identity gate for both execution doors (T10 foreground, T11
+    /// background): request-shape validation, capability honesty, scope +
+    /// digest from the CANONICAL body, and the one-lock identity decision.
+    /// A fresh mint plants the placeholder BEFORE any effect, so a
+    /// concurrent replay observes `starting` and can never double-fire.
+    fn gate_and_mint(
         &self,
         principal: &OwnerId,
         instance: &ActiveInstance,
         operation_key: &str,
-        spec: ExecSpec,
-    ) -> Result<StartOutcome, DomainError> {
+        spec: &ExecSpec,
+        mode: MintMode,
+    ) -> Result<MintOutcome, DomainError> {
         // 1) request-shape validation — before any identity exists.
-        validate_exec_spec(&spec)?;
+        validate_exec_spec(spec)?;
 
         // 2) capability honesty: a rootless single-id userns cannot honor a
         //    non-root exec user. Refuse BEFORE minting; replays refuse the
@@ -724,67 +800,68 @@ impl<P: ExecPort> ExecService<P> {
             instance.sandbox_id.as_str(),
             operation_key,
         )?;
-        let digest = request_digest(&canonical_body(&spec))?;
+        let digest = request_digest(&canonical_body(spec))?;
         let key = Self::scope_key(&scope)?;
 
-        // 4) identity decision under the single lock. Fresh mints a
-        //    placeholder BEFORE any effect — a concurrent replay observes
-        //    `starting` and can never double-fire.
-        let exec_id = {
-            let mut reg = self.reg.lock().expect("exec registry poisoned");
-            let existing = reg.by_scope.get(&key).map(|r| &r.record);
-            match decide(existing, &scope, &digest)? {
-                ReplayDecision::Replay { result_ref } => {
-                    let r = reg.by_scope.get(&key).expect("replay row");
-                    debug_assert_eq!(r.execution.id().as_str(), result_ref);
-                    return Ok(StartOutcome {
-                        view: Self::view_of(r, true),
-                        outcome: r.outcome.clone(),
-                    });
-                }
-                ReplayDecision::Fresh => {
-                    let exec_id = self.mint_exec_id()?;
-                    // binding-only record: the Fencing/Manager binding lives
-                    // in the lifecycle manager; Execution requires one.
-                    let rec =
-                        SandboxRecord::active(instance.sandbox_id.clone(), principal.clone());
-                    let binding = ls_core::domain::access::ExecutionBinding::new(
-                        exec_id.clone(),
-                        &rec,
-                    );
-                    let mut execution = Execution::new(exec_id.clone(), binding);
-                    execution.transition(ExecutionState::Starting)?;
-                    reg.by_scope.insert(
-                        key.clone(),
-                        Registration {
-                            record: IdempotencyRecord {
-                                scope: scope.clone(),
-                                request_digest: digest.clone(),
-                                result_ref: exec_id.as_str().to_string(),
-                            },
-                            execution,
-                            outcome: None,
-                            backend_error: None,
-                        },
-                    );
-                    reg.by_exec.insert(exec_id.as_str().to_string(), key.clone());
-                    exec_id
-                }
-            }
-        };
-
-        // 5) the effect — strictly outside the lock.
-        let effect: Result<ExecOutcome, DomainError> = self.port.exec(
-            exec_id.as_str(),
-            instance,
-            &spec,
-        );
-
-        // 6) fold observed truth into the domain state machine; park the
-        //    outcome. Domain errors here are internal by construction (the
-        //    placeholder is always `starting` at this point).
+        // 4) identity decision under the single lock.
         let mut reg = self.reg.lock().expect("exec registry poisoned");
-        let r = reg.by_scope.get_mut(&key).expect("fresh row");
+        let existing = reg.by_scope.get(&key).map(|r| &r.record);
+        match decide(existing, &scope, &digest)? {
+            ReplayDecision::Replay { result_ref } => {
+                let r = reg.by_scope.get(&key).expect("replay row");
+                debug_assert_eq!(r.execution.id().as_str(), result_ref);
+                Ok(MintOutcome::Replay(StartOutcome {
+                    view: Self::view_of(r, true),
+                    outcome: r.outcome.clone(),
+                }))
+            }
+            ReplayDecision::Fresh => {
+                let exec_id = self.mint_exec_id()?;
+                // binding-only record: the Fencing/Manager binding lives
+                // in the lifecycle manager; Execution requires one.
+                let rec = SandboxRecord::active(instance.sandbox_id.clone(), principal.clone());
+                let binding =
+                    ls_core::domain::access::ExecutionBinding::new(exec_id.clone(), &rec);
+                let mut execution = Execution::new(exec_id.clone(), binding);
+                execution.transition(ExecutionState::Starting)?;
+                let (cancel, bg_gate, ctrl_rootfs) = match mode {
+                    MintMode::Foreground => (None, None, None),
+                    MintMode::Background {
+                        cancel,
+                        gate,
+                        rootfs,
+                    } => (Some(cancel), Some(gate), Some(rootfs)),
+                };
+                reg.by_scope.insert(
+                    key.clone(),
+                    Registration {
+                        record: IdempotencyRecord {
+                            scope: scope.clone(),
+                            request_digest: digest.clone(),
+                            result_ref: exec_id.as_str().to_string(),
+                        },
+                        execution,
+                        outcome: None,
+                        backend_error: None,
+                        cancel,
+                        bg_gate,
+                        ctrl_rootfs,
+                    },
+                );
+                reg.by_exec.insert(exec_id.as_str().to_string(), key.clone());
+                Ok(MintOutcome::Fresh { key, exec_id })
+            }
+        }
+    }
+
+    /// Fold observed truth into the domain state machine; park the outcome.
+    /// Domain errors here are internal by construction (the placeholder is
+    /// always `starting` at this point). This is the T10 law, verbatim, and
+    /// the foreground door's only fold path.
+    fn fold_outcome(
+        r: &mut Registration,
+        effect: Result<ExecOutcome, DomainError>,
+    ) -> Result<(), DomainError> {
         match effect {
             Ok(outcome) => {
                 match &outcome.truth {
@@ -820,10 +897,188 @@ impl<P: ExecPort> ExecService<P> {
                 r.backend_error = Some(format!("{e}"));
             }
         }
+        Ok(())
+    }
+
+    /// The one front door (spec §幂等与超时).
+    pub fn start_execution(
+        &self,
+        principal: &OwnerId,
+        instance: &ActiveInstance,
+        operation_key: &str,
+        spec: ExecSpec,
+    ) -> Result<StartOutcome, DomainError> {
+        let (key, exec_id) =
+            match self.gate_and_mint(principal, instance, operation_key, &spec, MintMode::Foreground)? {
+                MintOutcome::Replay(outcome) => return Ok(outcome),
+                MintOutcome::Fresh { key, exec_id } => (key, exec_id),
+            };
+
+        // 5) the effect — strictly outside the lock.
+        let effect: Result<ExecOutcome, DomainError> =
+            self.port.exec(exec_id.as_str(), instance, &spec);
+
+        // 6) fold observed truth into the domain state machine; park the outcome.
+        let mut reg = self.reg.lock().expect("exec registry poisoned");
+        let r = reg.by_scope.get_mut(&key).expect("fresh row");
+        Self::fold_outcome(r, effect)?;
         Ok(StartOutcome {
             view: Self::view_of(r, false),
             outcome: r.outcome.clone(),
         })
+    }
+
+    /// T11 — cancel a background execution. Response law (card C04 +
+    /// spec semantics table):
+    /// * unknown id / foreign principal                → NotFound
+    /// * a FOREGROUND execution                        → Conflict (its only
+    ///   horizon is the caller's own timeout)
+    /// * already terminal, attributed Cancelled        → Ok (idempotent)
+    /// * already terminal, any other outcome           → Conflict (a cancel
+    ///   request must never overwrite a terminal record)
+    /// * cancel already requested, still in flight     → Ok (idempotent)
+    /// * fresh cancel while running                    → flag + kill-switch
+    ///   write; the process continues until observed terminal by the
+    ///   supervising waiter thread.
+    ///
+    /// Cancel never *declares* a kill: it arms the attribution flag and the
+    /// witness's kill switch. The exit record still comes from the real
+    /// waitpid path; a lost witness degrades to unknown, not to a faked
+    /// exit. A cancel write failure is logged (stderr), and the background
+    /// budget horizon still bounds the execution.
+    pub fn cancel_execution(
+        &self,
+        principal: &OwnerId,
+        execution_id: &ExecutionId,
+    ) -> Result<StartOutcome, DomainError> {
+        let mut reg = self.reg.lock().expect("exec registry poisoned");
+        let Some(key) = reg.by_exec.get(execution_id.as_str()).cloned() else {
+            return Err(DomainError::new(
+                ErrorCode::NotFound,
+                format!("execution {execution_id:?} not found"),
+            ));
+        };
+        let r = reg.by_scope.get_mut(&key).expect("by_exec backlink");
+        if r.record.scope.principal != *principal {
+            return Err(DomainError::new(
+                ErrorCode::NotFound,
+                format!("execution {execution_id:?} not found"),
+            ));
+        }
+        if r.bg_gate.is_none() {
+            return Err(DomainError::new(
+                ErrorCode::Conflict,
+                "foreground executions are not separately cancellable: their horizon is the caller-side timeout",
+            ));
+        }
+        if r.execution.state().is_terminal() {
+            if r.execution.termination() == TerminationReason::Cancelled {
+                // idempotent repeated cancel of a cancelled execution
+                return Ok(StartOutcome {
+                    view: Self::view_of(r, true),
+                    outcome: r.outcome.clone(),
+                });
+            }
+            return Err(DomainError::new(
+                ErrorCode::Conflict,
+                format!(
+                    "execution {} is already terminal; a late cancel cannot overwrite the observed result",
+                    execution_id.as_str()
+                ),
+            ));
+        }
+        let flag = r.cancel.clone().expect("bg registration has cancel flag");
+        if flag.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            // cancel already armed; kill switch already (attempted) written.
+            return Ok(StartOutcome {
+                view: Self::view_of(r, true),
+                outcome: r.outcome.clone(),
+            });
+        }
+        if let Some(rootfs) = &r.ctrl_rootfs {
+            background::fire_cancel(&background::host_ctrl_path(
+                rootfs,
+                execution_id.as_str(),
+            ));
+        }
+        Ok(StartOutcome {
+            view: Self::view_of(r, true),
+            outcome: r.outcome.clone(),
+        })
+    }
+
+    /// T11 — block until the execution is terminal or `budget` expires.
+    /// Expiry is NOT an error and NOT a cancellation: the caller simply gets
+    /// the still-running view. Unknown ids stay NotFound. Foreground
+    /// executions are terminal by the time they are visible, so their view
+    /// returns immediately.
+    pub fn wait_execution(
+        &self,
+        principal: &OwnerId,
+        execution_id: &ExecutionId,
+        budget: Duration,
+    ) -> Result<StartOutcome, DomainError> {
+        let deadline = Instant::now() + budget;
+        loop {
+            let (gate, current) = {
+                let reg = self.reg.lock().expect("exec registry poisoned");
+                let Some(key) = reg.by_exec.get(execution_id.as_str()) else {
+                    return Err(DomainError::new(
+                        ErrorCode::NotFound,
+                        format!("execution {execution_id:?} not found"),
+                    ));
+                };
+                let r = reg.by_scope.get(key).expect("by_exec backlink");
+                if r.record.scope.principal != *principal {
+                    return Err(DomainError::new(
+                        ErrorCode::NotFound,
+                        format!("execution {execution_id:?} not found"),
+                    ));
+                }
+                if r.execution.state().is_terminal() {
+                    return Ok(StartOutcome {
+                        view: Self::view_of(r, false),
+                        outcome: r.outcome.clone(),
+                    });
+                }
+                let Some(gate) = r.bg_gate.clone() else {
+                    // foreground placeholder still folding; spin briefly via
+                    // the same gate-less path by returning the live view.
+                    return Ok(StartOutcome {
+                        view: Self::view_of(r, false),
+                        outcome: r.outcome.clone(),
+                    });
+                };
+                (gate, ())
+            };
+            let _ = current;
+            let (m, cv) = &*gate;
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                let reg = self.reg.lock().expect("exec registry poisoned");
+                let key = reg.by_exec.get(execution_id.as_str()).expect("still registered");
+                let r = reg.by_scope.get(key).expect("by_exec backlink");
+                return Ok(StartOutcome {
+                    view: Self::view_of(r, false),
+                    outcome: r.outcome.clone(),
+                });
+            }
+            let mut published = m.lock().expect("bg gate poisoned");
+            while !*published {
+                let step = deadline.saturating_duration_since(Instant::now());
+                if step.is_zero() {
+                    break;
+                }
+                let (guard, _) = cv
+                    .wait_timeout(published, step)
+                    .expect("bg gate poisoned");
+                published = guard;
+            }
+            drop(published);
+            // publish_background folds the terminal under the registry lock
+            // BEFORE setting the gate flag; re-entering the loop now always
+            // observes the terminal state (or the budget finally expired).
+        }
     }
 
     /// Inspect by execution identity. A principal mismatch is deliberately
@@ -851,6 +1106,233 @@ impl<P: ExecPort> ExecService<P> {
             view: Self::view_of(r, false),
             outcome: r.outcome.clone(),
         })
+    }
+}
+
+// ------------------------------------------------------- background (T11)
+
+impl<P: BackgroundExecPort + 'static> ExecService<P> {
+    /// T11 background door: register under the SAME idempotency law, spawn
+    /// the supervised witness chain (nested pidns + ctrl kill-switch), and
+    /// hand reaping to a supervising waiter thread. Returns as soon as the
+    /// chain is up (Running) with `outcome: None`; the terminal is observed
+    /// via `wait_execution` / `get_execution` / `cancel_execution`.
+    ///
+    /// `budget` is the background horizon that replaces the caller-side
+    /// foreground timeout as the kill deadline (capped at MAX_TIMEOUT_MS).
+    /// Cancellation mid-flight is expressed via `cancel_execution`.
+    pub fn start_background_execution(
+        self: &std::sync::Arc<Self>,
+        principal: &OwnerId,
+        instance: &ActiveInstance,
+        operation_key: &str,
+        spec: ExecSpec,
+        budget: Duration,
+    ) -> Result<StartOutcome, DomainError> {
+        if budget.is_zero() || budget > Duration::from_millis(MAX_TIMEOUT_MS) {
+            return Err(DomainError::invalid(format!(
+                "background budget must be 1ms..={MAX_TIMEOUT_MS}ms"
+            )));
+        }
+        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let gate = std::sync::Arc::new((Mutex::new(false), std::sync::Condvar::new()));
+        let (key, exec_id) = match self.gate_and_mint(
+            principal,
+            instance,
+            operation_key,
+            &spec,
+            MintMode::Background {
+                cancel: cancel.clone(),
+                gate: gate.clone(),
+                rootfs: instance.rootfs.clone(),
+            },
+        )? {
+            MintOutcome::Replay(outcome) => return Ok(outcome),
+            MintOutcome::Fresh { key, exec_id } => (key, exec_id),
+        };
+
+        // spawn the supervised chain — strictly outside the lock.
+        match self.port.spawn_background(exec_id.as_str(), instance, &spec) {
+            Err(e) => {
+                // Infra-level spawn failure: fail_start + backend_error,
+                // identical law to the foreground effect error.
+                self.publish_background(&key, Err(e))?;
+                let reg = self.reg.lock().expect("exec registry poisoned");
+                let r = reg.by_scope.get(&key).expect("fresh row");
+                Ok(StartOutcome {
+                    view: Self::view_of(r, false),
+                    outcome: r.outcome.clone(),
+                })
+            }
+            Ok(BackgroundStart::PrecheckFailed(outcome)) => {
+                // Host precheck truth: SpawnFailed, no chain ever existed.
+                self.publish_background(&key, Ok((outcome, BackgroundClock::default())))?;
+                let reg = self.reg.lock().expect("exec registry poisoned");
+                let r = reg.by_scope.get(&key).expect("fresh row");
+                Ok(StartOutcome {
+                    view: Self::view_of(r, false),
+                    outcome: r.outcome.clone(),
+                })
+            }
+            Ok(BackgroundStart::Spawned(spawn)) => {
+                {
+                    let mut reg = self.reg.lock().expect("exec registry poisoned");
+                    let r = reg.by_scope.get_mut(&key).expect("fresh row");
+                    r.execution.transition(ExecutionState::Running)?;
+                }
+                let svc = std::sync::Arc::clone(self);
+                let waiter_key = key.clone();
+                let waiter_exec_id = exec_id.clone();
+                let waiter_instance = instance.clone();
+                thread::spawn(move || {
+                    let effect = svc.port.finish_background(
+                        spawn,
+                        waiter_exec_id.as_str(),
+                        &waiter_instance,
+                        budget,
+                        &cancel,
+                    );
+                    if let Err(e) = svc.publish_background(&waiter_key, effect) {
+                        // An unpublishable terminal is an internal protocol
+                        // break: log loudly; the registration stays
+                        // non-terminal rather than lying.
+                        eprintln!("ls-host: background publish failed for key {waiter_key}: {e}");
+                    }
+                });
+                let reg = self.reg.lock().expect("exec registry poisoned");
+                let r = reg.by_scope.get(&key).expect("fresh row");
+                Ok(StartOutcome {
+                    view: Self::view_of(r, false),
+                    outcome: None,
+                })
+            }
+        }
+    }
+
+    /// The supervising waiter thread's terminal publication: fold the
+    /// observed truth (with T11 attribution), then open the wait gate.
+    fn publish_background(
+        &self,
+        key: &str,
+        effect: Result<(ExecOutcome, BackgroundClock), DomainError>,
+    ) -> Result<(), DomainError> {
+        let gate = {
+            let mut reg = self.reg.lock().expect("exec registry poisoned");
+            let r = reg.by_scope.get_mut(key).expect("background row");
+            Self::fold_background_outcome(r, effect)?;
+            r.bg_gate.clone()
+        };
+        if let Some(gate) = gate {
+            let (m, cv) = &*gate;
+            let mut published = m.lock().expect("bg gate poisoned");
+            *published = true;
+            cv.notify_all();
+        }
+        Ok(())
+    }
+
+    /// T11 attribution law (see exec::background module docs): the observed
+    /// wait truth is folded EXACTLY as the foreground path folds it; the
+    /// termination dimension is additionally marked from host-side facts:
+    /// deadline fired → Timeout; cancel flag + kill-compatible truth
+    /// (Signaled / lost evidence) → Cancelled; a natural observed exit that
+    /// beat a racing cancel keeps NO termination mark. mark_termination's
+    /// set-once law makes Timeout-after-Cancelled (or vice versa) a logged
+    /// conflict on the ALREADY terminal record — never an overwrite.
+    fn fold_background_outcome(
+        r: &mut Registration,
+        effect: Result<(ExecOutcome, BackgroundClock), DomainError>,
+    ) -> Result<(), DomainError> {
+        // The door transitions Starting→Running once the chain is spawned;
+        // the fold may observe either state. Running-only truths are
+        // promoted exactly once, mirroring the foreground fold law.
+        let promote = |r: &mut Registration| -> Result<(), DomainError> {
+            if r.execution.state() == ExecutionState::Starting {
+                r.execution.transition(ExecutionState::Running)?;
+            }
+            Ok(())
+        };
+        let (outcome, clock) = match effect {
+            Ok(pair) => pair,
+            Err(e) => {
+                // Infra-level wait failure: pre-spawn this is a start
+                // failure; after spawn the evidence is lost → unknown. Both
+                // terminal, neither fabricated.
+                if r.execution.state() == ExecutionState::Starting {
+                    r.execution.fail_start()?;
+                } else {
+                    r.execution.finish_unknown()?;
+                }
+                r.backend_error = Some(format!("{e}"));
+                return Ok(());
+            }
+        };
+        let cancel_hit = r
+            .cancel
+            .as_ref()
+            .map(|f| background::cancel_requested(f))
+            .unwrap_or(false);
+        let attribution = if clock.deadline_fired {
+            Some(TerminationReason::Timeout)
+        } else if cancel_hit
+            && matches!(
+                &outcome.truth,
+                ExitTruth::Signaled(_) | ExitTruth::WitnessLost { .. } | ExitTruth::TimedOut { .. }
+            )
+        {
+            Some(TerminationReason::Cancelled)
+        } else {
+            None
+        };
+        let mark = |r: &mut Registration| {
+            if let Some(reason) = attribution {
+                if let Err(e) = r.execution.mark_termination(reason) {
+                    eprintln!("ls-host: termination attribution conflict kept observed record: {e}");
+                }
+            }
+        };
+        match &outcome.truth {
+            ExitTruth::Exited(code) => {
+                promote(r)?;
+                mark(r);
+                r.execution.finish_exited(*code)?;
+            }
+            ExitTruth::Signaled(sig) => {
+                promote(r)?;
+                mark(r);
+                r.execution.finish_signaled(*sig)?;
+            }
+            ExitTruth::SpawnFailed { detail, source } => {
+                if r.execution.state() == ExecutionState::Starting {
+                    r.execution.fail_start()?;
+                } else {
+                    // Frozen table law: running → start-failed is an illegal
+                    // edge. A pre-payload failure observed AFTER the Running
+                    // placeholder means the placeholder raced the evidence,
+                    // not that a running payload vanished. Keep the observed
+                    // truth in `outcome`, settle Unknown (the on-disk receipt
+                    // is the reconcile_unknown path back to StartFailed), and
+                    // log loudly. Never publish an illegal transition.
+                    eprintln!(
+                        "ls-host: SpawnFailed arrived after Running promote \
+                         ({source:?}: {detail}); settling Unknown pending reconcile"
+                    );
+                    r.execution.finish_unknown()?;
+                }
+            }
+            ExitTruth::TimedOut { .. } => {
+                promote(r)?;
+                mark(r);
+                r.execution.finish_unknown()?;
+            }
+            ExitTruth::WitnessLost { .. } => {
+                promote(r)?;
+                mark(r);
+                r.execution.finish_unknown()?;
+            }
+        }
+        r.outcome = Some(outcome);
+        Ok(())
     }
 }
 
@@ -1478,5 +1960,503 @@ mod tests {
         let ref_env: Vec<(&OsStr, Option<&OsStr>)> = reference.get_envs().collect();
         let our_env: Vec<(&OsStr, Option<&OsStr>)> = ours.get_envs().collect();
         assert_eq!(our_env, ref_env, "env discipline drift");
+    }
+
+    // ------------------------------------------------- background (T11)
+
+    use super::background::BackgroundSpawn;
+
+    /// Scripted background port: spawn produces a REAL decoy sleeper (so
+    /// BackgroundSpawn is construction-honest and always reaped), finish
+    /// consumes scripted outcomes, optionally gated so the test can
+    /// interleave cancel_execution with the in-flight wait.
+    struct FakeBgPort {
+        spawn_calls: AtomicUsize,
+        fail_next_spawn: std::sync::atomic::AtomicBool,
+        finishes: std::sync::Mutex<
+            VecDeque<(
+                Result<(ExecOutcome, BackgroundClock), DomainError>,
+                Option<mpsc::Receiver<()>>,
+            )>,
+        >,
+    }
+
+    impl FakeBgPort {
+        fn new() -> Self {
+            FakeBgPort {
+                spawn_calls: AtomicUsize::new(0),
+                fail_next_spawn: std::sync::atomic::AtomicBool::new(false),
+                finishes: std::sync::Mutex::new(VecDeque::new()),
+            }
+        }
+
+        fn push(
+            &self,
+            truth: ExitTruth,
+            clock: BackgroundClock,
+            gate: Option<mpsc::Receiver<()>>,
+        ) {
+            self.finishes.lock().unwrap().push_back((
+                Ok((
+                    ExecOutcome {
+                        truth,
+                        output: ExecOutput::default(),
+                        wall: Duration::from_millis(1),
+                        cli_exit: Some(0),
+                        receipt_text: None,
+                    },
+                    clock,
+                )),
+                gate,
+            ));
+        }
+    }
+
+    impl ExecPort for FakeBgPort {
+        fn exec(
+            &self,
+            _exec_id: &str,
+            _instance: &ActiveInstance,
+            _spec: &ExecSpec,
+        ) -> Result<ExecOutcome, DomainError> {
+            panic!("background tests never enter the foreground door");
+        }
+    }
+
+    impl BackgroundExecPort for FakeBgPort {
+        fn spawn_background(
+            &self,
+            exec_id: &str,
+            instance: &ActiveInstance,
+            _spec: &ExecSpec,
+        ) -> Result<BackgroundStart, DomainError> {
+            self.spawn_calls.fetch_add(1, Ordering::SeqCst);
+            if self.fail_next_spawn.swap(false, Ordering::SeqCst) {
+                return Err(DomainError::new(
+                    ErrorCode::InternalFailure,
+                    "scripted spawn failure",
+                ));
+            }
+            let mut child = Command::new("/bin/sleep")
+                .arg("30")
+                .stdin(Stdio::null())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("decoy sleeper spawns");
+            let pid = child.id() as i32;
+            let stdout_t = RuncWitnessExecPort::capture_pipe(child.stdout.take().unwrap());
+            let stderr_t = RuncWitnessExecPort::capture_pipe(child.stderr.take().unwrap());
+            Ok(BackgroundStart::Spawned(BackgroundSpawn {
+                child,
+                pid,
+                stdout_t,
+                stderr_t,
+                started: Instant::now(),
+                ctrl_host: super::background::host_ctrl_path(&instance.rootfs, exec_id),
+            }))
+        }
+
+        fn finish_background(
+            &self,
+            mut spawn: BackgroundSpawn,
+            _exec_id: &str,
+            _instance: &ActiveInstance,
+            _budget: Duration,
+            _cancel: &std::sync::atomic::AtomicBool,
+        ) -> Result<(ExecOutcome, BackgroundClock), DomainError> {
+            let (effect, gate) = self
+                .finishes
+                .lock()
+                .unwrap()
+                .pop_front()
+                .expect("scripted finish available");
+            if let Some(rx) = gate {
+                rx.recv().ok();
+            }
+            // The decoy is never the subject; reap it so no orphan survives.
+            let _ = spawn.child.kill();
+            let _ = spawn.child.wait();
+            let _ = spawn.stdout_t.join();
+            let _ = spawn.stderr_t.join();
+            effect
+        }
+    }
+
+    fn bg_svc(port: FakeBgPort) -> Arc<ExecService<FakeBgPort>> {
+        Arc::new(ExecService::new(port))
+    }
+
+    #[test]
+    fn bg_spawn_failed_after_promote_settles_unknown_and_keeps_truth() {
+        // The Running placeholder (chain spawned) can race a witness
+        // SPAWN_FAILED: the frozen table forbids running→start-failed, so
+        // the fold must settle Unknown with the observed truth preserved in
+        // the outcome (the on-disk receipt is the reconcile path back).
+        let rootfs = tmp_rootfs("bg-sf-late");
+        let port = FakeBgPort::new();
+        port.push(
+            ExitTruth::SpawnFailed {
+                detail: "cannot spawn entrypoint: ENOENT".to_string(),
+                source: TruthSource::WitnessReceipt,
+            },
+            BackgroundClock::default(),
+            None,
+        );
+        let svc = bg_svc(port);
+        let out = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/nope"]),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        assert_eq!(out.view.state, ExecutionState::Running);
+        let eid = out.view.execution_id.clone();
+        let done = svc
+            .wait_execution(&owner(), &eid, Duration::from_secs(5))
+            .unwrap();
+        assert_eq!(done.view.state, ExecutionState::Unknown);
+        let truth = &done.outcome.as_ref().expect("outcome kept").truth;
+        assert!(matches!(
+            truth,
+            ExitTruth::SpawnFailed {
+                source: TruthSource::WitnessReceipt,
+                ..
+            }
+        ));
+        // replay of the same key returns the settled view, no respawn
+        let again = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/nope"]),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        assert!(again.view.replayed);
+        assert_eq!(again.view.state, ExecutionState::Unknown);
+        let _ = std::fs::remove_dir_all(&rootfs);
+    }
+
+    #[test]
+    fn bg_cancel_midway_marks_cancelled_with_observed_signal() {
+        let rootfs = tmp_rootfs("bg-cancel");
+        // the ctrl dir exists in production (port precreates); fake writes
+        // land best-effort — create it so fire_cancel observably succeeds.
+        std::fs::create_dir_all(rootfs.join(".lsbx/exec")).unwrap();
+        let port = FakeBgPort::new();
+        let (tx, rx) = mpsc::channel();
+        port.push(ExitTruth::Signaled(9), BackgroundClock::default(), Some(rx));
+        let svc = bg_svc(port);
+        let out = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/bin/long"]),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        assert_eq!(out.view.state, ExecutionState::Running);
+        assert!(out.outcome.is_none());
+        let eid = out.view.execution_id.clone();
+        // cancel while in flight: arms the flag, writes the kill switch.
+        let c = svc.cancel_execution(&owner(), &eid).unwrap();
+        assert_eq!(c.view.state, ExecutionState::Running);
+        assert!(std::fs::read_to_string(super::background::host_ctrl_path(&rootfs, eid.as_str()))
+            .unwrap()
+            .starts_with("cancel"));
+        // idempotent while in flight
+        let c2 = svc.cancel_execution(&owner(), &eid).unwrap();
+        assert!(c2.view.replayed);
+        tx.send(()).unwrap();
+        let done = svc
+            .wait_execution(&owner(), &eid, Duration::from_secs(5))
+            .unwrap();
+        assert_eq!(done.view.state, ExecutionState::Exited);
+        assert_eq!(
+            done.view.exit_record,
+            Some(ExitRecord::Signaled { signal: 9 })
+        );
+        assert_eq!(done.view.termination, TerminationReason::Cancelled);
+        // repeated cancel after cancelled-terminal: idempotent, same view
+        let again = svc.cancel_execution(&owner(), &eid).unwrap();
+        assert_eq!(again.view.termination, TerminationReason::Cancelled);
+        let got = svc.get_execution(&owner(), &eid).unwrap();
+        assert_eq!(got.view.termination, TerminationReason::Cancelled);
+    }
+
+    #[test]
+    fn bg_cancel_after_natural_terminal_conflicts_and_record_stands() {
+        let rootfs = tmp_rootfs("bg-late");
+        let port = FakeBgPort::new();
+        port.push(ExitTruth::Exited(0), BackgroundClock::default(), None);
+        let svc = bg_svc(port);
+        let out = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/bin/quick"]),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        let eid = out.view.execution_id.clone();
+        let done = svc
+            .wait_execution(&owner(), &eid, Duration::from_secs(5))
+            .unwrap();
+        assert_eq!(done.view.state, ExecutionState::Exited);
+        assert_eq!(done.view.termination, TerminationReason::None);
+        let err = svc.cancel_execution(&owner(), &eid).unwrap_err();
+        assert_eq!(err.code, ErrorCode::Conflict, "{err}");
+        let got = svc.get_execution(&owner(), &eid).unwrap();
+        assert_eq!(
+            got.view.exit_record,
+            Some(ExitRecord::Exited { exit_code: 0 })
+        );
+        assert_eq!(got.view.termination, TerminationReason::None);
+    }
+
+    #[test]
+    fn bg_natural_exit_beats_racing_cancel_no_termination_mark() {
+        let rootfs = tmp_rootfs("bg-race");
+        let port = FakeBgPort::new();
+        let (tx, rx) = mpsc::channel();
+        port.push(ExitTruth::Exited(0), BackgroundClock::default(), Some(rx));
+        let svc = bg_svc(port);
+        let out = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/bin/race"]),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        let eid = out.view.execution_id.clone();
+        svc.cancel_execution(&owner(), &eid).unwrap();
+        tx.send(()).unwrap();
+        let done = svc
+            .wait_execution(&owner(), &eid, Duration::from_secs(5))
+            .unwrap();
+        // the kill demonstrably lost the race: observed natural exit stands,
+        // NO Cancelled mark (spec card C04: terminal state must be stable).
+        assert_eq!(
+            done.view.exit_record,
+            Some(ExitRecord::Exited { exit_code: 0 })
+        );
+        assert_eq!(done.view.termination, TerminationReason::None);
+        let err = svc.cancel_execution(&owner(), &eid).unwrap_err();
+        assert_eq!(err.code, ErrorCode::Conflict);
+    }
+
+    #[test]
+    fn bg_witness_lost_after_cancel_is_cancelled_unknown_never_retried() {
+        let rootfs = tmp_rootfs("bg-lost");
+        let port = FakeBgPort::new();
+        let (tx, rx) = mpsc::channel();
+        port.push(
+            ExitTruth::WitnessLost { cli_exit: None },
+            BackgroundClock::default(),
+            Some(rx),
+        );
+        let svc = bg_svc(port);
+        let out = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/bin/lost"]),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        let eid = out.view.execution_id.clone();
+        svc.cancel_execution(&owner(), &eid).unwrap();
+        tx.send(()).unwrap();
+        let done = svc
+            .wait_execution(&owner(), &eid, Duration::from_secs(5))
+            .unwrap();
+        assert_eq!(done.view.state, ExecutionState::Unknown);
+        assert_eq!(done.view.exit_record, Some(ExitRecord::Unknown));
+        assert_eq!(done.view.termination, TerminationReason::Cancelled);
+        // idempotent cancel replay of a cancelled-unknown execution
+        let again = svc.cancel_execution(&owner(), &eid).unwrap();
+        assert_eq!(again.view.termination, TerminationReason::Cancelled);
+    }
+
+    #[test]
+    fn bg_deadline_attribution_beats_racing_cancel() {
+        let rootfs = tmp_rootfs("bg-deadline");
+        let port = FakeBgPort::new();
+        let (tx, rx) = mpsc::channel();
+        port.push(
+            ExitTruth::Signaled(9),
+            BackgroundClock {
+                deadline_fired: true,
+            },
+            Some(rx),
+        );
+        let svc = bg_svc(port);
+        let out = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/bin/slow"]),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        let eid = out.view.execution_id.clone();
+        svc.cancel_execution(&owner(), &eid).unwrap();
+        tx.send(()).unwrap();
+        let done = svc
+            .wait_execution(&owner(), &eid, Duration::from_secs(5))
+            .unwrap();
+        assert_eq!(
+            done.view.exit_record,
+            Some(ExitRecord::Signaled { signal: 9 })
+        );
+        // outer policy horizon beats a racing cancel (set-once law)
+        assert_eq!(done.view.termination, TerminationReason::Timeout);
+    }
+
+    #[test]
+    fn bg_wait_budget_expiry_returns_running_and_never_cancels() {
+        let rootfs = tmp_rootfs("bg-wait");
+        let port = FakeBgPort::new();
+        let (tx, rx) = mpsc::channel();
+        port.push(ExitTruth::Exited(9), BackgroundClock::default(), Some(rx));
+        let svc = bg_svc(port);
+        let out = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/bin/calm"]),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        let eid = out.view.execution_id.clone();
+        let early = svc
+            .wait_execution(&owner(), &eid, Duration::from_millis(30))
+            .unwrap();
+        assert_eq!(early.view.state, ExecutionState::Running);
+        assert!(early.outcome.is_none());
+        tx.send(()).unwrap();
+        let done = svc
+            .wait_execution(&owner(), &eid, Duration::from_secs(5))
+            .unwrap();
+        assert_eq!(
+            done.view.exit_record,
+            Some(ExitRecord::Exited { exit_code: 9 })
+        );
+        assert_eq!(done.view.termination, TerminationReason::None);
+    }
+
+    #[test]
+    fn bg_replay_never_double_spawns_and_conflicts_on_digest_mismatch() {
+        let rootfs = tmp_rootfs("bg-idem");
+        let port = FakeBgPort::new();
+        let (tx, rx) = mpsc::channel();
+        port.push(ExitTruth::Exited(0), BackgroundClock::default(), Some(rx));
+        let svc = bg_svc(port);
+        let s = spec(&["/bin/slow"]);
+        let a = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                s.clone(),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        let b = svc
+            .start_background_execution(&owner(), &inst(&rootfs), "K", s, Duration::from_secs(60))
+            .unwrap();
+        assert_eq!(a.view.execution_id, b.view.execution_id);
+        assert!(b.view.replayed);
+        assert_eq!(svc.port.spawn_calls.load(Ordering::SeqCst), 1);
+        let err = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/bin/other"]),
+                Duration::from_secs(60),
+            )
+            .unwrap_err();
+        assert_eq!(err.code, ErrorCode::Conflict);
+        // budget validation
+        assert!(svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "B0",
+                spec(&["/bin/x"]),
+                Duration::ZERO,
+            )
+            .is_err());
+        assert!(svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "B1",
+                spec(&["/bin/x"]),
+                Duration::from_millis(MAX_TIMEOUT_MS + 1),
+            )
+            .is_err());
+        tx.send(()).unwrap();
+        let _ = svc.wait_execution(&owner(), &a.view.execution_id, Duration::from_secs(5));
+    }
+
+    #[test]
+    fn bg_spawn_failure_is_start_failed_and_terminal() {
+        let rootfs = tmp_rootfs("bg-spawnfail");
+        let port = FakeBgPort::new();
+        port.fail_next_spawn.store(true, Ordering::SeqCst);
+        let svc = bg_svc(port);
+        let out = svc
+            .start_background_execution(
+                &owner(),
+                &inst(&rootfs),
+                "K",
+                spec(&["/bin/x"]),
+                Duration::from_secs(60),
+            )
+            .unwrap();
+        assert_eq!(out.view.state, ExecutionState::StartFailed);
+        assert!(out.view.backend_error.is_some());
+        let got = svc
+            .wait_execution(&owner(), &out.view.execution_id, Duration::from_secs(1))
+            .unwrap();
+        assert_eq!(got.view.state, ExecutionState::StartFailed);
+    }
+
+    #[test]
+    fn fg_cancel_conflicts_and_unknown_ids_are_not_found() {
+        let rootfs = tmp_rootfs("fg-cancel");
+        let svc = ExecService::new(FakePort::new(vec![]));
+        let out = svc
+            .start_execution(&owner(), &inst(&rootfs), "K", spec(&["/bin/x"]))
+            .unwrap();
+        let err = svc
+            .cancel_execution(&owner(), &out.view.execution_id)
+            .unwrap_err();
+        assert_eq!(err.code, ErrorCode::Conflict, "{err}");
+        let ghost = ExecutionId::new("exec-ghost").unwrap();
+        assert_eq!(
+            svc.cancel_execution(&owner(), &ghost).unwrap_err().code,
+            ErrorCode::NotFound
+        );
+        assert_eq!(
+            svc.wait_execution(&owner(), &ghost, Duration::from_millis(1))
+                .unwrap_err()
+                .code,
+            ErrorCode::NotFound
+        );
     }
 }

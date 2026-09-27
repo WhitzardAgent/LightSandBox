@@ -120,6 +120,29 @@ pub struct InitReceipt {
     pub sandbox_id: String,
     pub child_pid: Option<i64>,
     pub termination: InitReceiptTermination,
+    /// T11 v2.1 witness evidence: which supervision mode actually ran and
+    /// how the escape surface ended. None for legacy/pre-v2.1 receipts and
+    /// for spawn-failure receipts (no supervision decision ever mattered).
+    pub supervision: Option<SupervisionInfo>,
+}
+
+/// Mirror of the guest init's supervision report (receipt evidence, not a
+/// domain input): kills are attributed host-side; this only records what
+/// the witness observed about its own progeny surface.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SupervisionInfo {
+    pub mode: SupervisionMode,
+    pub reaped_escapes: u64,
+    /// true = escape descendants may still be alive after the drain window
+    /// (or a kill without adoption authority). Never hidden.
+    pub residual_risk: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SupervisionMode {
+    NestedPidns,
+    Subreaper,
+    Direct,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

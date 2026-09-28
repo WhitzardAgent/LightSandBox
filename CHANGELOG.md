@@ -1,12 +1,57 @@
-# v5 修订摘要
+# Changelog
 
-## 2026-09-24 宿主能力分层修订
+All notable changes to this project are recorded here.
+
+Versioning scheme: this project uses **0.x development versions** until the
+release gates are met — public API stability, native **and** kernel backends,
+CLI/SDK, and documentation (see
+[docs/open-source-readiness.md](docs/open-source-readiness.md); the gate
+itself is `python3 tools/packctl.py release-check`). Until then there are no
+versioned releases; `[Unreleased]` accumulates changes on the main branch.
+
+## [Unreleased]
+
+### Added
+
+- Log streaming unit layer (task T12).
+- Guest protocol v1 implementation for the ls-guest serve mode (in progress).
+- Public documentation set under `docs/development/` (setup, testing,
+  codebase map, backend authoring, repository security).
+- Contributor and security policies: `CONTRIBUTING.md`, `SECURITY.md`.
+- Open-source readiness tracker: `docs/open-source-readiness.md`.
+- GitHub issue templates (bug, feature request, compatibility report) and a
+  pull request checklist.
+
+### Changed
+
+- Resource-semantics retest executed against kernel candidate-2; results are
+  recorded as raw evidence under `evidence/`.
+- This changelog was restructured into Keep-a-Changelog-style sections; the
+  prior design-pack notes are preserved below.
+
+### Fixed
+
+- None recorded yet.
+
+### Security
+
+- Security policy published with a private reporting channel, scope
+  definition, and current response targets (`SECURITY.md`).
+
+## Historical design-pack notes (pre-release)
+
+The notes below predate the changelog structure and are kept verbatim for
+audit. They describe design revisions, not shipped releases.
+
+### v5 修订摘要
+
+#### 2026-09-24 宿主能力分层修订
 
 - 引入 `HostCapabilityTier`（PORTABLE_ROOTLESS/FULL_ROOTLESS/ROOTFUL)，首发宿主假设为无root/无sudo的单ID userns主机；rootful降为未来可选backend。
 - 区分 Benchmark Task Parity 与 General Docker Semantic Parity;PORTABLE_ROOTLESS 只承诺前者,依赖多UID/硬cgroup/特权挂载的任务按能力依赖入台账。
 - 逐能力状态(SUPPORTED/DEGRADED/UNSUPPORTED/NOT_TESTED)绑定证据命令与退出码;UID/GID降级必须显式走SingleIdCompatibilityPolicy,禁止静默flatten。
 
-## 首批修订
+#### 首批修订
 
 - 原生EnvironmentSpec移除verifier/reward/agent；Harbor保留原Trial和Verifier。
 - CLI统一lsbx；exec提交与execution管理分组，SDK同步/异步共用请求合同。

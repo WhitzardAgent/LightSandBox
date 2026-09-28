@@ -1,0 +1,52 @@
+name: Feature request
+description: Propose new functionality or a deliberate change to existing behavior.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        LightSandbox works through a task catalog and frozen contracts —
+        feature requests are most useful when they name the problem and the
+        contract area they touch. Architecture-level changes will need an ADR
+        (`docs/adr/`).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What limitation or use case motivates this?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What should happen instead? Include API/CLI/SDK surface if relevant.
+    validations:
+      required: true
+  - type: input
+    id: task-card
+    attributes:
+      label: Related task card (if any)
+      description: e.g. T12 from plans/tasks/. Leave empty if none.
+    validations:
+      required: false
+  - type: dropdown
+    id: touches-contract
+    attributes:
+      label: Does this touch frozen contracts or shared lockfiles?
+      options:
+        - "No"
+        - "Yes — contracts/v1"
+        - "Yes — specs/ or lockfiles"
+        - "Unsure"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

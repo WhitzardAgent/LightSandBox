@@ -1,0 +1,91 @@
+name: Compatibility report
+description: Report a host/image/backend combination that behaves differently than expected.
+title: "[Compat]: "
+labels: [compatibility]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Compatibility claims are only as good as their raw data — exact
+        commands, exit codes, and logs make the difference between an
+        actionable report and a guess. Fill every field you can answer;
+        answer "unknown" where you cannot.
+  - type: dropdown
+    id: host-kind
+    attributes:
+      label: Host kind
+      options:
+        - VM
+        - VM-like container
+        - Unknown
+    validations:
+      required: true
+  - type: input
+    id: kernel
+    attributes:
+      label: Kernel
+      description: Full output of `uname -a` on the host.
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      options:
+        - native
+        - kernel
+        - auto
+        - unknown
+    validations:
+      required: true
+  - type: dropdown
+    id: privilege-tier
+    attributes:
+      label: Host privilege tier (if known)
+      description: From a real host probe, not an assumption.
+      options:
+        - portable-rootless (PORTABLE_ROOTLESS)
+        - full-rootless (FULL_ROOTLESS)
+        - rootful (ROOTFUL)
+        - unknown
+    validations:
+      required: true
+  - type: input
+    id: image-digest
+    attributes:
+      label: Image digest
+      description: The sha256 digest of the image involved, if any.
+    validations:
+      required: false
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command(s)
+      description: Full command lines, including flags and environment that matter.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and exit codes
+      description: Raw output and numeric exit codes.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Host probe report, capability states observed, related task card id, etc.

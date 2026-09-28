@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a defect in the CLI, SDK, reference clients, contracts, or test harness.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For **security vulnerabilities** do not use
+        this form — follow [SECURITY.md](https://github.com/WhitzardAgent/LightSandBox/blob/main/SECURITY.md)
+        instead.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - CLI (tools/lsbx.py)
+        - Python SDK / reference client (client/python)
+        - Dev helpers (python/)
+        - Test harness (dev/check)
+        - Contracts (contracts/v1)
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the exact error text where available.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal sequence that shows the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command(s) and exit code(s)
+      description: Copy the full command line and the numeric exit code. The harness treats raw exit codes as evidence; so do we.
+      placeholder: |
+        $ ./dev/check fast
+        (exit 1)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / output
+      render: text
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, python3 --version, rustc --version (should be the pinned 1.98.1), commit.
+      placeholder: |
+        macOS 14 / Ubuntu 22.04
+        Python 3.12.4, rustc 1.98.1, commit abc1234
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

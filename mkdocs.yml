@@ -1,0 +1,72 @@
+site_name: LightSandbox
+site_description: Lightweight, rootless-first sandbox runtime for coding and agent workloads
+repo_url: https://github.com/WhitzardAgent/LightSandBox
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - tables
+  - fenced_code
+  - toc:
+      permalink: true
+
+# Internal design documents (docs/v5, docs/adr, progress/, plans/) are
+# intentionally excluded: they remain repository-internal.
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - getting-started/installation.md
+      - getting-started/quickstart.md
+      - getting-started/first-sandbox.md
+  - Concepts:
+      - concepts/architecture.md
+      - concepts/backends.md
+      - concepts/capabilities.md
+      - concepts/security-model.md
+      - concepts/design-tradeoffs.md
+  - Tutorials:
+      - tutorials/run-a-sandbox.md
+      - tutorials/native-backend.md
+      - tutorials/kernel-backend.md
+      - tutorials/custom-image.md
+      - tutorials/backend-selection.md
+      - tutorials/harbor.md
+  - Reference:
+      - reference/compatibility.md
+      - reference/capability-matrix.md
+      - reference/cli.md
+      - reference/python-sdk.md
+      - reference/configuration.md
+      - reference/errors.md
+  - Development:
+      - development/setup.md
+      - development/testing.md
+      - development/codebase-map.md
+      - development/adding-a-backend.md
+      - development/repository-security.md
+  - Open-source readiness: open-source-readiness.md
+
+# Repository-internal design documents are kept out of the published site.
+exclude_docs: |
+  v5/
+  adr/
+  design/
+  acceptance/
+  engineering/
+  harbor/
+  harness/
+  research/
+  security/
+  requirements-docs.txt
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn

@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Development setup
+    url: https://github.com/WhitzardAgent/LightSandBox/blob/main/docs/development/setup.md
+    about: Toolchain pins and first commands before filing environment issues.
+  - name: Testing guide
+    url: https://github.com/WhitzardAgent/LightSandBox/blob/main/docs/development/testing.md
+    about: Suite map, exit codes, and what BLOCKED actually means.
+  - name: Security policy
+    url: https://github.com/WhitzardAgent/LightSandBox/blob/main/SECURITY.md
+    about: Report vulnerabilities privately — not in public issues.

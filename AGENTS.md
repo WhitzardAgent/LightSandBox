@@ -24,5 +24,9 @@ No host mutation or privileged runtime testing without an authorized worker. No 
 `python3 dev/check_native.py`
 `python3 dev/check_seeds.py`
 `python3 -m unittest discover -s tests/pack -v`
+`./dev/check docs` (mkdocs strict + link/snippet/generated-docs guards)
+`./dev/check examples` (runnable example suites; zero-collected = failure)
+
+External docs (README, `docs/getting-started|concepts|tutorials|reference|development`) are product interface: no internal task IDs, no commands that cannot actually run, statuses synced with real evidence.
 
 Current tests are reference/pack checks. Product tests and release require independent protected CI and real runtime evidence. Handoff via launch/CONTINUE.md and plans/templates/.

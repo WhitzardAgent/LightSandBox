@@ -13,10 +13,21 @@ versioned releases; `[Unreleased]` accumulates changes on the main branch.
 
 ### Added
 
-- Log streaming unit layer (task T12).
-- Guest protocol v1 implementation for the ls-guest serve mode (in progress).
-- Public documentation set under `docs/development/` (setup, testing,
-  codebase map, backend authoring, repository security).
+- Log streaming unit layer (bounded spool, SSE frame encoding; runtime
+  layer pending worker).
+- `lsguest serve` guest control agent: LSGP protocol v1 (framed, binary-safe,
+  fail-closed), one active exec + async control plane, cancel/timeout,
+  zero dependencies; unit-verified on unix (Linux/musl gate on CI/worker).
+- Public documentation set: rewritten English README, getting-started,
+  concepts (incl. security model, design trade-offs), tutorials,
+  reference (CLI, Python SDK, errors, capability matrix, compatibility),
+  and `docs/development/` (setup, testing, codebase map, backend authoring,
+  repository security) — published via MkDocs Material, built `--strict`.
+- Runnable examples: `examples/hello|python|coding-workspace|custom-image|
+  capability-routing`, each covered by `./dev/check examples`.
+- Verification suites: `./dev/check docs` (mkdocs strict build, markdown
+  link and bash-snippet guards, generated-docs drift checks) and
+  `./dev/check examples`; CI jobs for both.
 - Contributor and security policies: `CONTRIBUTING.md`, `SECURITY.md`.
 - Open-source readiness tracker: `docs/open-source-readiness.md`.
 - GitHub issue templates (bug, feature request, compatibility report) and a
@@ -24,8 +35,10 @@ versioned releases; `[Unreleased]` accumulates changes on the main branch.
 
 ### Changed
 
-- Resource-semantics retest executed against kernel candidate-2; results are
-  recorded as raw evidence under `evidence/`.
+- Resource-semantics retest executed against kernel candidate-2 (verdict
+  `RESOURCE_SEMANTICS_MISMATCH` 15/4: guest memory hard limit proven;
+  cpu/pids enforcement unproven; results in
+  `spike/results/uml-resource-semantics-candidate2.json`).
 - This changelog was restructured into Keep-a-Changelog-style sections; the
   prior design-pack notes are preserved below.
 

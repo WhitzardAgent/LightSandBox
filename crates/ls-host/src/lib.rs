@@ -7,12 +7,20 @@
 //! and image-config conversion, plans/tasks/T06.md.
 //! T08 adds the runtime slice (`runtime`): the create/inspect/execute/delete
 //! minimal API over a real runc backend, plans/tasks/T08.md.
+//! T13 adds `sessions`: the pure persistent-shell session state machine,
+//! plans/tasks/T13.md.
+//! T14 adds `pty` + `broker`: the PTY core vocabulary (refs, typed control
+//! frames, fd-accounting guard) and the pure broker ownership/attach model,
+//! plans/tasks/T14.md.
 
+pub mod broker;
 pub mod exec;
 pub mod images;
+pub mod pty;
 pub mod resources;
 pub mod rootfs;
 pub mod runtime;
+pub mod sessions;
 pub mod streams;
 
 pub mod probe {

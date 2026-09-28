@@ -4,9 +4,13 @@
 //! and the CLI/SDK. No server, no mounts, no host-path access.
 //! T08 adds `lifecycle`: the create/inspect/execute/delete wire vocabulary
 //! shared by CLI/SDK and the T08 runtime slice.
+//! T13 adds `sessions`: the persistent-shell wire vocabulary (create_session,
+//! run_in_session, session refs, and the control/payload frame split),
+//! plans/tasks/T13.md.
 
 pub mod commands;
 pub mod lifecycle;
+pub mod sessions;
 pub mod streams;
 
 pub mod errors {

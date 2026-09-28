@@ -4,8 +4,7 @@ Runnable reference examples. Everything here runs offline against the
 reference client and the frozen contracts — **no sandbox server ships in this
 repository**, so every request preview carries `executed: false` from the real
 CLI. Status "planning" means: real client/contract logic, stopping before any
-daemon call. Five runnable examples (round-05 cap), two pre-existing fixture
-trees.
+daemon call. Five runnable examples, two pre-existing fixture trees.
 
 ## Runnable examples
 

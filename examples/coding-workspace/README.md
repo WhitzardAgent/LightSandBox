@@ -2,10 +2,9 @@
 
 A coding-task-shaped workload: a tiny git-less source tree with a failing
 test, staged the way the native API would receive it — an offline environment
-plan plus a dry-run exec request for the verifier command. Adapted from the
-round-05 "coding workspace" goal: the original goal (edit code in a sandbox
-and run the tests there) requires a live runtime, so this example stops at a
-validated plan and honestly says so.
+plan plus a dry-run exec request for the verifier command. The guiding goal
+(edit code in a sandbox and run the tests there) requires a live runtime, so
+this example stops at a validated plan and honestly says so.
 
 **Planning level: runtime execution requires a runtime worker — not yet
 available.** Nothing in this example runs the workload; no test is executed

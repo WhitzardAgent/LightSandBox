@@ -46,7 +46,7 @@ Legend: ✓ supported / proven · L limited or degraded (contract-visible) · �
 | Prebuilt OCI images | ✓ | Digest-pinned references; materialization per backend |
 | Dockerfile → image builds | Planned | Isolated BuildKit worker; not available today |
 | Idle-agent launch mode | ✓ contract | Client + contract support; runtime wiring in development |
-| PTY | Planned | |
+| PTY | WIP | Unit core + design freeze complete (single-broker master ownership, RAII FD ledger, typed control frames); runtime legs worker-gated |
 | Log streaming | WIP | Framing unit-tested; runtime layer blocked |
 | Harbor environments | Planned | See `tutorials/harbor.md` |
 | OpenSandbox-compatible API | Planned | Adapter into native v1 |

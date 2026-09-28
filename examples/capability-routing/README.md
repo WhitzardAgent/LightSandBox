@@ -2,15 +2,16 @@
 
 Shows how declared requirements route to a runtime backend under the ADR 0002
 capability-adaptive architecture, with every rule cited back to the frozen
-contract files. This is the round-05 tested planning example for capability
-routing: it exercises the real rule data, not a paraphrase.
+contract files. This is a tested planning example: it exercises the real rule
+data, not a paraphrase.
 
-**Planning level until the runtime backend work (catalog task T49, with the
-contract-surface evolution under T45) ships.** The selector demonstrated here
-is a small honest simulation in this directory; the production selection is
-`plan()` in `crates/ls-core/src/domain/backend.rs`, reachable only through an
-API server that this repository does not ship. No sandbox is created and no
-backend is started.
+**Planning level: this example demonstrates selection logic only — the
+runtime backend it plans for is still in development and ships no server
+yet.** The selector demonstrated here is a small honest simulation in this
+directory; the production selection is `plan()` in
+`crates/ls-core/src/domain/backend.rs`, reachable only through an API server
+that this repository does not ship. No sandbox is created and no backend is
+started.
 
 ## Run
 

@@ -37,7 +37,7 @@ python3 tools/lsbx.py --json sandbox create --dry-run --image example.invalid/ap
 python3 tools/lsbx.py --json exec sb_demo --generation 1 --dry-run -- echo hello
 ```
 
-Without `--dry-run`, client commands issue real HTTP requests to a compatible daemon over `unix:///run/lightsandbox/api.sock` and fail today with `TRANSPORT_ERROR: cannot reach sandbox API`, because this package provides no server. The [quickstart](docs/getting-started/quickstart.md) walks through each command with expected output.
+Without `--dry-run`, client commands issue real HTTP requests to a compatible daemon over `unix:///run/lightsandbox/api.sock` and fail today, because this package provides no server — read requests (GET) surface `TRANSPORT_ERROR: cannot reach sandbox API`, while mutating requests (POST/DELETE) surface `REQUEST_OUTCOME_UNKNOWN`, since a lost response leaves the request's outcome uncertain. The [quickstart](docs/getting-started/quickstart.md) walks through each command with expected output.
 
 ## Backends
 
@@ -62,7 +62,7 @@ The planner tries Native first (lower overhead) and escalates to Kernel only whe
 | Guest workloads: memory hard limit | ✓ Proven in guest (guest cgroup, measured) |
 | Guest workloads: cpu / pids hard limits | Unproven (kernel candidate in progress) |
 | Host-enforced sandbox hard limits | Unsupported on portable-rootless hosts (no cgroup delegation) |
-| PTY | Planned |
+| PTY | WIP (unit core + design freeze; runtime legs worker-gated) |
 | Dockerfile builds | Planned (prebuilt OCI images only today) |
 | Harbor provider | Planned |
 | OpenSandbox-compatible API | Planned |

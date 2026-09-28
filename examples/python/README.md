@@ -1,10 +1,9 @@
 # python — reference client typed surface (planning level)
 
 A walk through the reference client's typed building blocks, ending with an
-offline environment plan for the checked-in `environment.json`. Adapted from
-the round-05 "Python example" goal: the original goal (drive a live sandbox
-from Python) is reduced honestly to what exists today — the typed client
-surface and the offline planner.
+offline environment plan for the checked-in `environment.json`. The guiding
+goal (drive a live sandbox from Python) is reduced honestly to what exists
+today — the typed client surface and the offline planner.
 
 **Planning level, not a running sandbox.** No sandbox server ships in this
 repository. The script uses the real reference contracts

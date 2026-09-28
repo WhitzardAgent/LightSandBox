@@ -71,6 +71,6 @@ The repo gates verify the pinned toolchain before running crate tests (`dev/chec
 | `python3 tools/lsbx.py version` | Prints client/contract versions locally; no network |
 | `python3 tools/lsbx.py --json env plan --file examples/native/environment.json` | Offline environment planning: validates a spec and emits a `plan_digest` with `execution_ready: false` |
 | `python3 tools/lsbx.py --json sandbox create --dry-run ...` | Prints the exact HTTP request shape with `executed: false` |
-| any non-`--dry-run` client command | Performs real HTTP to a compatible daemon — fails today (`TRANSPORT_ERROR`), because no server ships in this repo |
+| any non-`--dry-run` client command | Performs real HTTP to a compatible daemon — fails today because no server ships in this repo: reads with `TRANSPORT_ERROR`, mutations with `REQUEST_OUTCOME_UNKNOWN` (see [error codes](../reference/errors.md)) |
 
 Next: the [quickstart](quickstart.md) walks each command with expected output, and [first sandbox](first-sandbox.md) explains the end-to-end flow the runtime will provide.

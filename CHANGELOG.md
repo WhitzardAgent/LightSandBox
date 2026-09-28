@@ -32,6 +32,18 @@ versioned releases; `[Unreleased]` accumulates changes on the main branch.
 - Open-source readiness tracker: `docs/open-source-readiness.md`.
 - GitHub issue templates (bug, feature request, compatibility report) and a
   pull request checklist.
+- Persistent interactive sessions unit layer: strict session wire vocabulary
+  in ls-api (control frames and output chunks non-interconvertible) + pure
+  session state machine in ls-host; runtime legs blocked pending an
+  authorized worker.
+- PTY unit core and design freeze: a single broker owns the PTY master, an
+  RAII FD ledger guarantees exactly-once release, typed
+  resize/window/half-close frames; runtime legs blocked pending an
+  authorized worker.
+- Benchmark enumeration: measured task inventories at locked revisions
+  (SWE-bench full/lite/verified 2294/300/500, CyberGym 1507, Terminal-Bench
+  66) with manifest, feature census, and a `tests/inventory` suite wired
+  into `./dev/check fast`.
 
 ### Changed
 

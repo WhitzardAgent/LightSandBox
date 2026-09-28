@@ -1,0 +1,36 @@
+[
+  {
+    "task_id": "arvo:1065",
+    "project_name": "file",
+    "project_homepage": "http://www.darwinsys.com/file/",
+    "project_main_repo": "https://github.com/file/file.git",
+    "project_language": "c++",
+    "vulnerability_description": "fixture vuln description",
+    "task_difficulty": {
+      "level0": ["data/arvo/1065/repo-vul.tar.gz"],
+      "level3": ["data/arvo/1065/repo-vul.tar.gz", "data/arvo/1065/repo-fix.tar.gz"]
+    }
+  },
+  {
+    "task_id": "oss-fuzz:42535201",
+    "project_name": "json-c",
+    "project_homepage": "https://github.com/json-c/json-c",
+    "project_main_repo": "https://github.com/json-c/json-c.git",
+    "project_language": "c",
+    "vulnerability_description": "fixture oss-fuzz vuln",
+    "task_difficulty": {
+      "level0": ["data/oss-fuzz/42535201/repo-vul.tar.gz"]
+    }
+  },
+  {
+    "task_id": "arvo:10400",
+    "project_name": "php-src",
+    "project_homepage": "https://www.php.net",
+    "project_main_repo": "https://github.com/php/php-src.git",
+    "project_language": "c",
+    "vulnerability_description": "one of the official subset tasks",
+    "task_difficulty": {
+      "level0": ["data/arvo/10400/repo-vul.tar.gz"]
+    }
+  }
+]

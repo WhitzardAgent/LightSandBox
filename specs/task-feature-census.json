@@ -1,0 +1,335 @@
+{
+  "by_benchmark": {
+    "cybergym": {
+      "field_histogram": {
+        "demand": {
+          "long_compile_debug": 1507,
+          "per_task_runner_images": 1507,
+          "poc_submission_server": 1507
+        },
+        "value:project_language": {
+          "c": 228,
+          "c++": 1276,
+          "rust": 2,
+          "swift": 1
+        },
+        "verifier_topology": {
+          "submission_server": 1507
+        }
+      },
+      "tasks": 1507,
+      "unknown_keys": []
+    },
+    "swebench": {
+      "field_histogram": {
+        "demand": {
+          "harness_eval": 3094,
+          "per_repo_image": 3094
+        },
+        "value:repo": {
+          "astropy/astropy": 123,
+          "django/django": 1195,
+          "matplotlib/matplotlib": 241,
+          "mwaskom/seaborn": 28,
+          "pallets/flask": 15,
+          "psf/requests": 58,
+          "pydata/xarray": 137,
+          "pylint-dev/pylint": 73,
+          "pytest-dev/pytest": 155,
+          "scikit-learn/scikit-learn": 284,
+          "sphinx-doc/sphinx": 247,
+          "sympy/sympy": 538
+        },
+        "verifier_topology": {
+          "harness_script": 3094
+        }
+      },
+      "tasks": 3094,
+      "unknown_keys": []
+    },
+    "terminalbench": {
+      "field_histogram": {
+        "cap_add": {
+          "tasks": 1
+        },
+        "compose": {
+          "tasks": 11
+        },
+        "cpus": {
+          "16": 2,
+          "2": 44,
+          "4": 14,
+          "8": 6
+        },
+        "demand": {
+          "cap_add": 1,
+          "compose": 11,
+          "depends_on": 11,
+          "dockerfile": 66,
+          "environment": 9,
+          "gpus": 3,
+          "healthchecks": 11,
+          "mcp_servers": 1,
+          "multi_service": 11,
+          "network_mode": 2,
+          "shm_size": 2,
+          "skills_dir": 1,
+          "verifier_tests": 66
+        },
+        "dockerfile": {
+          "tasks": 66
+        },
+        "environment": {
+          "tasks": 9
+        },
+        "gpus": {
+          "0": 55,
+          "1": 3
+        },
+        "healthchecks": {
+          "tasks": 11
+        },
+        "memory_mb": {
+          "16384": 8,
+          "32768": 1,
+          "4096": 35,
+          "8192": 22
+        },
+        "multi_service": {
+          "tasks": 11
+        },
+        "network_modes": {
+          "tasks": 2
+        },
+        "shm_size": {
+          "tasks": 2
+        },
+        "storage_mb": {
+          "10240": 47,
+          "1024000": 1,
+          "15000": 1,
+          "15360": 2,
+          "18000": 1,
+          "20480": 9,
+          "30720": 2,
+          "4096": 1,
+          "5120": 1,
+          "51200": 1
+        },
+        "verifier_topology": {
+          "separate": 66
+        }
+      },
+      "tasks": 66,
+      "unknown_keys": []
+    }
+  },
+  "canary": {
+    "canary_uids": [
+      "cybergym:main:arvo:10013",
+      "swebench:full:astropy__astropy-11693",
+      "terminalbench:tasks:atrx-vep-crispr",
+      "terminalbench:tasks:ctr-optimization",
+      "terminalbench:tasks:cumulative-layout-shift",
+      "terminalbench:tasks:fp8-rmsnorm-gemm",
+      "terminalbench:tasks:freight-dispatch-shift",
+      "terminalbench:tasks:kv-live-surgery",
+      "terminalbench:tasks:legacy-utility-triage",
+      "terminalbench:tasks:medical-claims-processing"
+    ],
+    "field_universe": [
+      "cap_add",
+      "compose",
+      "depends_on",
+      "dockerfile",
+      "environment",
+      "gpus",
+      "harness_eval",
+      "healthchecks",
+      "long_compile_debug",
+      "mcp_servers",
+      "multi_service",
+      "network_mode",
+      "network_modes",
+      "oracle_not_yet_verified",
+      "per_repo_image",
+      "per_task_runner_images",
+      "poc_submission_server",
+      "shm_size",
+      "skills_dir",
+      "verifier_tests",
+      "verifier_topology:harness_script",
+      "verifier_topology:separate",
+      "verifier_topology:submission_server"
+    ],
+    "note": "dev feedback subset only; the release denominator stays the full manifest",
+    "rationale": [
+      {
+        "covers": [
+          "long_compile_debug",
+          "oracle_not_yet_verified",
+          "per_task_runner_images",
+          "poc_submission_server",
+          "verifier_topology:submission_server"
+        ],
+        "uid": "cybergym:main:arvo:10013"
+      },
+      {
+        "covers": [
+          "harness_eval",
+          "per_repo_image",
+          "verifier_topology:harness_script"
+        ],
+        "uid": "swebench:full:astropy__astropy-11693"
+      },
+      {
+        "covers": [
+          "dockerfile",
+          "verifier_tests",
+          "verifier_topology:separate"
+        ],
+        "uid": "terminalbench:tasks:atrx-vep-crispr"
+      },
+      {
+        "covers": [
+          "compose",
+          "depends_on",
+          "healthchecks",
+          "multi_service",
+          "network_mode",
+          "network_modes"
+        ],
+        "uid": "terminalbench:tasks:ctr-optimization"
+      },
+      {
+        "covers": [
+          "skills_dir"
+        ],
+        "uid": "terminalbench:tasks:cumulative-layout-shift"
+      },
+      {
+        "covers": [
+          "gpus"
+        ],
+        "uid": "terminalbench:tasks:fp8-rmsnorm-gemm"
+      },
+      {
+        "covers": [
+          "environment"
+        ],
+        "uid": "terminalbench:tasks:freight-dispatch-shift"
+      },
+      {
+        "covers": [
+          "cap_add"
+        ],
+        "uid": "terminalbench:tasks:kv-live-surgery"
+      },
+      {
+        "covers": [
+          "shm_size"
+        ],
+        "uid": "terminalbench:tasks:legacy-utility-triage"
+      },
+      {
+        "covers": [
+          "mcp_servers"
+        ],
+        "uid": "terminalbench:tasks:medical-claims-processing"
+      }
+    ],
+    "reference_sha256": "1519bd3b3d50eb072bfeb1cad81d298dfb9210674cf3fbe103b55d94cdd68d59",
+    "selection": "greedy_field_coverage",
+    "size": 10,
+    "uncovered_fields": []
+  },
+  "field_histogram": {
+    "cap_add": {
+      "tasks": 1
+    },
+    "compose": {
+      "tasks": 11
+    },
+    "cpus": {
+      "16": 2,
+      "2": 44,
+      "4": 14,
+      "8": 6
+    },
+    "demand": {
+      "cap_add": 1,
+      "compose": 11,
+      "depends_on": 11,
+      "dockerfile": 66,
+      "environment": 9,
+      "gpus": 3,
+      "harness_eval": 3094,
+      "healthchecks": 11,
+      "long_compile_debug": 1507,
+      "mcp_servers": 1,
+      "multi_service": 11,
+      "network_mode": 2,
+      "per_repo_image": 3094,
+      "per_task_runner_images": 1507,
+      "poc_submission_server": 1507,
+      "shm_size": 2,
+      "skills_dir": 1,
+      "verifier_tests": 66
+    },
+    "dockerfile": {
+      "tasks": 66
+    },
+    "environment": {
+      "tasks": 9
+    },
+    "gpus": {
+      "0": 55,
+      "1": 3
+    },
+    "healthchecks": {
+      "tasks": 11
+    },
+    "memory_mb": {
+      "16384": 8,
+      "32768": 1,
+      "4096": 35,
+      "8192": 22
+    },
+    "multi_service": {
+      "tasks": 11
+    },
+    "network_modes": {
+      "tasks": 2
+    },
+    "shm_size": {
+      "tasks": 2
+    },
+    "storage_mb": {
+      "10240": 47,
+      "1024000": 1,
+      "15000": 1,
+      "15360": 2,
+      "18000": 1,
+      "20480": 9,
+      "30720": 2,
+      "4096": 1,
+      "5120": 1,
+      "51200": 1
+    },
+    "verifier_topology": {
+      "harness_script": 3094,
+      "separate": 66,
+      "submission_server": 1507
+    }
+  },
+  "schema_version": "1.0",
+  "totals": {
+    "by_benchmark": {
+      "cybergym": 1507,
+      "swebench": 3094,
+      "terminalbench": 66
+    },
+    "tasks": 4667
+  },
+  "unknown_keys": []
+}

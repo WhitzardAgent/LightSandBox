@@ -1,32 +1,174 @@
 {
   "schema_version": "2.0",
   "status": "UNLOCKED",
-  "manifests": [],
+  "note": "T02枚举真实全量资产，不能按旧宣传数量预填。",
+  "enumerated_at": "2026-09-28T14:34:08+00:00",
+  "enumeration": {
+    "tool": "conformance/inventory (enumerate.py, census.py, canary.py)",
+    "provenance": "network_clone_filtered_at_locked_rev",
+    "upstream_sources": [
+      {
+        "name": "swebench",
+        "url": "https://github.com/SWE-bench/SWE-bench.git",
+        "locked_revision": "02e7a74ffd0b707aab73d203fe87bdc7c76afc8e",
+        "checked_out_revision": "02e7a74ffd0b707aab73d203fe87bdc7c76afc8e",
+        "match": true,
+        "clone_method": "git clone --filter=blob:none + git checkout"
+      },
+      {
+        "name": "cybergym",
+        "url": "https://github.com/sunblaze-ucb/cybergym.git",
+        "locked_revision": "c6fe2027d39471375920b92cf1025e23a99ffda5",
+        "checked_out_revision": "c6fe2027d39471375920b92cf1025e23a99ffda5",
+        "match": true,
+        "clone_method": "git clone --filter=blob:none + git checkout"
+      },
+      {
+        "name": "terminalbench",
+        "url": "https://github.com/harbor-framework/terminal-bench.git",
+        "locked_revision": "4def1f367467b34b18e0dbdc086400ba71c3e037",
+        "checked_out_revision": "4def1f367467b34b18e0dbdc086400ba71c3e037",
+        "match": true,
+        "clone_method": "git clone --filter=blob:none + git checkout"
+      }
+    ],
+    "consistency_gate": {
+      "upstream_ids": 4667,
+      "unique": true,
+      "result": "PASS",
+      "command": "python3 -m conformance.inventory.enumerate gate --manifest specs/benchmark-manifest.jsonl --upstream-ids <upstream-ids.txt>"
+    }
+  },
+  "manifests": [
+    {
+      "path": "specs/benchmark-manifest.jsonl",
+      "entries": 4667,
+      "sha256": "1519bd3b3d50eb072bfeb1cad81d298dfb9210674cf3fbe103b55d94cdd68d59",
+      "hash_rule": "sha256 of canonical JSONL bytes (entries sorted by uid, keys sorted, one line per entry)",
+      "by_benchmark": {
+        "cybergym": {"entries": 1507, "sha256": "4c65a2eb9817cab77c22e18fbca1652ce10845aa4bb47222dcac68d47e1a89f9"},
+        "swebench": {"entries": 3094, "sha256": "561b61ffdcbddfa83bf69eae64b2135fd8d17f4859d39cf79cb2984fb66d93b2"},
+        "terminalbench": {"entries": 66, "sha256": "6644124d6a7a2130191b1548259205279a96ebeaa19a660de418ea8de0036533"}
+      }
+    }
+  ],
   "benchmarks": [
     {
       "id": "cybergym",
-      "dataset_revision": null,
-      "split": null,
-      "task_count": null,
-      "manifest_sha256": null,
-      "oracle_status": "NOT_ENUMERATED"
+      "dataset_revision": "bde190ded494e52bc684b66073b436c9d992c7c6",
+      "split": "main",
+      "task_count": {"main": 1507, "total": 1507, "by_family": {"arvo": 1368, "oss-fuzz": 139}},
+      "manifest_sha256": "4c65a2eb9817cab77c22e18fbca1652ce10845aa4bb47222dcac68d47e1a89f9",
+      "oracle_status": "ENUMERATED",
+      "oracle_summary": {"ORACLE_AVAILABLE": 0, "ORACLE_NOT_YET_VERIFIED": 1507, "ORACLE_UNAVAILABLE": 0},
+      "dataset": {
+        "slug": "sunblaze-ucb/cybergym",
+        "git_sha": "bde190ded494e52bc684b66073b436c9d992c7c6",
+        "last_modified": "2025-05-15T00:14:14.000Z",
+        "files": 7538,
+        "manifest_file": "tasks.json (1507 entries, ids unique, 1:1 with data/ task dirs in the file inventory)",
+        "canonical_assets_per_task": ["description.txt", "error.txt", "patch.diff", "repo-fix.tar.gz", "repo-vul.tar.gz"],
+        "poc_assets_public": false,
+        "pin_status": "referenced by the locked repo README without a revision pin; revision recorded above is the dataset git sha measured at fetch time and used to fetch tasks.json"
+      },
+      "harness": {
+        "repo": "sunblaze-ucb/cybergym",
+        "revision": "c6fe2027d39471375920b92cf1025e23a99ffda5",
+        "data_preparation_modes": [
+          {
+            "mode": "full",
+            "size": "~240GB HF dataset plus ~10TB server data (runner images)",
+            "entry": "scripts/server_data/download.py --tasks-file ./cybergym_data/tasks.json"
+          },
+          {
+            "mode": "binary_only",
+            "size": "~130GB server data, no dynamic compilation environment",
+            "entry": "scripts/server_data/download_binary_only_runners.py then cybergym-server-data.7z from dataset sunblaze-ucb/cybergym-server-binary"
+          },
+          {
+            "mode": "official_subset_10",
+            "entry": "scripts/server_data/download_subset.py",
+            "tasks": ["arvo:47101", "arvo:3938", "arvo:24993", "arvo:1065", "arvo:10400", "arvo:368", "oss-fuzz:42535201", "oss-fuzz:42535468", "oss-fuzz:370689421", "oss-fuzz:385167047"]
+          }
+        ],
+        "verification_entry_points": [
+          "cybergym.server (PoC submission server; /verify-agent-pocs endpoint)",
+          "scripts/verify_agent_result.py (reads PoC DB + triggers server-side verification)",
+          "runner images: n132/arvo:<id>-vul, n132/arvo:<id>-fix, cybergym/oss-fuzz:<id>-vul, cybergym/oss-fuzz:<id>-fix, base cybergym/oss-fuzz-base-runner:latest"
+        ],
+        "agent_and_verifier_separated": true,
+        "agent_env": "cybergym.task.gen_task generates description/README/repo-vul.tar.gz/submit.sh per task; agents run on the firewalled cybergym-internal network"
+      }
     },
     {
       "id": "swebench",
-      "dataset_revision": null,
-      "split": null,
-      "task_count": null,
-      "manifest_sha256": null,
-      "oracle_status": "NOT_ENUMERATED"
+      "dataset_revision": {
+        "SWE-bench/SWE-bench": "c6fe717fd7a4c3ac1daa4055a4fd082c6a1d28a2",
+        "SWE-bench/SWE-bench_Lite": "b0dde1093fe417d83b7184254edf8199c1f0dff5",
+        "SWE-bench/SWE-bench_Verified": "78f471bf655a3137b2e8a75af1501690ec009ec3"
+      },
+      "split": ["full", "lite", "verified"],
+      "task_count": {
+        "full": 2294,
+        "lite": 300,
+        "verified": 500,
+        "total": 3094,
+        "dev_splits_informational_not_enumerated": {"full": 225, "lite": 23}
+      },
+      "manifest_sha256": "561b61ffdcbddfa83bf69eae64b2135fd8d17f4859d39cf79cb2984fb66d93b2",
+      "oracle_status": "ENUMERATED",
+      "oracle_summary": {"ORACLE_AVAILABLE": 0, "ORACLE_NOT_YET_VERIFIED": 3094, "ORACLE_UNAVAILABLE": 0},
+      "split_relationships_measured_not_merged": {
+        "full_intersection_lite": 300,
+        "full_intersection_verified": 500,
+        "lite_intersection_verified": 93,
+        "statement": "Every lite instance id and every verified instance id is also in full; the three products stay distinct manifest splits, never merged."
+      },
+      "additional_products_referenced_by_locked_harness_out_of_acceptance_scope": {
+        "SWE-bench/SWE-bench_Multilingual": {"git_sha": "846e647b9f33c0b51b739d005d13d85493c9af09", "test_rows": 300},
+        "SWE-bench/SWE-bench_Multimodal": {"git_sha": "4e6662d51c48e475f7f346e4fa09a6f8b31fcaa5", "test_rows": 480, "dev_rows": 100, "note": "locked submit/package.py: evaluated externally through sb-cli; no local logs"}
+      },
+      "harness": {
+        "repo": "SWE-bench/SWE-bench",
+        "revision": "02e7a74ffd0b707aab73d203fe87bdc7c76afc8e",
+        "dataset_aliases_source": "swebench/cli/_datasets.py DATASET_ALIASES",
+        "aliases": {
+          "full": "SWE-bench/SWE-bench",
+          "lite": "SWE-bench/SWE-bench_Lite",
+          "verified": "SWE-bench/SWE-bench_Verified",
+          "multilingual": "SWE-bench/SWE-bench_Multilingual",
+          "multimodal": "SWE-bench/SWE-bench_Multimodal"
+        },
+        "instance_id_style": "<org>__<repo>-<number>",
+        "evaluation_split": "test"
+      }
     },
     {
       "id": "terminalbench",
-      "dataset_revision": null,
-      "split": null,
-      "task_count": null,
-      "manifest_sha256": null,
-      "oracle_status": "NOT_ENUMERATED"
+      "dataset_revision": "4def1f367467b34b18e0dbdc086400ba71c3e037",
+      "split": "tasks",
+      "task_count": {"tasks": 66, "total": 66},
+      "manifest_sha256": "6644124d6a7a2130191b1548259205279a96ebeaa19a660de418ea8de0036533",
+      "oracle_status": "ENUMERATED",
+      "oracle_summary": {"ORACLE_AVAILABLE": 0, "ORACLE_NOT_YET_VERIFIED": 66, "ORACLE_UNAVAILABLE": 0},
+      "dataset_manifest": {
+        "file": "tasks/dataset.toml",
+        "name": "terminal-bench/terminal-bench",
+        "tasks_with_content_digests": 66,
+        "dir_inventory_matches_dataset_manifest": true
+      },
+      "releases_measured": [
+        {"tag": "v3.0.0", "commit": "2b0442c3c583b710ca8da14c8e601b99f2f1f244", "dataset_name": "terminal-bench/terminal-bench-3", "tasks": 74},
+        {"tag": "v4.0.0", "commit": "452bf305c6daa62fc59061d22133a7cbc7c1572e", "dataset_name": "terminal-bench/terminal-bench", "tasks": 66, "note": "task id set identical to the locked rev HEAD task id set; the locked rev is 50 commits past v4.0.0"}
+      ],
+      "retired_tasks_present_in_repo": {"path": "archive/", "count": 90, "status": "not part of the enumerated task set"},
+      "task_format": {
+        "file": "task.toml",
+        "schema_version_histogram": {"ABSENT": 12, "1": 1, "1.0": 34, "1.1": 4, "1.2": 9, "1.3": 1, "2.0": 5},
+        "verifier_environment_mode": {"separate": 66},
+        "environment_files": {"dockerfile": 66, "docker_compose_tasks": 11}
+      },
+      "harness": {"name": "harbor CLI", "reference_revision": "cdb76bae6dc88d5bca1c8f0754bbba300d6574b4", "run_entry": "harbor run -d terminal-bench/terminal-bench"}
     }
-  ],
-  "note": "T02枚举真实全量资产，不能按旧宣传数量预填。"
+  ]
 }

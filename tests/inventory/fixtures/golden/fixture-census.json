@@ -1,0 +1,176 @@
+{
+  "by_benchmark": {
+    "terminalbench": {
+      "field_histogram": {
+        "cap_add": {
+          "tasks": 1
+        },
+        "compose": {
+          "tasks": 1
+        },
+        "cpus": {
+          "1": 3,
+          "2": 1
+        },
+        "demand": {
+          "cap_add": 1,
+          "compose": 1,
+          "devices": 1,
+          "dockerfile": 4,
+          "environment": 1,
+          "gpus": 1,
+          "healthchecks": 1,
+          "multi_service": 1,
+          "networks": 1,
+          "shm_size": 1,
+          "ulimits": 1,
+          "verifier_tests": 1,
+          "volumes": 1
+        },
+        "devices": {
+          "tasks": 1
+        },
+        "dockerfile": {
+          "tasks": 4
+        },
+        "environment": {
+          "tasks": 1
+        },
+        "gpus": {
+          "0": 3,
+          "1": 1
+        },
+        "healthchecks": {
+          "tasks": 1
+        },
+        "memory_mb": {
+          "1024": 1,
+          "4096": 1,
+          "512": 2
+        },
+        "multi_service": {
+          "tasks": 1
+        },
+        "networks": {
+          "tasks": 1
+        },
+        "shm_size": {
+          "tasks": 1
+        },
+        "storage_mb": {
+          "10240": 1,
+          "2048": 1,
+          "512": 2
+        },
+        "ulimits": {
+          "tasks": 1
+        },
+        "verifier_topology": {
+          "separate": 1,
+          "shared": 3
+        },
+        "volumes": {
+          "tasks": 1
+        }
+      },
+      "tasks": 4,
+      "unknown_keys": [
+        {
+          "benchmark": "terminalbench",
+          "file": "environment/docker-compose.yaml",
+          "key": "quantum_entanglement_protocol",
+          "task_id": "c01-gap-task",
+          "value": "enabled"
+        }
+      ]
+    }
+  },
+  "field_histogram": {
+    "cap_add": {
+      "tasks": 1
+    },
+    "compose": {
+      "tasks": 1
+    },
+    "cpus": {
+      "1": 3,
+      "2": 1
+    },
+    "demand": {
+      "cap_add": 1,
+      "compose": 1,
+      "devices": 1,
+      "dockerfile": 4,
+      "environment": 1,
+      "gpus": 1,
+      "healthchecks": 1,
+      "multi_service": 1,
+      "networks": 1,
+      "shm_size": 1,
+      "ulimits": 1,
+      "verifier_tests": 1,
+      "volumes": 1
+    },
+    "devices": {
+      "tasks": 1
+    },
+    "dockerfile": {
+      "tasks": 4
+    },
+    "environment": {
+      "tasks": 1
+    },
+    "gpus": {
+      "0": 3,
+      "1": 1
+    },
+    "healthchecks": {
+      "tasks": 1
+    },
+    "memory_mb": {
+      "1024": 1,
+      "4096": 1,
+      "512": 2
+    },
+    "multi_service": {
+      "tasks": 1
+    },
+    "networks": {
+      "tasks": 1
+    },
+    "shm_size": {
+      "tasks": 1
+    },
+    "storage_mb": {
+      "10240": 1,
+      "2048": 1,
+      "512": 2
+    },
+    "ulimits": {
+      "tasks": 1
+    },
+    "verifier_topology": {
+      "separate": 1,
+      "shared": 3
+    },
+    "volumes": {
+      "tasks": 1
+    }
+  },
+  "schema_version": "1.0",
+  "totals": {
+    "by_benchmark": {
+      "terminalbench": 4
+    },
+    "tasks": 4
+  },
+  "unknown_keys": [
+    {
+      "benchmark": "terminalbench",
+      "file": "environment/docker-compose.yaml",
+      "key": "quantum_entanglement_protocol",
+      "task_id": "c01-gap-task",
+      "value": "enabled"
+    }
+  ]
+}

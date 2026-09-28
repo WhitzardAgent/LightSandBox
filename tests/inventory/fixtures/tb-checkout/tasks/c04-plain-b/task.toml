@@ -1,0 +1,21 @@
+[task]
+name = "fixture/c04-plain-b"
+description = "C04: second plain task, same field shape as A"
+authors = [{ name = "Fixture", email = "fixture@example.invalid" }]
+
+[metadata]
+category = "Fixture"
+
+[verifier]
+timeout_sec = 30.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 120.0
+
+[environment]
+build_timeout_sec = 300.0
+cpus = 1
+memory_mb = 512
+storage_mb = 512
+gpus = 0

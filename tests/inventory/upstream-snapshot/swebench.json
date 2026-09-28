@@ -1,0 +1,64 @@
+{
+  "additional_products_not_in_acceptance_scope": {
+    "SWE-bench/SWE-bench_Multilingual": {
+      "sha": "846e647b9f33c0b51b739d005d13d85493c9af09",
+      "size_rows": {
+        "test": 300
+      }
+    },
+    "SWE-bench/SWE-bench_Multimodal": {
+      "sha": "4e6662d51c48e475f7f346e4fa09a6f8b31fcaa5",
+      "size_rows": {
+        "dev": 100,
+        "test": 480
+      }
+    }
+  },
+  "alias_source": "swebench/cli/_datasets.py DATASET_ALIASES",
+  "fetched_via": "datasets-server.huggingface.co /rows + /size",
+  "harness_repo": "SWE-bench/SWE-bench",
+  "harness_revision": "02e7a74ffd0b707aab73d203fe87bdc7c76afc8e",
+  "schema_version": "1.0",
+  "splits": {
+    "full": {
+      "dataset": "SWE-bench/SWE-bench",
+      "dataset_sha": "c6fe717fd7a4c3ac1daa4055a4fd082c6a1d28a2",
+      "datasets_server_size_rows": {
+        "dev": 225,
+        "test": 2294
+      },
+      "fetch_errors": [],
+      "last_modified": "2026-08-16T04:23:42.000Z",
+      "measured_rows_from_row_files": {
+        "full": 2294,
+        "full.dev": 225
+      }
+    },
+    "lite": {
+      "dataset": "SWE-bench/SWE-bench_Lite",
+      "dataset_sha": "b0dde1093fe417d83b7184254edf8199c1f0dff5",
+      "datasets_server_size_rows": {
+        "dev": 23,
+        "test": 300
+      },
+      "fetch_errors": [],
+      "last_modified": "2026-08-16T04:19:26.000Z",
+      "measured_rows_from_row_files": {
+        "lite": 300,
+        "lite.dev": 23
+      }
+    },
+    "verified": {
+      "dataset": "SWE-bench/SWE-bench_Verified",
+      "dataset_sha": "78f471bf655a3137b2e8a75af1501690ec009ec3",
+      "datasets_server_size_rows": {
+        "test": 500
+      },
+      "fetch_errors": [],
+      "last_modified": "2026-08-16T04:23:43.000Z",
+      "measured_rows_from_row_files": {
+        "verified": 500
+      }
+    }
+  }
+}

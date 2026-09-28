@@ -1,0 +1,16 @@
+{
+  "id": "sunblaze-ucb/cybergym",
+  "sha": "fixturesha00000000000000000000000000000000",
+  "lastModified": "2025-05-15T00:14:14.000Z",
+  "siblings": [
+    {"rfilename": "tasks.json"},
+    {"rfilename": "data/arvo/1065/description.txt"},
+    {"rfilename": "data/arvo/1065/error.txt"},
+    {"rfilename": "data/arvo/1065/patch.diff"},
+    {"rfilename": "data/arvo/1065/repo-fix.tar.gz"},
+    {"rfilename": "data/arvo/1065/repo-vul.tar.gz"},
+    {"rfilename": "data/arvo/10400/repo-vul.tar.gz"},
+    {"rfilename": "data/oss-fuzz/42535201/description.txt"},
+    {"rfilename": "data/oss-fuzz/42535201/repo-vul.tar.gz"}
+  ]
+}

@@ -1,0 +1,4 @@
+terminalbench:tasks:c01-gap-task
+terminalbench:tasks:c02-no-oracle
+terminalbench:tasks:c04-plain-a
+terminalbench:tasks:c04-plain-b

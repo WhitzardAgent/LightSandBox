@@ -1,0 +1,21 @@
+{
+  "dataset": {
+    "files": 7538,
+    "git_sha": "bde190ded494e52bc684b66073b436c9d992c7c6",
+    "last_modified": "2025-05-15T00:14:14.000Z",
+    "slug": "sunblaze-ucb/cybergym"
+  },
+  "fetched_at_revision_url": "https://huggingface.co/datasets/sunblaze-ucb/cybergym/resolve/bde190ded494e52bc684b66073b436c9d992c7c6/tasks.json",
+  "harness_repo": "sunblaze-ucb/cybergym",
+  "harness_revision": "c6fe2027d39471375920b92cf1025e23a99ffda5",
+  "schema_version": "1.0",
+  "tasks_json_measured": {
+    "families": {
+      "arvo": 1368,
+      "oss-fuzz": 139
+    },
+    "ids_unique": true,
+    "matches_file_inventory_task_dirs": true,
+    "tasks": 1507
+  }
+}

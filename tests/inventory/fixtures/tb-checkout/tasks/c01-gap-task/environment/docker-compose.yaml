@@ -1,0 +1,36 @@
+# C01 fixture: devices, ulimits and an unknown top-level key.
+services:
+  main:
+    image: fixture/c01:latest
+    devices:
+      - /dev/fuse:/dev/fuse
+      - /dev/net/tun
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+      memlock: -1
+    shm_size: 128m
+    cap_add:
+      - SYS_PTRACE
+    environment:
+      FIXTURE_FLAG: "on"
+    volumes:
+      - fixture-data:/work
+      - ./payload:/payload:ro
+    networks:
+      - fixture-net
+  sidecar-db:
+    image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fixture"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - fixture-net
+volumes:
+  fixture-data:
+networks:
+  fixture-net:
+quantum_entanglement_protocol: enabled

@@ -200,6 +200,8 @@ def suite_fast(root):
     commands.append(python_script(root / 'dev' / 'check_seeds.py', 'seed-reference'))
     commands.append(python_unittest(root / 'tests' / 'pack', root, label='pack-tools'))
     commands.append(python_unittest(root / 'tests' / 'contracts', root, label='contract-locks'))
+    commands.append(python_unittest(root / 'tests' / 'inventory', root / 'tests' / 'inventory',
+                                    label='inventory'))
     res = run_command([sys.executable, str(root / 'tools' / 'packctl.py'), 'validate'],
                       cwd=str(root))
     commands.append({'argv': res['argv'], 'label': 'packctl-validate', 'exit': res['exit'],

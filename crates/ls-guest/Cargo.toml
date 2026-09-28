@@ -15,3 +15,11 @@ rust-version.workspace = true
 [[bin]]
 name = "lsguest-init"
 path = "src/init/main.rs"
+
+# Round-05 (ADR 0002 §8): the guest control agent for Kernel/Machine
+# backends. All serve logic lives in the lib module `serve` so integration
+# tests exercise Agent::run in-process over socketpairs; this target is only
+# the process entry point. Still zero external dependencies.
+[[bin]]
+name = "lsguest"
+path = "src/serve/main.rs"

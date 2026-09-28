@@ -8,8 +8,15 @@
 //! entrypoint as its child, forwards signals, reaps orphans, and atomically
 //! records the entrypoint's real wait status (observed by init itself) before
 //! exiting with the same semantics.
+//!
+//! Round-05 scope (ADR 0002 §8): `serve` — the `lsguest serve` guest control
+//! agent for Kernel/Machine backends: exec, signal, health, shutdown over a
+//! small framed protocol v1 on one byte-stream fd. Unix-only.
 
 pub mod init;
+
+#[cfg(unix)]
+pub mod serve;
 
 pub mod initargs {
     use std::fmt;

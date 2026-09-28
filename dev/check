@@ -4,6 +4,12 @@
 Adds the locally provisioned rustup toolchain to PATH when cargo is otherwise
 absent, then delegates to dev/checklib.py. All suite logic lives in checklib
 so tests can import it directly.
+
+Suites: unit, fast, structure, contracts, docs, examples (unprivileged);
+runtime, differential, security, parity, performance (worker-gated). The docs
+suite gates the external documentation (site build, Markdown links, bash
+snippets, generated-doc drift); the examples suite runs every
+examples/**/test_example.py. Run without arguments for usage details.
 """
 import os
 import shutil

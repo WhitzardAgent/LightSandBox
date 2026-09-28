@@ -32,6 +32,14 @@ python3 tools/lock_local_sources.py \
 
 `python3 tools/packctl.py verify-manifest`核对初始交付文件集合与每个SHA-256，忽略Git内部目录和Python缓存。开始正常开发后失配是预期现象，不应为掩盖开发修改而更改原始归档。日常工作用validate。
 
+## 文档工具
+
+以下三者为 docs CI 服务，仅依赖标准库，不联网：
+
+- `tools/check_md_links.py`：校验 `docs/**/*.md` 与根 `README.md` 的相对 Markdown 链接指向存在的文件；`--snippets` 模式校验 bash 代码块仅使用仓库真实入口（`tools/*.py`、`dev/check*`、`python3 tools/*`、cargo test/build、环境命令），不写不存在的二进制名。
+- `tools/gen_error_docs.py`：从 `crates/ls-api` 错误码源码、参考客户端源码与 `contracts/v1` 拒绝码生成 `docs/reference/errors.md`；`--check` 重新生成并比对漂移。
+- `tools/gen_capability_matrix.py`：从 `contracts/v1` 需求维度与解析规则、ls-core 后端 AUTO 顺序、`specs/host-profiles.json` 层级生成 `docs/reference/capability-matrix.md`；`--check` 同样做漂移比对。两者改动源文件后必须重新生成，由 `dev/check docs` 强制。
+
 ## 可信性边界
 
 这些工具只能发现结构错误与不一致，不能抵抗拥有文件写权限的人同时篡改工具、状态和证据。关键门禁需要受保护CI/分支、独立review和制品存储控制。本包没有通用任务执行器，也没有自动sudo/远程部署动作。

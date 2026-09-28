@@ -1,0 +1,22 @@
+{
+  "schema_version": "v1",
+  "services": {
+    "main": {
+      "image": "registry.example.invalid/python-demo@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "launch_mode": "image",
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      },
+      "resources": {
+        "cpu_millis": 500,
+        "memory_bytes": 268435456,
+        "pids": 64
+      }
+    }
+  },
+  "networks": {},
+  "volumes": {},
+  "labels": {
+    "example": "python-planning"
+  }
+}

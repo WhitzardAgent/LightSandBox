@@ -21,6 +21,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -206,6 +207,61 @@ def suite_fast(root):
     return commands
 
 
+def _script_count(root, argv, label, pattern):
+    """Repo script whose stdout carries a 'checked N ...' style summary.
+
+    N becomes the collected count; a clean exit with N=0 converts to failure
+    (same zero-collected law as python_unittest).
+    """
+    res = run_command(argv, cwd=str(root))
+    match = re.search(pattern, res['output'])
+    tests = int(match.group(1)) if match else 0
+    out = {'argv': res['argv'], 'label': label, 'exit': res['exit'], 'tests': tests,
+           'duration_ms': res['duration_ms'], 'output': res['output']}
+    if res['exit'] == EXIT_OK and tests == 0:
+        out['raw_exit'] = res['exit']
+        out['exit'] = EXIT_FAIL
+        out['reason'] = 'zero tests collected'
+    return out
+
+
+def suite_docs(root):
+    """External-docs gates: site build, link/snippet guards, generated-doc drift."""
+    commands = []
+    mkdocs = _which('mkdocs', child_env())
+    if mkdocs is None:
+        # A missing prerequisite is reported as a named collected check, never
+        # as a skip: exit 4 names the tool, exactly like a missing cargo.
+        commands.append({'argv': ['mkdocs', 'build', '--strict'],
+                         'label': 'mkdocs_missing_prerequisite', 'exit': EXIT_PREREQ, 'tests': 1,
+                         'output': '', 'reason': 'mkdocs not installed; see docs/requirements-docs.txt'})
+    else:
+        with tempfile.TemporaryDirectory(prefix='lsbx-mkdocs-') as site_dir:
+            res = run_command([mkdocs, 'build', '--strict', '--site-dir', site_dir], cwd=str(root))
+        commands.append({'argv': ['mkdocs', 'build', '--strict', '--site-dir', '<tempdir>'],
+                         'label': 'mkdocs-build', 'exit': res['exit'], 'tests': 1,
+                         'duration_ms': res['duration_ms'], 'output': res['output']})
+    commands.append(_script_count(root, [sys.executable, str(root / 'tools' / 'check_md_links.py')],
+                                  'md-link-check', r'checked (\d+) links'))
+    commands.append(_script_count(root, [sys.executable, str(root / 'tools' / 'check_md_links.py'),
+                                         '--snippets'],
+                                  'bash-snippet-guard', r'checked (\d+) bash blocks'))
+    commands.append(_script_count(root, [sys.executable, str(root / 'tools' / 'gen_error_docs.py'),
+                                         '--check'],
+                                  'generated-errors-doc', r'verified (\d+) error codes'))
+    commands.append(_script_count(root, [sys.executable, str(root / 'tools' / 'gen_capability_matrix.py'),
+                                         '--check'],
+                                  'generated-capability-matrix', r'verified (\d+) requirement dimensions'))
+    return commands
+
+
+def suite_examples(root):
+    """One unittest discovery per examples/*/test_example.py."""
+    tests = sorted((root / 'examples').glob('*/test_example.py'))
+    return [python_unittest(t.parent, t.parent, label=f'example-{t.parent.name}',
+                            patterns=['test_example.py']) for t in tests]
+
+
 def lint_structure(root):
     """Static structure rules. Findings: {rule, path, detail}. Exit 1 when any."""
     if tomllib is None:
@@ -351,6 +407,8 @@ def _suite_defs():
             python_unittest(root / 'tests' / 'native', root, label='native-contracts',
                             patterns=['test_contracts.py', 'test_schema.py']),
         ],
+        'docs': lambda root, opts: suite_docs(root),
+        'examples': lambda root, opts: suite_examples(root),
         'runtime': lambda root, opts: suite_worker_gated(root, 'runtime', opts.get('task'), opts.get('worker')),
         'differential': lambda root, opts: suite_worker_gated(root, 'differential', opts.get('task'), opts.get('worker')),
         'security': lambda root, opts: suite_worker_gated(root, 'security', opts.get('task'), opts.get('worker')),
@@ -361,9 +419,9 @@ def _suite_defs():
     }
 
 
-PUBLIC_SUITES = ('unit', 'fast', 'structure', 'contracts', 'runtime',
-                 'differential', 'security', 'parity', 'performance')
-TEST_COLLECTING = ('unit', 'fast', 'contracts')
+PUBLIC_SUITES = ('unit', 'fast', 'structure', 'contracts', 'docs', 'examples',
+                 'runtime', 'differential', 'security', 'parity', 'performance')
+TEST_COLLECTING = ('unit', 'fast', 'contracts', 'docs', 'examples')
 
 
 def _git_state(root):
@@ -504,6 +562,11 @@ def main(argv=None):
     if not positionals:
         print(f"usage: dev/check <{'|'.join(PUBLIC_SUITES)}> [--task T] [--worker W] "
               f"[--benchmark B --manifest M] [--profile P] [--json]", file=sys.stderr)
+        print("  docs      external-docs gates: mkdocs build --strict (exit 4 naming the tool\n"
+              "            when mkdocs is not installed), Markdown link resolution,\n"
+              "            bash-snippet entry-point allowlist, generated-doc drift checks\n"
+              "  examples  unittest discovery over every examples/**/test_example.py",
+              file=sys.stderr)
         return EXIT_USAGE
     summary = run_suite(positionals[0], ROOT, **opts)
     _print_summary(summary, opts['json'])

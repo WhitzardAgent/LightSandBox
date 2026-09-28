@@ -1,0 +1,23 @@
+{
+  "schema_version": "v1",
+  "services": {
+    "workspace": {
+      "image": "registry.example.invalid/pytest-workspace@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "launch_mode": "image",
+      "cwd": "/workspace",
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "resources": {
+        "cpu_millis": 1000,
+        "memory_bytes": 536870912,
+        "pids": 128
+      }
+    }
+  },
+  "networks": {},
+  "volumes": {},
+  "labels": {
+    "example": "coding-workspace"
+  }
+}

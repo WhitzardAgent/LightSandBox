@@ -93,7 +93,25 @@ remains the candidate-1 record; this section is the candidate-2 addendum.
   `pids_cgrp_subsys` both present in the new `System.map`.
   Verdict: **SMOKE_OK**. Console: `evidence/runtime/uml/phase-k2-smoke.txt`;
   pre/post logs in `spike/uml/work/k2-{pre,post}smoke.log`.
-- **Re-evidence pending** (tracked by the parent): resource suite R3 rerun
-  on candidate-2 (guest `memory.max`/`pids.max` semantics — NOT_TESTED until
-  then) and the §34 network legs. Candidate-1 remains the pinned evidence
-  kernel for phases A–F until those land.
+- **Re-evidence: resource retest DONE, verdict `RESOURCE_SEMANTICS_MISMATCH`
+  (15 MATCH / 4 MISMATCH, 2026-09-28 recorded as
+  `spike/results/uml-resource-semantics-candidate2.json`).** Memory:
+  `memory.max=32MiB` enforced (allocator 137, init+channel survive) —
+  GuestWorkloadHardLimit for memory is PROVEN on candidate-2. pids:
+  enforcement UNPROVEN — `pids.current` marker never reached the host
+  (measurement indeterminate, guest survived; hardened capture pending).
+  cpu: `cpu.max` write rc=1 and no throttling of a 3 s hog (~3.03 s CPU
+  used, 50% cap would allow ≤2.4 s). Leading hypothesis: no `scripts/config`
+  flip ever touched `CONFIG_FAIR_GROUP_SCHED`/`CONFIG_CFS_BANDWIDTH` in
+  `build.sh`, and UML defconfig defaults them off — `cpu` shows in
+  `cgroup.controllers` but the `cpu.max` knob rejects writes. Pending
+  `grep CFS_BANDWIDTH` on the worker `.config` + verbose rerun.
+  R4b shmem oversubscribe: divergent (137 / channel loss / guest SIGABRT)
+  — tmpfs is host-charged; oversubscribe can destabilize the whole guest;
+  recorded honestly, not a stability guarantee. Module policy negative
+  probes MATCH (`=m` 0). The §34 network legs remain pending.
+- **kernel-candidate-3 (planned, worker-gated):** flip
+  `CONFIG_FAIR_GROUP_SCHED=y` + `CONFIG_CFS_BANDWIDTH=y` if grep confirms
+  absence; re-run the resource suite with the hardened
+  `run-resources-c2.py` (unsilenced subtree_control enables, cpu.max
+  existence/verbose-write probes, R4b per-attempt cookie + console tail).

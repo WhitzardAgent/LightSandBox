@@ -189,16 +189,33 @@ def run():
     if cg_ok and has_pids:
         # pids.max=16 vs a 64-fork storm of `sleep 30`; shell itself counts
         # toward the limit, so a hard 16 + count-race slack => assert <= 20
+        # hardened capture (post-candidate-2): no silently-swallowed enables,
+        # per-step rc markers, and a raw tail fact so a -1 sentinel can be
+        # attributed to script fault vs kernel fault at the next rerun.
         script = (
-            "echo +pids > /sys/fs/cgroup/cgroup.subtree_control 2>/dev/null; "
-            "mkdir /sys/fs/cgroup/t2; "
-            "echo 16 > /sys/fs/cgroup/t2/pids.max; "
+            "echo +pids > /sys/fs/cgroup/cgroup.subtree_control 2>&1; "
+            "echo PENRC=$?; "
+            "mkdir /sys/fs/cgroup/t2; echo MKRC=$?; "
+            "echo 16 > /sys/fs/cgroup/t2/pids.max 2>&1; echo PWRC=$?; "
             "echo $$ > /sys/fs/cgroup/t2/cgroup.procs; "
-            "i=0; while [ $i -lt 64 ]; do sleep 30 & i=$((i+1)); done; "
-            "sleep 1; "
-            "echo PIDSCUR=$(cat /sys/fs/cgroup/t2/pids.current)")
+            "i=0; FAILCT=0; while [ $i -lt 64 ]; do "
+            "(sleep 30) 2>/dev/null & true || FAILCT=$((FAILCT+1)); "
+            "i=$((i+1)); done; "
+            "sleep 1; echo FAILCT=$FAILCT; "
+            "cat /sys/fs/cgroup/t2/pids.current 2>&1; echo CATRC=$?; "
+            "echo PIDSCUR=$(cat /sys/fs/cgroup/t2/pids.current 2>/dev/null)")
         rc, out = sh(g, script, timeout=60, tag="PIDS")
-        pids_cur = marker(out_text(out), "PIDSCUR", -1)
+        txt_p = out_text(out)
+        FACTS["pids_leg_rcs"] = {
+            "frame_rc": rc,
+            "enable_subtree_rc": marker(txt_p, "PENRC", -2),
+            "mkdir_rc": marker(txt_p, "MKRC", -2),
+            "pids_max_write_rc": marker(txt_p, "PWRC", -2),
+            "fork_fail_count": marker(txt_p, "FAILCT", -2),
+            "pids_current_cat_rc": marker(txt_p, "CATRC", -2),
+        }
+        FACTS["pids_leg_raw_tail"] = txt_p.strip()[-200:]
+        pids_cur = marker(txt_p, "PIDSCUR", -1)
         FACTS["pids_current_with_max16_vs_64forks"] = pids_cur
         chk("guest pids.max=16 caps 64-fork storm at <=20 tasks",
             isinstance(pids_cur, int) and 0 < pids_cur <= 20,
@@ -225,11 +242,18 @@ def run():
         # cpu.max 50000/100000 = 50% of one CPU; a 3s dd hog may consume
         # at most ~1.5s of cgroup CPU. Bound is loose (80%) only against
         # shared-host scheduling noise; the measured delta is the record.
+        # hardened capture (post-candidate-2): enable rc, knob existence and
+        # unsilenced write — candidate-2's CMAXW=1 needs the stderr to
+        # separate "controller offered but knob rejected" (e.g. CFS_BANDWIDTH
+        # off) from a script-level failure.
         script = (
-            "echo +cpu > /sys/fs/cgroup/cgroup.subtree_control 2>/dev/null; "
+            "echo +cpu > /sys/fs/cgroup/cgroup.subtree_control 2>&1; "
+            "echo CENRC=$?; "
             "mkdir /sys/fs/cgroup/t3; "
-            "echo '50000 100000' > /sys/fs/cgroup/t3/cpu.max; "
+            "test -f /sys/fs/cgroup/t3/cpu.max; echo CMAXF=$?; "
+            "echo '50000 100000' > /sys/fs/cgroup/t3/cpu.max 2>&1; "
             "echo CMAXW=$?; "
+            "cat /sys/fs/cgroup/t3/cpu.max 2>&1; "
             "echo $$ > /sys/fs/cgroup/t3/cgroup.procs; "
             "U1=$(awk '/usage_usec/{print $2}' /sys/fs/cgroup/t3/cpu.stat); "
             "dd if=/dev/zero of=/dev/null 2>/dev/null & "
@@ -239,6 +263,12 @@ def run():
         rc, out = sh(g, script, timeout=60, tag="CPU")
         txt = out_text(out)
         cmaxw = marker(txt, "CMAXW", -1)
+        FACTS["cpu_leg_rcs"] = {
+            "enable_subtree_rc": marker(txt, "CENRC", -2),
+            "cpu_max_file_present": marker(txt, "CMAXF", -2) == 0,
+            "cpu_max_write_rc": cmaxw,
+        }
+        FACTS["cpu_leg_raw_head"] = txt.strip()[:200]
         ub = marker(txt, "CPUBEFORE", -1)
         ua = marker(txt, "CPUAFTER", -1)
         delta = ua - ub if isinstance(ua, int) and isinstance(ub, int) else -1
@@ -325,33 +355,68 @@ def run():
     # killing the ALLOCATOR stops growth; stability afterwards depends on
     # nothing allocating further. Never sold as a guarantee.
     r4b_outcomes = []
+    r4b_facts = []
     guest_died = False
     sh(g, "mount -o remount,size=400m /tmp/shm 2>/dev/null; rm -f /tmp/shm/big")
-    for attempt in (1, 2, 3):
+
+    def _console_tail(n=3000):
         try:
-            rc, out = sh(g, "dd if=/dev/zero of=/tmp/shm/big bs=1M count=300 "
-                            "2>/dev/null; echo big_rc=$?", timeout=120,
-                         tag=f"R4b#{attempt}")
+            raw = pathlib.Path(logp).read_bytes()
+        except OSError:
+            return "<unreadable>"
+        return raw[-n:].decode(errors="replace")
+
+    for attempt in (1, 2, 3):
+        mem_before = None
+        try:
+            rcb, outb = sh(g, "awk '/MemAvailable/{print $2}' /proc/meminfo",
+                           timeout=20, tag=f"R4b#{attempt}-pre")
+            mem_before = marker(out_text(outb), "", -1)
+        except (ConnectionError, OSError, AssertionError):
+            pass
+        rc, big_rc = None, None
+        try:
+            rc, out = sh(g, "echo CKSTART{}=$$; dd if=/dev/zero of=/tmp/shm/big"
+                            " bs=1M count=300 2>&1; echo big_rc=$?; "
+                            "echo CKEND{}=done".format(attempt, attempt),
+                         timeout=120, tag=f"R4b#{attempt}")
             txt = out_text(out)
             big = [l for l in txt.splitlines() if l.startswith("big_rc=")]
             big_rc = int(big[0].split("=")[1]) if big else -1
-            r4b_outcomes.append(f"attempt{attempt}: big_rc={big_rc}")
+            cookie = (f"attempt{attempt}: big_rc={big_rc} "
+                      f"start_seen={f'CKSTART{attempt}' in txt} "
+                      f"end_seen={f'CKEND{attempt}=' in txt}")
+            r4b_outcomes.append(cookie)
             sh(g, "rm -f /tmp/shm/big")
         except (ConnectionError, OSError, AssertionError) as exc:
             # a broken channel means the guest is going down but UML may
             # need ~1s to actually exit (OOM trace, init kill, power-down);
             # never send another frame until the process state settles
-            r4b_outcomes.append(f"attempt{attempt}: channel-{type(exc).__name__}")
+            r4b_outcomes.append(
+                f"attempt{attempt}: channel-{type(exc).__name__} "
+                f"rc_seen={rc if isinstance(rc, int) else None}")
             try:
                 g.proc.wait(timeout=8)
             except Exception:
                 pass
             guest_died = True
+            r4b_facts.append({
+                "attempt": attempt, "kind": "channel-death",
+                "exception": type(exc).__name__,
+                "guest_rc": g.proc.returncode,
+                "mem_available_kib_before": mem_before,
+                "console_tail": _console_tail()})
             break
+        r4b_facts.append({
+            "attempt": attempt, "kind": "completed-frame",
+            "big_rc": big_rc, "guest_alive": g.proc.poll() is None,
+            "mem_available_kib_before": mem_before})
         if g.proc.poll() is not None:
             guest_died = True
+            r4b_facts[-1]["console_tail"] = _console_tail()
             r4b_outcomes.append(f"attempt{attempt}: guest-exited")
             break
+    FACTS["r4b_attempt_facts"] = r4b_facts
     FACTS["r4b_shmem_oversubscribe_outcomes"] = r4b_outcomes
     chk("R4b shmem oversubscribe behavior recorded (allocator killed or "
         "guest down every time)", all("big_rc=137" in o or "channel-" in o

@@ -1,0 +1,174 @@
+{
+ "experiment": "uml resource semantics on kernel-candidate-2 (round-05 \u00a78), pids/cpu/module-policy additions",
+ "utc": "2026-09-27T20:59:13.768457+00:00",
+ "boundary_notice": "GuestWorkloadHardLimit (memory.max / pids.max / cpu.max inside the GUEST cgroup v2 hierarchy) is what THIS run asserts \u2014 guest-kernel truth, not a host guarantee. HostSandboxProcessHardLimit (cgroup hard limits on the host UML process itself) remains UNSUPPORTED on this host (cgroupfs ro), exactly the T09-C01 boundary for Native. The two are never blurred.",
+ "verdict": "RESOURCE_SEMANTICS_MISMATCH",
+ "summary": {
+  "checks_match": 15,
+  "checks_mismatch": 4
+ },
+ "facts": {
+  "kernel_binary_sha256": "084b8c3983f697aa1c89fcd1397e9bf7d234ca977e15cae32d8863cd7d8903ec",
+  "kernel_config_sha256": "242fb1e03dba1c5806b41ae7b9112080dc47f6e02fd097e5b3e7afe6321f621d",
+  "kernel_binary_path": "/inspire/qb-ilm/project/control-technology/25015/lightsandbox_v5_2026-09-24/spike/uml/work/src/linux/linux",
+  "kernel_config_path": "/inspire/qb-ilm/project/control-technology/25015/lightsandbox_v5_2026-09-24/spike/uml/work/src/linux/.config",
+  "guest_kernelrelease": "/bin/sh: uname: not found",
+  "guest_mem_total_kib": 249616,
+  "guest_cpu_fields": [
+   "1",
+   "0"
+  ],
+  "guest_cgroup_controllers": "cpu io memory pids",
+  "memcg_present": true,
+  "pids_cg_present": true,
+  "cpu_cg_present": true,
+  "pids_current_with_max16_vs_64forks": -1,
+  "cpu_stat_usage_usec_before": 0,
+  "cpu_stat_usage_usec_after": 3030000,
+  "cpu_stat_delta_usec_3s_hog_50pct_cap": 3030000,
+  "module_policy_probe_raw": "cat: can't open '/proc/modules': No such file or directory\nMODRC=1\ninsmod: short read\nINSMODRC=1",
+  "proc_modules_rc": 1,
+  "busybox_insmod_rc": 1,
+  "host_vmhwm_kib_after_150mib_write": 187352,
+  "r4b_shmem_oversubscribe_outcomes": [
+   "attempt1: big_rc=137",
+   "attempt2: big_rc=-1",
+   "attempt3: channel-ConnectionError"
+  ]
+ },
+ "notes": [
+  "candidate-1 finding: CONFIG_MEMCG absent (R3 NOT_TESTED); candidate-2 asserts it by build fact",
+  "hog journey: awk doubling starved the single CPU (v2a); busybox tail -c preflights and exits rc=1 without allocating (v2b); shell $( ) accumulation is the deterministic anon hog (v3)",
+  "guest ended after R4b, rc=-6"
+ ],
+ "checks": [
+  {
+   "check": "R1 mem=256M guest MemTotal KiB in (204800, 262144]",
+   "expected": "(204800, 262144]",
+   "observed": 249616,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R5 nproc recorded",
+   "expected": ">=1 field",
+   "observed": [
+    "1",
+    "0"
+   ],
+   "verdict": "MATCH"
+  },
+  {
+   "check": "cgroup2 mounts in guest",
+   "expected": "mount_rc=0",
+   "observed": "mount_rc=0\ncpu io memory pids",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "MEMCG offered in guest cgroup.controllers",
+   "expected": "'memory' offered (CONFIG_MEMCG=y build fact)",
+   "observed": "cpu io memory pids",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R3 guest enforces 32MiB memory.max (allocator SIGKILL=137)",
+   "expected": "inner_rc=137",
+   "observed": 137,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R3 init+channel survive MEMCG-constrained OOM",
+   "expected": "echo ok",
+   "observed": "alive-after-memcg-oom",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "pids offered in guest cgroup.controllers",
+   "expected": "'pids' offered (CONFIG_CGROUP_PIDS=y build fact)",
+   "observed": "cpu io memory pids",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "guest pids.max=16 caps 64-fork storm at <=20 tasks",
+   "expected": "1 <= pids.current <= 20 (hard 16 + shell/race slack)",
+   "observed": -1,
+   "verdict": "MISMATCH"
+  },
+  {
+   "check": "guest channel alive after pids fork storm",
+   "expected": "echo ok",
+   "observed": "alive-after-pids-limit",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "cpu offered in guest cgroup.controllers",
+   "expected": "'cpu' offered (build fact)",
+   "observed": "cpu io memory pids",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "cpu.max write rc=0 ('50000 100000')",
+   "expected": 0,
+   "observed": 1,
+   "verdict": "MISMATCH"
+  },
+  {
+   "check": "guest cpu.max 50% throttles 3s hog (delta<=2400000 usec)",
+   "expected": "0 <= delta <= 2400000 usec over ~3s",
+   "observed": 3030000,
+   "verdict": "MISMATCH"
+  },
+  {
+   "check": "module policy: /proc/modules unreadable AND busybox insmod fails",
+   "expected": "MODRC!=0 and INSMODRC!=0 (MODULES=n build fact)",
+   "observed": {
+    "MODRC": 1,
+    "INSMODRC": 1,
+    "raw": "cat: can't open '/proc/modules': No such file or directory\nMODRC=1\ninsmod: short read\nINSMODRC=1"
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R2 150MiB tmpfs write fits in 256MiB guest",
+   "expected": "dd_rc=0",
+   "observed": "dd_rc=0",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R2 host VmHWM >= 140MiB after 150MiB guest write",
+   "expected": ">=143360 KiB",
+   "observed": 187352,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R4a 300MiB anon hog OOM-killed (rc=137)",
+   "expected": "frame rc=137 or hog_rc=137",
+   "observed": {
+    "frame_rc": 137,
+    "body": ""
+   },
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R4a host UML process survives guest OOM",
+   "expected": true,
+   "observed": null,
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R4a init+channel survive anon OOM",
+   "expected": "echo ok",
+   "observed": "alive-after-anon-oom",
+   "verdict": "MATCH"
+  },
+  {
+   "check": "R4b shmem oversubscribe behavior recorded (allocator killed or guest down every time)",
+   "expected": "every attempt: big_rc=137|channel-death|guest-exit",
+   "observed": [
+    "attempt1: big_rc=137",
+    "attempt2: big_rc=-1",
+    "attempt3: channel-ConnectionError"
+   ],
+   "verdict": "MISMATCH"
+  }
+ ]
+}

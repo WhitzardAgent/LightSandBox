@@ -7,6 +7,7 @@
 
 pub mod commands;
 pub mod lifecycle;
+pub mod streams;
 
 pub mod errors {
     /// Stable machine-facing error codes for the native v1 API.

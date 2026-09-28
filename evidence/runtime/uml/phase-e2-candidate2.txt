@@ -1,0 +1,52 @@
+phase-b.cpio rebuilt from guest-init.sh @ 20:58:21
+boot umid=lsbxresc2 pid=2526296
+  [leg KREL] 'uname -r'
+  [leg KREL] done rc=127 out=26B
+  [leg R1] "awk '/MemTotal/{print $2}' /proc/meminfo"
+  [leg R1] done rc=0 out=7B
+  [leg R5] 'grep -c ^processor /proc/cpuinfo; cat /sys/devices/system/cp'
+  [leg R5] done rc=0 out=4B
+  [leg CG] 'mount -t cgroup2 none /sys/fs/cgroup 2>&1; echo mount_rc=$?;'
+  [leg CG] done rc=0 out=30B
+  [leg ] 'mkdir -p /tmp/shm; mount -t tmpfs -o size=180m tmpfs /tmp/sh'
+  [leg ] done rc=0 out=0B
+  [leg ] 'echo +memory > /sys/fs/cgroup/cgroup.subtree_control 2>/dev/'
+  [leg ] done rc=0 out=13B
+  [leg ] 'echo alive-after-memcg-oom'
+  [leg ] done rc=0 out=22B
+  [leg ] 'echo $$ > /sys/fs/cgroup/cgroup.procs; rmdir /sys/fs/cgroup/'
+  [leg ] done rc=0 out=0B
+  [leg PIDS] 'echo +pids > /sys/fs/cgroup/cgroup.subtree_control 2>/dev/nu'
+  [leg PIDS] done rc=2 out=54B
+  [leg ] 'echo alive-after-pids-limit'
+  [leg ] done rc=0 out=23B
+  [leg ] 'kill $(cat /sys/fs/cgroup/t2/cgroup.procs 2>/dev/null) 2>/de'
+  [leg ] done rc=127 out=0B
+  [leg CPU] 'echo +cpu > /sys/fs/cgroup/cgroup.subtree_control 2>/dev/nul'
+  [leg CPU] done rc=0 out=104B
+  [leg ] 'kill $(cat /sys/fs/cgroup/t3/cgroup.procs 2>/dev/null) 2>/de'
+  [leg ] done rc=127 out=0B
+  [leg MODPOL] 'cat /proc/modules 2>&1; echo MODRC=$?; busybox insmod /dev/n'
+  [leg MODPOL] done rc=0 out=97B
+  [leg R2] 'dd if=/dev/zero of=/tmp/shm/f150 bs=1M count=150 2>/dev/null'
+  [leg R2] done rc=0 out=8B
+  [leg ] 'rm -f /tmp/shm/f150'
+  [leg ] done rc=0 out=0B
+  [leg R4a] 'x=$(/bin/busybox head -c 314572800 /dev/urandom); echo hog_r'
+  [leg R4a] done rc=137 out=0B
+  [leg ] 'echo alive-after-anon-oom'
+  [leg ] done rc=0 out=21B
+  [leg ] 'mount -o remount,size=400m /tmp/shm 2>/dev/null; rm -f /tmp/'
+  [leg ] done rc=0 out=0B
+  [leg R4b#1] 'dd if=/dev/zero of=/tmp/shm/big bs=1M count=300 2>/dev/null;'
+  [leg R4b#1] done rc=0 out=11B
+  [leg ] 'rm -f /tmp/shm/big'
+  [leg ] done rc=0 out=0B
+  [leg R4b#2] 'dd if=/dev/zero of=/tmp/shm/big bs=1M count=300 2>/dev/null;'
+  [leg R4b#2] done rc=137 out=0B
+  [leg ] 'rm -f /tmp/shm/big'
+  [leg ] done rc=0 out=0B
+  [leg R4b#3] 'dd if=/dev/zero of=/tmp/shm/big bs=1M count=300 2>/dev/null;'
+verdict: RESOURCE_SEMANTICS_MISMATCH
+checks match/mismatch: 15 / 4
+written: /inspire/qb-ilm/project/control-technology/25015/lightsandbox_v5_2026-09-24/spike/results/uml-resource-semantics-candidate2.json

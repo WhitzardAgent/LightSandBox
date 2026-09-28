@@ -16,7 +16,7 @@ pub mod error;
 pub mod layout;
 pub mod process_config;
 pub mod pull;
-mod sha256; // private streaming SHA-256 for blob verification (round-03 #12)
+pub mod sha256; // streaming SHA-256; blobs (T06) + stream chunk digests (T12)
 pub mod store;
 pub mod unpack;
 

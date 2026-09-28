@@ -1,0 +1,67 @@
+{
+ "experiment": "uml kernel-candidate-2 build + smoke (round-05 directive section 7)",
+ "utc": "2026-09-27T20:18:41Z",
+ "base": {
+  "name": "kernel-candidate-1 (phase-a..f pinned binary)",
+  "kernel_binary_sha256": "477a39b5012db687608d32730392069e0ad0891fb7cb16bf4ad53f109c7fcbb4",
+  "note": "candidate-1 binary untouched; work/config-c1-preflip.txt holds the pre-flip .config verbatim"
+ },
+ "kernel_binary_sha256": "084b8c3983f697aa1c89fcd1397e9bf7d234ca977e15cae32d8863cd7d8903ec",
+ "config_sha256": "242fb1e03dba1c5806b41ae7b9112080dc47f6e02fd097e5b3e7afe6321f621d",
+ "version": "6.19.14",
+ "kernelrelease_source": "make -s ARCH=um kernelrelease",
+ "flips_applied": [
+  "CONFIG_MEMCG: not set -> y (survived olddefconfig; auto-added CONFIG_PAGE_COUNTER=y, CONFIG_CGROUP_WRITEBACK=y, CONFIG_SLAB_OBJ_EXT=y; CONFIG_MEMCG_V1 left not set)",
+  "CONFIG_CGROUP_PIDS: not set -> y (survived olddefconfig)",
+  "CONFIG_UML_NET: requested; symbol DOES NOT EXIST in Linux 6.19.14 ARCH=um Kconfig (only CONFIG_UML_NET_VECTOR exists) -> olddefconfig dropped the unknown symbol; no CONFIG_UML_NET line in final .config",
+  "CONFIG_UML_NET_VECTOR: not set -> y (survived olddefconfig; the sole UML net Kconfig family in 6.19.14)",
+  "CONFIG_UML_NET_SLIRP: requested; symbol DOES NOT EXIST in 6.19.14 (no 'slirp' string anywhere in arch/um/) -> dropped as unknown by olddefconfig; .config NOT hand-edited per directive",
+  "CONFIG_MODULES: y -> not set (survived; all module infra symbols removed, all 11 former =m promoted to =y except CONFIG_SLIP and CONFIG_SLIP fragment lines)",
+  "CONFIG_SLIP: m -> not set (survived; dead-module trap eliminated)"
+ ],
+ "eds_olddefconfig_deltas": [
+  "CONFIG_STATIC_LINK=y DROPPED (unrequested): CONFIG_UML_NET_VECTOR 'select MAY_HAVE_RUNTIME_DEPS' conflicts with STATIC_LINK 'depends on !MAY_HAVE_RUNTIME_DEPS'. Final .config: CONFIG_MAY_HAVE_RUNTIME_DEPS=y, CONFIG_LD_SCRIPT_DYN=y, CONFIG_LD_SCRIPT_DYN_RPATH=y. CONSEQUENCE: candidate-2 `linux` is DYNAMICALLY linked (interpreter /lib64/ld-linux-x86-64.so.2) whereas candidate-1 was statically linked. Enabling the UML vector net family and STATIC_LINK are mutually exclusive in 6.19.14 Kconfig; the net flip was given priority per directive.",
+  "11 former =m symbols promoted to =y by MODULES=n: IOSCHED_BFQ, BINFMT_MISC, BLK_DEV_LOOP, BLK_DEV_NBD, DUMMY, TUN, PPP, AUTOFS_FS, ISO9660_FS, SLHC, (SLIP -> not set instead)",
+  "module-infrastructure symbols removed with MODULES=n: CONFIG_MODULE_UNLOAD, CONFIG_MODPROBE_PATH, CONFIG_TRIM_UNUSED_KSYMS lines, CONFIG_EXECMEM (selected by MODULES), CONFIG_TEST_LKM/TEST_KMOD/TEST_KALLSYMS/TEST_BPF/TEST_STATIC_KEYS not-set lines (depend on m/MODULES)",
+  "cosmetic kconfig re-derivation (no semantic action): CONFIG_CC_IMPLICIT_FALLTHROUGH, CONFIG_CC_HAS_MARCH_NATIVE/CONFIG_X86_NATIVE_CPU, CONFIG_CC_HAS_ZERO_CALL_USED_REGS, CONFIG_HAVE_KCSAN_COMPILER, CONFIG_ARCH_DISABLE_KASAN_INLINE/KASAN lines, CONFIG_TEST_ASYNC_DRIVER_PROBE/TEST_LOCKUP/TEST_OBJPOOL/PREEMPTIRQ_DELAY_TEST/PERCPU_TEST lines; CONFIG_GCOV not-set line added",
+  "CONFIG_UML_NET_DAEMON state: NO LINE in final .config (symbol does not exist in 6.19.14; recorded per directive instead of hand-editing)"
+ ],
+ "module_count": 0,
+ "module_count_command": "grep -c '=m$' .config",
+ "flip_grep_verbatim": [
+  "CONFIG_MEMCG=y",
+  "CONFIG_CGROUP_PIDS=y",
+  "CONFIG_UML_NET_VECTOR=y",
+  "CONFIG_MODULES_USE_ELF_RELA=y",
+  "# CONFIG_MODULES is not set",
+  "# CONFIG_SLIP is not set"
+ ],
+ "net_family_chosen": "CONFIG_UML_NET_VECTOR=y (in-tree transports: raw, fd, vde user-side; tap, gre, l2tpv3, hybrid, bess kernel-parsed). slirp/daemon/pcap are NOT separate Kconfig symbols in 6.19.14 and no in-tree slirp transport exists; rootless slirp-style egress must use the vector 'fd' transport against a host-side slirp4netns/passt socket (section 34 follow-up).",
+ "build": {
+  "command": "PATH=<work>/tools/bin:$PATH make ARCH=um -j4",
+  "log": "spike/uml/work/kernel-build-k2.log",
+  "wall_time": "2026-09-27T20:13:47Z -> 20:16:11Z = 2m24s (BUILD_RC=0; incremental over candidate-1 objects on host with load average ~38)",
+  "env_defects_hit": [
+   "attempt 1 (20:08:01Z, rc=2, 6s): /root/.minimax/shims/rm (agent-bash PATH override) prints 'mavis-trash: moved to trash: <file>' on stdout; kbuild try-run/cc-option capture that output via $(shell ...) and inject it word-by-word into gcc argv -> 'gcc: error: mavis-trash:: linker input file not found' at arch/x86/um/user-offsets.s",
+   "attempt 2 (20:13:11Z, rc=2, 1s): same; wrapper existed but lacked +x because the earlier chmod+test call had been denied as a batch",
+   "fix: spike/uml/work/tools/bin/rm -> exec /root/.minimax/bin/mavis-trash \"$@\" >/dev/null (same sanctioned trash binary, POSIX-silent stdout), prepended via tools/bin in PATH; zero mavis-trash lines in final build log"
+  ]
+ },
+ "smoke": {
+  "method": "timeout 60 ./linux mem=256M con0=fd:0,fd:1 </dev/null, same invocation for old and new binary; verdict from guest kmsg markers only",
+  "presmoke_log": "spike/uml/work/k2-presmoke.log (candidate-1 binary, host_rc=0, 85 lines, no panic/BUG)",
+  "postsmoke_log": "spike/uml/work/k2-postsmoke.log (candidate-2 binary, host_rc=0, 89 lines, no panic/BUG/Oops/Call Trace)",
+  "presmoke_markers": ["LSB_DEVKMSG_MODE_BEFORE=ratelimit","LSB_CONSOLE_PROBE=open-ok","LSB_UML_BOOT_OK","LSB_PROC_OWN=yes","LSB_HOSTNAME=lsbx-uml","LSB_CHOWN_OK","LSB_STAT=1000:999 644","LSB_SU_OK","LSB_USER_WRITE_OK","LSB_DAC_ISOLATION_OK","LSB_CGROUPS=6","LSB_UML_EXPERIMENT_DONE"],
+  "postsmoke_markers": ["LSB_DEVKMSG_MODE_BEFORE=ratelimit","LSB_CONSOLE_PROBE=open-ok","LSB_UML_BOOT_OK","LSB_PROC_OWN=yes","LSB_HOSTNAME=lsbx-uml","LSB_CHOWN_OK","LSB_STAT=1000:999 644","LSB_SU_OK","LSB_USER_WRITE_OK","LSB_DAC_ISOLATION_OK","LSB_CGROUPS=7","LSB_UML_EXPERIMENT_DONE"],
+  "marker_name_sets": "identical (12 names both runs); only the LSB_CGROUPS VALUE grew 6 -> 7 alongside the MEMCG/CGROUP_PIDS flip; both memory_cgrp_subsys and pids_cgrp_subsys are present in the new System.map, exact controller-table enumeration is deferred to the R3 resource rerun (parent-tracked)",
+  "host_rc": {"presmoke": 0, "postsmoke": 0, "note": "guest poweroff before timeout in both runs (rc=0, not 124)"},
+  "panic_bug_lines": {"presmoke": 0, "postsmoke": 0},
+  "verdict": "SMOKE_OK"
+ },
+ "measured_on_host_note": "All numbers measured on the shared multi-tenant round-03 spike host (load average ~38, containerized, PORTABLE_ROOTLESS, no KVM, no sudo, CapEff as recorded in spike/uml/work/host-readiness.json lineage). Build and smoke performed as the unprivileged spike user inside spike/uml/work scratch only.",
+ "deferred_to_parent": [
+  "R3 resource-suite rerun on candidate-2 (memory.max / pids.max now compilable-in; must move from NOT_TESTED to measured)",
+  "section-34 network legs (vector transports + host-side slirp4netns/passt decision)",
+  "guest image rebuild decision: candidate-2 is dynamically linked, so any chroot/static assumption about the uml binary is void; host ld.so/libc now required at guest-kernel exec time"
+ ]
+}

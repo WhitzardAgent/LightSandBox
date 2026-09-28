@@ -13,6 +13,7 @@ pub mod images;
 pub mod resources;
 pub mod rootfs;
 pub mod runtime;
+pub mod streams;
 
 pub mod probe {
     use ls_core::capability::{CapabilityFinding, CapabilityStatus};

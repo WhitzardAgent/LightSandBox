@@ -1,5 +1,30 @@
 > v5：架构/接口以docs/v5与contracts/v1为准；旧seed仅为局部逻辑参考。当前产品任务目录已更新为45项。
 
+# 交接 2026-09-29（真实 benchmark case runner，优先 SWE/Terminal）
+
+当前分支增加普通用户 worker case runner、原生 OCI create/exec/files/delete
+驱动与原始证据收集。worker 地址放在被忽略的
+`dev/runtime-workers.local.json`，公开仓库不保存内部 SSH 目标。
+
+- SWE-bench `full:astropy__astropy-11693` 已在候选后端真实运行。gold patch
+  经锁定上游 grader 判定 resolved；原始 pytest 摘要 49 项，错误 patch 在
+  verifier 前失败；两次运行均有清理收据。状态只能写
+  `CANDIDATE_ONLY_POSITIVE / REFERENCE_NOT_RUN`。
+- Terminal-Bench `atrx-vep-crispr` 的原版 agent Dockerfile 在隔离 rootless
+  BuildKit 中因 `/etc/gshadow` GID 42 无法由单 ID userns 表示而失败。
+  solution/verifier 尚未运行，不能声明支持。下一步接通已实测的 UML 多 UID
+  路径来构建原版 agent/verifier 镜像，再执行原 solution 和 `tests/test.sh`。
+- CyberGym 已完成 agent 工作区、原 build 与清理证明，但按当前推进优先级暂停；
+  不研究或生成有效 PoC。
+
+本轮本地门禁：packctl 34、native 76、seed 109、runtime runner 7、docs 180、
+examples 20 均通过。macOS 上直接运行 `cargo test -p ls-host` 有 14 项 Linux
+宿主相关失败；Linux worker 的 workspace 测试在本轮代码的早期版本通过，最新
+case-driver 已通过 `cargo check`，仍需在 SSH 稳定后补一次完整 Linux 回归。
+
+真实证据在 `evidence/runtime/ws03/`；它证明指定 HostReport 上的候选运行，不是
+Docker 参考差分、完整 benchmark parity 或独立认证。
+
 # 交接 2026-09-24(实现轮:T00/T01/T03 + Portable Rootless Spike + ADR0001)
 
 本轮完成(commit 序列见 git log):

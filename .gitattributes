@@ -1,0 +1,3 @@
+# Raw runtime evidence is byte-preserved. Test output can legitimately contain
+# trailing spaces and blank terminal lines; do not treat them as source style.
+evidence/** -whitespace

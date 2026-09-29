@@ -1,0 +1,39 @@
+[02:26:57] ptrace probe: OK  (CapEff: 0000000000000000)
+[02:26:57] config CONFIG_BLK_DEV_INITRD=y
+[02:26:57] config CONFIG_STATIC_LINK=y
+[02:26:57] config CONFIG_DEBUG_INFO=y
+[02:26:57] busybox binary: /data/lightsandbox-panxudong/uml-run/work/src/busybox/busybox: ELF 64-bit LSB executable, 
+[02:26:57] bc shim ready: 42
+initramfs.list written
+[02:26:58] make ARCH=um -j21 (this takes minutes)
+[02:27:24] uml binary sha256 ddbb7f2c471185f7fd01c7c513dd68f912cb4bdd72f4025cb2526f1e40c7f102
+/data/lightsandbox-panxudong/uml-run/work/src/linux/linux: ELF 64-bit LSB executable, x86-64, versio
+[02:27:24] booting UML (timeout 120s)…
+[02:27:25] host process exit rc=0
+NET: Registered PF_PACKET protocol family
+Initialized stdio console driver
+Console initialized on /dev/tty0
+printk: legacy console [tty0] enabled
+Initializing software serial port version 1
+printk: legacy console [mc-1] enabled
+Failed to initialize ubd device 0 :Couldn't determine size of device's file
+Warning: unable to open an initial console.
+Run /init as init process
+LSB_DEVKMSG_MODE_BEFORE=ratelimit
+LSB_CONSOLE_PROBE=open-ok
+LSB_UML_BOOT_OK
+LSB_PROC_OWN=yes
+LSB_HOSTNAME=lsbx-uml
+LSB_CHOWN_OK
+LSB_STAT=1000:999 644
+uid=1000(user) gid=1000(user) groups=1000(user)
+LSB_SU_OK
+-rw-r--r--    1 user     user             0 Sep 29 02:27 /workspace/by-user
+LSB_USER_WRITE_OK
+LSB_DAC_ISOLATION_OK
+LSB_CGROUPS=6
+LSB_UML_EXPERIMENT_DONE
+reboot: Power down
+
+evidence written: /data/lightsandbox-panxudong/results/uml-boot.json
+VERDICT: BOOT_OK

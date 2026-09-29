@@ -994,10 +994,8 @@ mod tests {
         let _ = std::fs::remove_file(&args.receipt);
     }
 
-    // T11 protocol v2: parse + ctrl kill-switch behaviour. The two
-    // child-spawning tests serialize on REAP_LOCK: waitpid(-1) is
-    // process-global and parallel tests must not eat each other's children.
-    static REAP_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    // waitpid(-1) is process-global, including across the serve module's
+    // parallel tests. Hold the crate-wide guard around every child run.
 
     fn base_args(ctrl: Option<String>, nested: bool, argv: &[&str]) -> InitArgs {
         InitArgs {
@@ -1077,7 +1075,7 @@ mod tests {
 
     #[test]
     fn ctrl_file_missing_keeps_natural_exit_observation() {
-        let _g = REAP_LOCK.lock().unwrap();
+        let _g = crate::TEST_CHILD_REAP_LOCK.lock().unwrap();
         let args = base_args(
             Some("/definitely/not-present-lsguest.ctrl".to_string()),
             false,
@@ -1094,7 +1092,7 @@ mod tests {
 
     #[test]
     fn ctrl_cancel_kills_child_and_reports_signaled_not_exit() {
-        let _g = REAP_LOCK.lock().unwrap();
+        let _g = crate::TEST_CHILD_REAP_LOCK.lock().unwrap();
         let ctrl_path = std::env::temp_dir()
             .join(format!("lsguest-init-cancel-{}.ctrl", std::process::id()))
             .to_string_lossy()
@@ -1117,7 +1115,7 @@ mod tests {
         // v2.1 contract: a denied unshare is a DOWNGRADE, never a fabricated
         // spawn failure. Whatever this host permits, the payload runs and the
         // receipt names the real mode.
-        let _g = REAP_LOCK.lock().unwrap();
+        let _g = crate::TEST_CHILD_REAP_LOCK.lock().unwrap();
         let args = base_args(None, true, &["/bin/true"]);
         let (_pid, outcome, sup) = run_child(&args).expect("payload runs under any mode");
         match outcome {
@@ -1154,4 +1152,3 @@ mod tests {
         assert_ne!(supervision_mode(true, -1, 0), Supervision::NestedPidns);
     }
 }
-

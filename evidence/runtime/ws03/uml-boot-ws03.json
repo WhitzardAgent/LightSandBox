@@ -1,0 +1,49 @@
+{
+ "experiment": "uml phase-a boot (CONTAINERIZED + PORTABLE_ROOTLESS host)",
+ "utc": "2026-09-29T02:27:25.488950+00:00",
+ "host_process_exit_rc": 0,
+ "ptrace_probe": "OK",
+ "kernel_binary_sha256": "ddbb7f2c471185f7fd01c7c513dd68f912cb4bdd72f4025cb2526f1e40c7f102",
+ "verdict": "BOOT_OK",
+ "markers": {
+  "LSB_UML_BOOT_OK": true,
+  "LSB_CHOWN_OK": true,
+  "LSB_SU_OK": true,
+  "LSB_USER_WRITE_OK": true,
+  "LSB_UML_EXPERIMENT_DONE": true
+ },
+ "fields": {
+  "LSB_PROC_OWN": "yes",
+  "LSB_HOSTNAME": "lsbx-uml",
+  "LSB_STAT": "1000:999 644",
+  "LSB_CGROUPS": "6"
+ },
+ "console_tail": [
+  "NET: Registered PF_PACKET protocol family",
+  "Initialized stdio console driver",
+  "Console initialized on /dev/tty0",
+  "printk: legacy console [tty0] enabled",
+  "Initializing software serial port version 1",
+  "printk: legacy console [mc-1] enabled",
+  "Failed to initialize ubd device 0 :Couldn't determine size of device's file",
+  "Warning: unable to open an initial console.",
+  "Run /init as init process",
+  "LSB_DEVKMSG_MODE_BEFORE=ratelimit",
+  "LSB_CONSOLE_PROBE=open-ok",
+  "LSB_UML_BOOT_OK",
+  "LSB_PROC_OWN=yes",
+  "LSB_HOSTNAME=lsbx-uml",
+  "LSB_CHOWN_OK",
+  "LSB_STAT=1000:999 644",
+  "uid=1000(user) gid=1000(user) groups=1000(user)",
+  "LSB_SU_OK",
+  "-rw-r--r--    1 user     user             0 Sep 29 02:27 /workspace/by-user",
+  "LSB_USER_WRITE_OK",
+  "LSB_DAC_ISOLATION_OK",
+  "LSB_CGROUPS=6",
+  "LSB_UML_EXPERIMENT_DONE",
+  "reboot: Power down",
+  ""
+ ],
+ "note": "verdict derives only from guest-emitted markers in kernel console output."
+}

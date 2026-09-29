@@ -12,6 +12,7 @@ __pycache__/
 
 # dev/check run logs (summaries are committed deliberately under evidence/)
 /dev/.check-runs/
+/dev/runtime-workers.local.json
 
 # Virtualenvs
 .venv/

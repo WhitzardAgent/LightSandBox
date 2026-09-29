@@ -18,6 +18,12 @@ pub mod init;
 #[cfg(unix)]
 pub mod serve;
 
+// The init tests call waitpid(-1), which can reap children spawned by serve
+// tests running in the same test process. Production init and serve are
+// separate binary modes; only their tests need this process-wide guard.
+#[cfg(test)]
+pub(crate) static TEST_CHILD_REAP_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 pub mod initargs {
     use std::fmt;
 

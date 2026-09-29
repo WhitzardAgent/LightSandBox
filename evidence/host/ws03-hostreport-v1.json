@@ -1,0 +1,111 @@
+{
+  "schema": "lightsandbox.hostreport/1",
+  "probe_date": "2026-09-29",
+  "hostname": "pxd",
+  "probe_provenance": "T03 live argv probes; supersedes-as-formal the 2026-09-23 exploratory probe (evidence/host/rootless-host-report.json)",
+  "host": {
+    "kernel": "5.10.25-nvidia-gpu",
+    "arch": "x86_64",
+    "uid": 10250,
+    "nested_container_traits": "cap 掩码 0x1ffffffffff(live /proc/self/status CapBnd); cgroupfs=rw?(live mountinfo); 见 identity_observation"
+  },
+  "findings": [
+    {
+      "name": "userns",
+      "status": "SUPPORTED",
+      "evidence_command": "unshare -Ur true",
+      "exit_code": 0,
+      "output_excerpt": "unprivileged_userns_clone=<unreadable: [Errno 2] No such file or directory: '/proc/sys/kernel/unprivileged_userns_clone'>; max_user_namespaces=<unreadable: [Errno 2] No such file or directory: '/proc/sys/kernel/max_user_namespaces'>",
+      "note": "unprivileged user namespace 可创建"
+    },
+    {
+      "name": "uid_mappings",
+      "status": "DEGRADED",
+      "evidence_command": "newuidmap",
+      "exit_code": 127,
+      "output_excerpt": "newuidmap: command not found; /etc/subuid=present; userns 内 uid_map='0      10250          1' (single identity); newuidmap/newgidmap: absent",
+      "limitation": "仅单 ID 映射;多 container UID/GID 语义不可原生提供,需要 SingleIdCompatibilityPolicy 显式声明"
+    },
+    {
+      "name": "cgroup",
+      "status": "UNSUPPORTED",
+      "evidence_command": "touch /sys/fs/cgroup/.lsbx-delegation-probe",
+      "exit_code": 1,
+      "output_excerpt": "touch: cannot touch '/sys/fs/cgroup/.lsbx-delegation-probe': Read-only file system; mount=rw?; /proc/self/cgroup: 10:blkio:/kubepods/pod5adc7acf-04cb-45fc-984d-6ee447a21bd9/dda145c616ce7a56037f43240bbac56f4896909a358a1e30d22e3d6613137e10\n9:perf_event:/kubepods/pod5adc7acf-04cb-45fc-984d-6ee447a21bd9/dda145c616ce7a56037f43240bbac56f4896909a358a1e30d22e3d6613137e10\n8:pids:/kubepods/pod5adc7acf-04cb-45fc-984d-6ee447a21bd9/dda145c616ce7a56037f43240bbac56f4896909a358a1e30d22e3d6613137e10/user.slice/user-10250.slice/session-c37.scope\n7:net_cls,net_prio:/kubepods/pod5adc7acf-04cb-45fc-984d-6ee447a21bd9/dda145c616ce7a56037f43240bbac56f4896909a358a1e30d22e3d6613137e10\n6:devices:/kubepods/pod5adc7acf-04cb-45fc-984d-6ee447a21bd9/dda145c616ce7a56037f43240bbac56f4896909a358a1e30d22e3d6613137e10/user.slice\n5:cpuset:/kubepods/pod5adc7acf-04cb-45fc-984d-6ee447a21bd9/dda145c616ce7a56037f43240bbac56f4896909a358a1e30d22e3d6613137e10\n4:memory:/kubepods/pod5adc7acf-04cb-45fc-984d-6ee447a21bd9/dda145c616ce7a56037f43240bbac56f4896909a358a1e30d22e3d6613137e10/user.slice/user-10250.slice/session-c37.scope\n3:cpu,cpuacct:/kubepods/pod5adc7acf-04cb-45fc-984d-6ee447a21bd9/dda145c616ce7a56037f43240bbac56f4896909a358a1e30d22e3d6613137e10/user.slice\n2:freezer:/kubepods/pod5adc7acf-04cb-45fc-984d-6ee447a21bd9/dda145c616ce7a56037f43240bbac56f4896909a358a1e30d22e3d6613137e10\n1:name=systemd:/user.slice/user-10250.slice/session-c37.scope\n0::/user.slice/user-10250.slice/session-c37.scope",
+      "limitation": "无 cgroup v2 委托:不可声明任何 memory/pids/cpu/io 硬限额;HardResourceLimits=HOST_UNSUPPORTED 直到管理员委托"
+    },
+    {
+      "name": "procfs",
+      "status": "UNSUPPORTED",
+      "evidence_command": "unshare -Urpf mount -t proc proc /proc",
+      "exit_code": 32,
+      "output_excerpt": "mount: /proc: permission denied.\n       dmesg(1) may have more information after failed mount system call.",
+      "limitation": "私有 procfs 挂载 EPERM(嵌套容器继承的 masked /proc + 外层运行时策略);A/B 沙箱共享宿主 /proc 会互相暴露,见 spike P2 安全实验"
+    },
+    {
+      "name": "mount",
+      "status": "SUPPORTED",
+      "evidence_command": "unshare -Urm python3 -c <ctypes mount(2) probe: tmpfs + MS_BIND>",
+      "exit_code": 0,
+      "output_excerpt": "tmpfs mount+write OK; bind mount content verified",
+      "note": "tmpfs/bind 挂载在 userns+mountns 内实测可用;namespace 销毁即清理"
+    },
+    {
+      "name": "rootfs",
+      "status": "DEGRADED",
+      "evidence_command": "unshare -Urm mount -t overlay overlay -o lowerdir=..,upperdir=<disk>,workdir=.. ..",
+      "exit_code": 32,
+      "output_excerpt": "mount: /tmp/lsbx-ov-y9tz33wt/t: permission denied.\n       dmesg(1) may have more information after failed mount system call.; home fs=xfs; /dev/fuse absent",
+      "limitation": "磁盘 overlay upper 与 fuse-overlayfs 不可用;v1 rootfs 仅承诺 FULL_COPY(磁盘整树复制)与 TMPFS_COW(内存回写层)两条路径"
+    },
+    {
+      "name": "network",
+      "status": "DEGRADED",
+      "evidence_command": "unshare -Urn sh -c 'ip link add lsbxprobe0 type veth peer name lsbxprobe1 && ip link del lsbxprobe0'",
+      "exit_code": 0,
+      "output_excerpt": "; netns 可建但仅 ['lo']; helpers=none",
+      "limitation": "无 rootless 网络 helper(slirp4netns/pasta 均缺);veth 实验在 私有 netns 内执行(宿主零残留);v1 承诺 network=none(loopback only),出口网络属可选增强"
+    },
+    {
+      "name": "seccomp",
+      "status": "DEGRADED",
+      "evidence_command": "grep -q '\"seccomp\"' <runc features output>",
+      "exit_code": 1,
+      "output_excerpt": "Seccomp:\t0; runc features rc=127, seccomp entry absent; 静态 runc 构建无 libseccomp(宿主无头文件)",
+      "limitation": "内核支持 seccomp 但当前 v1 运行二进制未带过滤支持;不可宣称 seccomp 策略强制,直到以 libseccomp 重建并复测"
+    },
+    {
+      "name": "lsm",
+      "status": "DEGRADED",
+      "evidence_command": "ls /sys/kernel/security/apparmor",
+      "exit_code": 2,
+      "output_excerpt": "apparmor enabled=<unreadable: [Errno 2] No such file or directory: '/sys/module/apparmor/parameters/enabled'>; securityfs/profiles 不可读 (ls: cannot access '/sys/kernel/security/apparmor': No such file or directory); getenforce=absent",
+      "limitation": "宿主 AppArmor 激活于外层且不可由本层管理;不加载自定义 LSM 策略,v1 不以 LSM 为安全边界"
+    },
+    {
+      "name": "filesystem",
+      "status": "SUPPORTED",
+      "evidence_command": "ls /dev/fuse",
+      "exit_code": 0,
+      "output_excerpt": "/dev/fuse present"
+    },
+    {
+      "name": "resource",
+      "status": "SUPPORTED",
+      "evidence_command": "systemctl --user status",
+      "exit_code": 0,
+      "output_excerpt": "user manager present"
+    }
+  ],
+  "derived_tier": "PORTABLE_ROOTLESS",
+  "tier_notes": {
+    "PORTABLE_ROOTLESS": "首发宿主类;承诺 Benchmark Task Parity,不承诺 General Docker Semantic Parity",
+    "UNSUPPORTED_HOST": "非接纳 tier:无足够实测证据时的诚实记录值,不得被改写为任何接纳 tier",
+    "explicitly_not_claimed": [
+      "full Docker UID/GID semantics (single-ID host)",
+      "hard cgroup resource enforcement (no delegation)",
+      "private procfs per sandbox (EPERM on this layer)",
+      "seccomp policy enforcement via current static runc build"
+    ]
+  }
+}

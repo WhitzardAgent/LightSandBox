@@ -19,7 +19,7 @@
 
 use crate::images::error::ImageError;
 use crate::images::layout::load_verified;
-use crate::images::process_config::{convert, ImageProcessConfig, ProcessOverrides};
+use crate::images::process_config::{convert, ArgvOverride, ImageProcessConfig, ProcessOverrides};
 use crate::images::store::ImageStore;
 use crate::images::Platform;
 use crate::rootfs::lease::{mount_leaks_under, sweep, GcReport};
@@ -70,6 +70,10 @@ pub struct CreateSandboxInput {
     pub image: String,
     pub workdir: Option<String>,
     pub env: Vec<(String, String)>,
+    /// Native v1 explicit process overrides. `None` inherits the image;
+    /// `Clear` and `Replace` retain the resolver's distinct semantics.
+    pub entrypoint_override: Option<ArgvOverride>,
+    pub command_override: Option<ArgvOverride>,
     /// Hard capability requirements — checked via the shared planner
     /// BEFORE any effect (08_FAILURES: requirement != observation).
     pub requirements: CapabilityRequirements,
@@ -587,6 +591,8 @@ impl<B: SandboxBackend + Clone + Send + 'static> SandboxManager<B> {
                     let img_cfg = ImageProcessConfig::from_config(&image.config)
                         .map_err(ManagerError::from_image)?;
                     let overrides = ProcessOverrides {
+                        entrypoint: input.entrypoint_override.clone(),
+                        command: input.command_override.clone(),
                         cwd: input.workdir.clone(),
                         env: input.env.clone(),
                         ..ProcessOverrides::none()

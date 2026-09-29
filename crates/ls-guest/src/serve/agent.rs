@@ -555,9 +555,11 @@ mod tests {
     struct Harness {
         sock: UnixStream,
         agent: Option<JoinHandle<RunEnd>>,
+        _reap_guard: std::sync::MutexGuard<'static, ()>,
     }
 
     fn harness() -> Harness {
+        let reap_guard = crate::TEST_CHILD_REAP_LOCK.lock().unwrap();
         let (host, guest) = UnixStream::pair().unwrap();
         let reader = guest.try_clone().unwrap();
         let agent = std::thread::spawn(move || Agent::new().run(reader, guest));
@@ -567,6 +569,7 @@ mod tests {
         Harness {
             sock,
             agent: Some(agent),
+            _reap_guard: reap_guard,
         }
     }
 

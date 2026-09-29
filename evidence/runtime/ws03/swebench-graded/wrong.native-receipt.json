@@ -1,0 +1,117 @@
+{
+  "cleanup": {
+    "all_ok": true,
+    "receipt": {
+      "cleanup_id": "cln-70077-4-18d9aac87d0eb379",
+      "compaction_result": null,
+      "finished_unix_ms": 1790650104924,
+      "ops_terminated": null,
+      "reversible": false,
+      "scope": "sandbox",
+      "started_unix_ms": 1790650104109,
+      "steps": [
+        {
+          "name": "archive-init-receipt",
+          "note": "no init receipt existed (never fabricated)",
+          "ok": true,
+          "wall_ms": 0
+        },
+        {
+          "name": "backend-delete",
+          "ok": true,
+          "wall_ms": 123
+        },
+        {
+          "name": "backend-residue-sweep",
+          "ok": true,
+          "wall_ms": 0
+        },
+        {
+          "name": "lease-teardown",
+          "ok": true,
+          "wall_ms": 691
+        },
+        {
+          "name": "layout-view-remove",
+          "note": "view already gone",
+          "ok": true,
+          "wall_ms": 0
+        }
+      ],
+      "target_generation": 1,
+      "target_sandbox_id": "sbx-70077-0-18d9aaa49b830bd6"
+    }
+  },
+  "complete": false,
+  "created_state": "running",
+  "generation": 1,
+  "image_digest": "sha256:6c7c53781de330e7000fbd2e4277ac144434cd79120e0c6ed6bb59aee12e979d",
+  "live_after": [],
+  "sandbox_id": "sbx-70077-0-18d9aaa49b830bd6",
+  "schema": "native-case-driver/1",
+  "step_error": "step apply-patch did not exit zero with an authoritative receipt",
+  "steps": [
+    {
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "printf %s 'ZGlmZiAtLWdpdCBhL25vdC1hLXJlYWwtZmlsZSBiL25vdC1hLXJlYWwtZmlsZQpAQCBtYWxmb3JtZWQgQEAK' | base64 -d > '/tmp/patch.diff'"
+      ],
+      "cwd": null,
+      "execution_id": "exec-70077-1-18d9aac81c15c492",
+      "exit_record": {
+        "exit_code": 0,
+        "kind": "EXITED"
+      },
+      "name": "upload-patch",
+      "state": "exited",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/0.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/0.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "truncated": false,
+      "wall_ms": 373
+    },
+    {
+      "argv": [
+        "sha256sum",
+        "/tmp/patch.diff"
+      ],
+      "cwd": null,
+      "execution_id": "exec-70077-2-18d9aac8330963f8",
+      "exit_record": {
+        "exit_code": 0,
+        "kind": "EXITED"
+      },
+      "name": "patch-digest",
+      "state": "exited",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/1.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/1.stdout",
+      "stdout_sha256": "a908830a114257c9709ffa6c5096273e0858571c8257cfbcd725cb3167f6fa64",
+      "truncated": false,
+      "wall_ms": 20
+    },
+    {
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "set -x\nattempt=0\nfor command in 'git apply --verbose' 'git apply --verbose --3way' 'git apply --verbose --reject' 'patch --batch --forward --fuzz=5 -p1 -i'; do\n  if [ \"$attempt\" -ne 0 ]; then\n    git checkout -- . ; git clean -fd\n  fi\n  if $command /tmp/patch.diff; then\n    exit 0\n  fi\n  attempt=$((attempt + 1))\ndone\ngit apply --check --reverse /tmp/patch.diff\n"
+      ],
+      "cwd": "/testbed",
+      "execution_id": "exec-70077-3-18d9aac834f48442",
+      "exit_record": {
+        "exit_code": 128,
+        "kind": "EXITED"
+      },
+      "name": "apply-patch",
+      "state": "exited",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/2.stderr",
+      "stderr_sha256": "f317817c1aa16d06755f5a1d390f261a73502adbb4c8cec80311c92c5020434f",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/2.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "truncated": false,
+      "wall_ms": 393
+    }
+  ]
+}

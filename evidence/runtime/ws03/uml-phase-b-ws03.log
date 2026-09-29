@@ -1,0 +1,36 @@
+[02:31:26] kernel sha256 ddbb7f2c471185f7fd01c7c513dd68f912cb4bdd72f4025cb2526f1e40c7f102
+fixture written: /data/lightsandbox-panxudong/uml-run/work/phase-b/oci-cache/fidelity
+manifest sha256: 9f04cd8c55701a6fa56689e8669d88372b976ebc986ca879b95e53d2c746b887
+config   sha256: e10294c81994565c6ee6ddc28ff04c4713e4c4c2bac7a4cf45ca2db82f3a0554
+expected.json + probe-paths.txt written under /data/lightsandbox-panxudong/uml-run/work/phase-b
+[02:31:26] base disk ready: 100663296 bytes
+phase-b.cpio rebuilt from guest-init.sh @ 02:31:26
+[02:31:26] initramfs: 14310912 bytes
+[02:31:26] boot 1/2: materialize (timeout 300s)
+[02:31:28] build boot rc=0 wall=1.74s
+LSB_PHASE_INIT mode=build ocipath=/data/lightsandbox-panxudong/uml-run/work/phase-b/oci-cache
+LSB_HOSTFS_MOUNT_OK
+LSB_HOSTFS_RO_OK
+LSB_UBD_MOUNT_OK
+LSB_UNPACK_START
+LSB_UNPACK_OK
+LSB_RTCONFIG_OK
+LSB_CONFIGSHA=5c3bd030a0f0453798239231a889ca2edbf2e125a269b51342744477f2121f1b
+LSB_UBD_UMOUNT_OK
+LSB_PHASE_BUILD_DONE
+[02:31:28] boot 2/2: runtime (timeout 300s)
+[02:31:30] runtime boot rc=0 wall=1.37s
+LSB_PHASE_INIT mode=runtime ocipath=/data/lightsandbox-panxudong/uml-run/work/phase-b/oci-cache
+LSB_RT_MOUNT_OK
+LSB_RT_CONFIGSHA=5c3bd030a0f0453798239231a889ca2edbf2e125a269b51342744477f2121f1b
+RT_CFG|cwd=/srv/data|uid=1000|gid=0|args=[/opt/svc/bin/svc --serve --default]|env=[PATH=/usr/bin:/bin TERM=xterm SVC_HOME=/opt/svc MARK=round04]
+SVC_ARGV=--serve --default
+SVC_PWD=/srv/data
+SVC_ID=uid=1000(user) gid=1000(user) groups=1000(user)
+SVC_ENV_HOME=/opt/svc
+SVC_MARK=round04
+LSB_PHASE_RUNTIME_DONE
+verdict: FIDELITY_OK
+fields match/mismatch: 108 / 0
+runtime: {'cwd': 'MATCH', 'argv_from_entrypoint_plus_cmd': 'MATCH', 'uid': 'MATCH', 'env_SVC_HOME': 'MATCH', 'env_MARK': 'MATCH'}
+written: /data/lightsandbox-panxudong/results/uml-oci-fidelity.json

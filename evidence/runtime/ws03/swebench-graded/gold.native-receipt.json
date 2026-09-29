@@ -1,0 +1,179 @@
+{
+  "cleanup": {
+    "all_ok": true,
+    "receipt": {
+      "cleanup_id": "cln-69196-7-18d9aa94dd4365ae",
+      "compaction_result": null,
+      "finished_unix_ms": 1790649883200,
+      "ops_terminated": null,
+      "reversible": false,
+      "scope": "sandbox",
+      "started_unix_ms": 1790649882307,
+      "steps": [
+        {
+          "name": "archive-init-receipt",
+          "note": "no init receipt existed (never fabricated)",
+          "ok": true,
+          "wall_ms": 0
+        },
+        {
+          "name": "backend-delete",
+          "ok": true,
+          "wall_ms": 123
+        },
+        {
+          "name": "backend-residue-sweep",
+          "ok": true,
+          "wall_ms": 0
+        },
+        {
+          "name": "lease-teardown",
+          "ok": true,
+          "wall_ms": 769
+        },
+        {
+          "name": "layout-view-remove",
+          "note": "view already gone",
+          "ok": true,
+          "wall_ms": 0
+        }
+      ],
+      "target_generation": 1,
+      "target_sandbox_id": "sbx-69196-0-18d9aa6dd101debb"
+    }
+  },
+  "complete": true,
+  "created_state": "running",
+  "generation": 1,
+  "image_digest": "sha256:6c7c53781de330e7000fbd2e4277ac144434cd79120e0c6ed6bb59aee12e979d",
+  "live_after": [],
+  "sandbox_id": "sbx-69196-0-18d9aa6dd101debb",
+  "schema": "native-case-driver/1",
+  "step_error": null,
+  "steps": [
+    {
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "printf %s 'ZGlmZiAtLWdpdCBhL2FzdHJvcHkvd2NzL3djc2FwaS9maXRzd2NzLnB5IGIvYXN0cm9weS93Y3Mvd2NzYXBpL2ZpdHN3Y3MucHkKLS0tIGEvYXN0cm9weS93Y3Mvd2NzYXBpL2ZpdHN3Y3MucHkKKysrIGIvYXN0cm9weS93Y3Mvd2NzYXBpL2ZpdHN3Y3MucHkKQEAgLTMyMyw3ICszMjMsMTcgQEAgZGVmIHBpeGVsX3RvX3dvcmxkX3ZhbHVlcyhzZWxmLCAqcGl4ZWxfYXJyYXlzKToKICAgICAgICAgcmV0dXJuIHdvcmxkWzBdIGlmIHNlbGYud29ybGRfbl9kaW0gPT0gMSBlbHNlIHR1cGxlKHdvcmxkKQogCiAgICAgZGVmIHdvcmxkX3RvX3BpeGVsX3ZhbHVlcyhzZWxmLCAqd29ybGRfYXJyYXlzKToKLSAgICAgICAgcGl4ZWwgPSBzZWxmLmFsbF93b3JsZDJwaXgoKndvcmxkX2FycmF5cywgMCkKKyAgICAgICAgIyBhdm9pZCBjaXJjdWxhciBpbXBvcnQKKyAgICAgICAgZnJvbSBhc3Ryb3B5Lndjcy53Y3MgaW1wb3J0IE5vQ29udmVyZ2VuY2UKKyAgICAgICAgdHJ5OgorICAgICAgICAgICAgcGl4ZWwgPSBzZWxmLmFsbF93b3JsZDJwaXgoKndvcmxkX2FycmF5cywgMCkKKyAgICAgICAgZXhjZXB0IE5vQ29udmVyZ2VuY2UgYXMgZToKKyAgICAgICAgICAgIHdhcm5pbmdzLndhcm4oc3RyKGUpKQorICAgICAgICAgICAgIyB1c2UgYmVzdF9zb2x1dGlvbiBjb250YWluZWQgaW4gdGhlIGV4Y2VwdGlvbiBhbmQgZm9ybWF0IHRoZSBzYW1lCisgICAgICAgICAgICAjIHdheSBhcyBhbGxfd29ybGQycGl4IGRvZXMgKHVzaW5nIF9hcnJheV9jb252ZXJ0ZXIpCisgICAgICAgICAgICBwaXhlbCA9IHNlbGYuX2FycmF5X2NvbnZlcnRlcihsYW1iZGEgKmFyZ3M6IGUuYmVzdF9zb2x1dGlvbiwKKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgJ2lucHV0JywgKndvcmxkX2FycmF5cywgMCkKKwogICAgICAgICByZXR1cm4gcGl4ZWxbMF0gaWYgc2VsZi5waXhlbF9uX2RpbSA9PSAxIGVsc2UgdHVwbGUocGl4ZWwpCiAKICAgICBAcHJvcGVydHkK' | base64 -d > '/tmp/patch.diff'"
+      ],
+      "cwd": null,
+      "execution_id": "exec-69196-1-18d9aa9175c6f69a",
+      "exit_record": {
+        "exit_code": 0,
+        "kind": "EXITED"
+      },
+      "name": "upload-patch",
+      "state": "exited",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/0.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/0.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "truncated": false,
+      "wall_ms": 393
+    },
+    {
+      "argv": [
+        "sha256sum",
+        "/tmp/patch.diff"
+      ],
+      "cwd": null,
+      "execution_id": "exec-69196-2-18d9aa918df085e3",
+      "exit_record": {
+        "exit_code": 0,
+        "kind": "EXITED"
+      },
+      "name": "patch-digest",
+      "state": "exited",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/1.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/1.stdout",
+      "stdout_sha256": "c20c7ac1a026fb070a478d1b15ebd862dabc6f332be76adca9ba39cbf5c5b7a8",
+      "truncated": false,
+      "wall_ms": 21
+    },
+    {
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "set -x\nattempt=0\nfor command in 'git apply --verbose' 'git apply --verbose --3way' 'git apply --verbose --reject' 'patch --batch --forward --fuzz=5 -p1 -i'; do\n  if [ \"$attempt\" -ne 0 ]; then\n    git checkout -- . ; git clean -fd\n  fi\n  if $command /tmp/patch.diff; then\n    exit 0\n  fi\n  attempt=$((attempt + 1))\ndone\ngit apply --check --reverse /tmp/patch.diff\n"
+      ],
+      "cwd": "/testbed",
+      "execution_id": "exec-69196-3-18d9aa918fdce3ba",
+      "exit_record": {
+        "exit_code": 0,
+        "kind": "EXITED"
+      },
+      "name": "apply-patch",
+      "state": "exited",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/2.stderr",
+      "stderr_sha256": "a30257828c8c9f5c910b88a5e769442bc2ac618bbd3f5f1503a1aa406df45cd9",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/2.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "truncated": false,
+      "wall_ms": 91
+    },
+    {
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "printf %s 'IyEvYmluL2Jhc2gKc2V0IC11eG8gcGlwZWZhaWwKc291cmNlIC9vcHQvbWluaWNvbmRhMy9iaW4vYWN0aXZhdGUKY29uZGEgYWN0aXZhdGUgdGVzdGJlZApjZCAvdGVzdGJlZApnaXQgY29uZmlnIC0tZ2xvYmFsIC0tYWRkIHNhZmUuZGlyZWN0b3J5IC90ZXN0YmVkCmNkIC90ZXN0YmVkCmdpdCBzdGF0dXMKZ2l0IHNob3cKZ2l0IC1jIGNvcmUuZmlsZU1vZGU9ZmFsc2UgZGlmZiAzODMyMjEwNTgwZDUxNjM2NWRkYWUxYTYyMDcxMDAxZmFmOTRkNDE2CnNvdXJjZSAvb3B0L21pbmljb25kYTMvYmluL2FjdGl2YXRlCmNvbmRhIGFjdGl2YXRlIHRlc3RiZWQKcHl0aG9uIC1tIHBpcCBpbnN0YWxsIC1lIC5bdGVzdF0gLS12ZXJib3NlCmdpdCBjaGVja291dCAzODMyMjEwNTgwZDUxNjM2NWRkYWUxYTYyMDcxMDAxZmFmOTRkNDE2IGFzdHJvcHkvd2NzL3djc2FwaS90ZXN0cy90ZXN0X2ZpdHN3Y3MucHkKZ2l0IGFwcGx5IC12IC0gPDwnRU9GXzExNDMyOTMyNDkxMicKZGlmZiAtLWdpdCBhL2FzdHJvcHkvd2NzL3djc2FwaS90ZXN0cy90ZXN0X2ZpdHN3Y3MucHkgYi9hc3Ryb3B5L3djcy93Y3NhcGkvdGVzdHMvdGVzdF9maXRzd2NzLnB5Ci0tLSBhL2FzdHJvcHkvd2NzL3djc2FwaS90ZXN0cy90ZXN0X2ZpdHN3Y3MucHkKKysrIGIvYXN0cm9weS93Y3Mvd2NzYXBpL3Rlc3RzL3Rlc3RfZml0c3djcy5weQpAQCAtMTksNyArMTksNyBAQAogZnJvbSBhc3Ryb3B5LmlvLmZpdHMudmVyaWZ5IGltcG9ydCBWZXJpZnlXYXJuaW5nCiBmcm9tIGFzdHJvcHkudW5pdHMuY29yZSBpbXBvcnQgVW5pdHNXYXJuaW5nCiBmcm9tIGFzdHJvcHkudXRpbHMuZGF0YSBpbXBvcnQgZ2V0X3BrZ19kYXRhX2ZpbGVuYW1lCi1mcm9tIGFzdHJvcHkud2NzLndjcyBpbXBvcnQgV0NTLCBGSVRTRml4ZWRXYXJuaW5nCitmcm9tIGFzdHJvcHkud2NzLndjcyBpbXBvcnQgV0NTLCBGSVRTRml4ZWRXYXJuaW5nLCBTaXAsIE5vQ29udmVyZ2VuY2UKIGZyb20gYXN0cm9weS53Y3Mud2NzYXBpLmZpdHN3Y3MgaW1wb3J0IGN1c3RvbV9jdHlwZV90b191Y2RfbWFwcGluZywgVkVMT0NJVFlfRlJBTUVTCiBmcm9tIGFzdHJvcHkud2NzLl93Y3MgaW1wb3J0IF9fdmVyc2lvbl9fIGFzIHdjc3ZlcgogZnJvbSBhc3Ryb3B5LnV0aWxzIGltcG9ydCBpZXJzCkBAIC00MDEsNyArNDAxLDcgQEAgZGVmIHRlc3Rfc3BlY3RyYWxfY3ViZV9ub25hbGlnbmVkKCk6CiBDUlZBTDNBID0gMjQ0MC41MjUgLyBSZWxhdGl2ZSB0aW1lIG9mIGZpcnN0IGZyYW1lCiBDVU5JVDNBID0gJ3MnIC8gVGltZSB1bml0CiBDUlBJWDNBID0gMS4wIC8gUGl4ZWwgY29vcmRpbmF0ZSBhdCByZWYgcG9pbnQKLU9CU0dFTy1CPSAtMjQuNjE1NyAvIFtkZWddIFRlbCBnZW9kZXRpYyBsYXRpdHVkZSAoPU5vcnRoKSsKK09CU0dFTy1CPSAtMjQuNjE1NyAvIFtkZWddIFRlbCBnZW9kZXRpYyBsYXRpdHV0ZSAoPU5vcnRoKSsKIE9CU0dFTy1MPSAtNzAuMzk3NiAvIFtkZWddIFRlbCBnZW9kZXRpYyBsb25naXR1ZGUgKD1FYXN0KSsKIE9CU0dFTy1IPSAyNTMwLjAwMDAgLyBbbV0gVGVsIGhlaWdodCBhYm92ZSByZWZlcmVuY2UgZWxsaXBzb2lkCiBDUkRFUjMgID0gMC4wODE5IC8gcmFuZG9tIGVycm9yIGluIHRpbWluZ3MgZnJvbSBmaXQKQEAgLTEwNjcsMyArMTA2NywzMiBAQCBkZWYgdGVzdF9kaWZmZXJlbnRfY3R5cGVzKGhlYWRlcl9zcGVjdHJhbF9mcmFtZXMsIGN0eXBlMywgb2JzZXJ2ZXIpOgogICAgICAgICAgICAgcGl4ID0gd2NzLndvcmxkX3RvX3BpeGVsKHNreWNvb3JkLCBzcGVjdHJhbGNvb3JkKQogCiAgICAgYXNzZXJ0X2FsbGNsb3NlKHBpeCwgWzAsIDAsIDMxXSwgcnRvbD0xZS02KQorCisKK2RlZiB0ZXN0X25vbl9jb252ZXJnZW5jZV93YXJuaW5nKCk6CisgICAgIiIiVGVzdCBjYXNlIGZvciBpc3N1ZSAjMTE0NDYKKyAgICBTaW5jZSB3ZSBjYW4ndCBkZWZpbmUgYSB0YXJnZXQgYWNjdXJhY3kgd2hlbiBwbG90dGluZyBhIFdDUyBgYWxsX3dvcmxkMnBpeGAKKyAgICBzaG91bGQgbm90IGVycm9yIGJ1dCBvbmx5IHdhcm4gd2hlbiB0aGUgZGVmYXVsdCBhY2N1cmFjeSBjYW4ndCBiZSByZWFjaGVkLgorICAgICIiIgorICAgICMgZGVmaW5lIGEgbWluaW1hbCBXQ1Mgd2hlcmUgY29udmVyZ2VuY2UgZmFpbHMgZm9yIGNlcnRhaW4gaW1hZ2UgcG9zaXRpb25zCisgICAgd2NzID0gV0NTKG5heGlzPTIpCisgICAgY3JwaXggPSBbMCwgMF0KKyAgICBhID0gYiA9IGFwID0gYnAgPSBucC56ZXJvcygoNCwgNCkpCisgICAgYVszLCAwXSA9IC0xLjIwMTE2NzUzZS0wNworCisgICAgdGVzdF9wb3NfeCA9IFsxMDAwLCAxXQorICAgIHRlc3RfcG9zX3kgPSBbMCwgMl0KKworICAgIHdjcy5zaXAgPSBTaXAoYSwgYiwgYXAsIGJwLCBjcnBpeCkKKyAgICAjIGZpcnN0IG1ha2Ugc3VyZSB0aGUgV0NTIHdvcmtzIHdoZW4gdXNpbmcgYSBsb3cgYWNjdXJhY3kKKyAgICBleHBlY3RlZCA9IHdjcy5hbGxfd29ybGQycGl4KHRlc3RfcG9zX3gsIHRlc3RfcG9zX3ksIDAsIHRvbGVyYW5jZT0xZS0zKQorCisgICAgIyB0aGVuIGNoZWNrIHRoYXQgaXQgZmFpbHMgd2hlbiB1c2luZyB0aGUgZGVmYXVsdCBhY2N1cmFjeQorICAgIHdpdGggcHl0ZXN0LnJhaXNlcyhOb0NvbnZlcmdlbmNlKToKKyAgICAgICAgd2NzLmFsbF93b3JsZDJwaXgodGVzdF9wb3NfeCwgdGVzdF9wb3NfeSwgMCkKKworICAgICMgYXQgbGFzdCBjaGVjayB0aGF0IHdvcmxkX3RvX3BpeGVsX3ZhbHVlcyByYWlzZXMgYSB3YXJuaW5nIGJ1dCByZXR1cm5zCisgICAgIyB0aGUgc2FtZSAnbG93IGFjY3VyYXknIHJlc3VsdAorICAgIHdpdGggcHl0ZXN0Lndhcm5zKFVzZXJXYXJuaW5nKToKKyAgICAgICAgYXNzZXJ0X2FsbGNsb3NlKHdjcy53b3JsZF90b19waXhlbF92YWx1ZXModGVzdF9wb3NfeCwgdGVzdF9wb3NfeSksCisgICAgICAgICAgICAgICAgICAgICAgICBleHBlY3RlZCkKCkVPRl8xMTQzMjkzMjQ5MTIKOiAnPj4+Pj4gU3RhcnQgVGVzdCBPdXRwdXQnCnB5dGVzdCAtckEgYXN0cm9weS93Y3Mvd2NzYXBpL3Rlc3RzL3Rlc3RfZml0c3djcy5weQpTV0VCRU5DSF9URVNUX0VYSVRfQ09ERT0kPwo6ICc+Pj4+PiBFbmQgVGVzdCBPdXRwdXQnCmVjaG8gIj4+Pj4+IFRlc3QgRXhpdCBDb2RlOiAkU1dFQkVOQ0hfVEVTVF9FWElUX0NPREUiCmdpdCBjaGVja291dCAzODMyMjEwNTgwZDUxNjM2NWRkYWUxYTYyMDcxMDAxZmFmOTRkNDE2IGFzdHJvcHkvd2NzL3djc2FwaS90ZXN0cy90ZXN0X2ZpdHN3Y3MucHkK' | base64 -d > '/eval.sh'"
+      ],
+      "cwd": null,
+      "execution_id": "exec-69196-4-18d9aa9195fc74df",
+      "exit_record": {
+        "exit_code": 0,
+        "kind": "EXITED"
+      },
+      "name": "upload-eval-script",
+      "state": "exited",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/3.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/3.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "truncated": false,
+      "wall_ms": 101
+    },
+    {
+      "argv": [
+        "sha256sum",
+        "/eval.sh"
+      ],
+      "cwd": null,
+      "execution_id": "exec-69196-5-18d9aa919cb5e701",
+      "exit_record": {
+        "exit_code": 0,
+        "kind": "EXITED"
+      },
+      "name": "eval-script-digest",
+      "state": "exited",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/4.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/4.stdout",
+      "stdout_sha256": "96c39f7211fb3207e1834f69083d3868e569f047fbfbcfcba501f6e56717db64",
+      "truncated": false,
+      "wall_ms": 31
+    },
+    {
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "/bin/bash /eval.sh 2>&1"
+      ],
+      "cwd": null,
+      "execution_id": "exec-69196-6-18d9aa919f3ef82e",
+      "exit_record": {
+        "exit_code": 0,
+        "kind": "EXITED"
+      },
+      "name": "original-eval",
+      "state": "exited",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/5.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/5.stdout",
+      "stdout_sha256": "a1fabd2be798833bb742997bdb5fa370926e3e60713ea675a1d487c8904ebc1d",
+      "truncated": false,
+      "wall_ms": 13019
+    }
+  ]
+}

@@ -19,6 +19,8 @@ import json
 import os
 import re
 import shutil
+import shlex
+import socket
 import subprocess
 import sys
 import tempfile
@@ -354,9 +356,14 @@ def lint_structure(root):
 
 def _load_workers(root):
     registry = root / 'dev' / 'runtime-workers.json'
-    if not registry.exists():
-        return {}
-    return json.loads(registry.read_text(encoding='utf-8'))
+    workers = json.loads(registry.read_text(encoding='utf-8')) if registry.exists() else {}
+    # Worker addresses and account names are deployment-local data. Keep the
+    # public registry reviewable and merge the ignored local registry only on
+    # the operator machine that owns the authorization.
+    local = root / 'dev' / 'runtime-workers.local.json'
+    if local.exists():
+        workers.update(json.loads(local.read_text(encoding='utf-8')))
+    return workers
 
 
 def _blocked(reason):
@@ -370,6 +377,38 @@ def suite_worker_gated(root, kind, task, worker):
     entry = workers.get(worker)
     if not entry or not entry.get('authorized'):
         return [_blocked(f'worker {worker!r} is not registered/authorized in dev/runtime-workers.json')]
+    if kind == 'runtime' and task in (
+            'swebench:full:astropy__astropy-11693',
+            'terminalbench:tasks:atrx-vep-crispr',
+            'cybergym:main:arvo:47101'):
+        runner = Path(entry['workspace_root']) / 'repo/dev/runtime_cases.py'
+        remote_argv = ['python3', str(runner), '--task', task, '--worker', worker]
+        if socket.gethostname() == entry['hostname'] and os.geteuid() == entry['uid']:
+            argv = remote_argv
+        else:
+            # The fixed registry supplies the destination; the task must match
+            # one of the three literals above before joining the SSH command.
+            argv = ['ssh', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
+                    '-o', 'UpdateHostKeys=no', '-p', str(entry['ssh_port']),
+                    entry['ssh_target'], ' '.join(shlex.quote(v) for v in remote_argv)]
+        command = run_command(argv, cwd=root, timeout=3600)
+        try:
+            receipt = json.loads(command['output'].strip().splitlines()[-1])
+        except (IndexError, json.JSONDecodeError):
+            receipt = {}
+        reported_tests = receipt.get('tests_collected', 0)
+        command['tests'] = reported_tests if isinstance(reported_tests, int) and reported_tests >= 0 else 0
+        for field in ('case_dir', 'denominator', 'environment_execution',
+                      'verification_run', 'positive_oracle', 'result_comparison',
+                      'cleanup', 'blocked_at'):
+            if field in receipt:
+                command[field] = receipt[field]
+        if command['exit'] == EXIT_OK and command['tests'] == 0:
+            command['exit'] = EXIT_FAIL
+            command['reason'] = 'runtime case returned success with zero collected tests'
+        if command['exit'] == EXIT_BLOCKED:
+            command['reason'] = receipt.get('reason') or 'case receipt reports a blocked stage; inspect worker evidence'
+        return [command]
     return [_blocked(f'worker {worker!r} registered, but the {kind} adapter is not implemented in T00; '
                      f'no runtime commands were executed')]
 

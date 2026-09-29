@@ -1,0 +1,570 @@
+{
+  "asset_files_present": [
+    "/data/lightsandbox-panxudong/assets/swebench/full/astropy__astropy-11693.json"
+  ],
+  "assets": {
+    "base_commit": "3832210580d516365ddae1a62071001faf94d416",
+    "candidate_oci_manifest_digest": "sha256:6c7c53781de330e7000fbd2e4277ac144434cd79120e0c6ed6bb59aee12e979d",
+    "eval_script_sha256": "06e743065586d72298f564f5816b9ca34e5c42e2e2654f0f6668bf205f3db98a",
+    "gold_patch_sha256": "03efe828d7a7be303c39b84a240a56c9c6e6bccf568185d2221dd6665fd9e6bc",
+    "image_reference": "swebench/sweb.eval.x86_64.astropy_1776_astropy-11693:latest",
+    "source-0_oci_tar_sha256": "596a7e31623c25d2eced6ff73646f3294fe81da2d023ecab605ed0e8529a6eda",
+    "source_revision": "c6fe717fd7a4c3ac1daa4055a4fd082c6a1d28a2",
+    "source_row_sha256": "4d045ba53703dde4c9decc3c3a3912de074f77ea63e7e7fc4d8724c035b7116a"
+  },
+  "benchmark": "swebench",
+  "blocked_at": "reference_comparison",
+  "candidate": {
+    "commit": "95034d3d461bfbf7a6f457652b99dbc4257f154f",
+    "runner_sha256": "d65df889af920bde8347d02ac4dca9cbfe06c33153d8d3474d8f79622addc8e8",
+    "status": "M crates/ls-guest/src/init/mod.rs\n M crates/ls-guest/src/lib.rs\n M crates/ls-guest/src/serve/agent.rs\n M crates/ls-guest/src/serve/exec.rs\n M crates/ls-host/src/runtime/manager.rs\n M crates/ls-host/tests/cancellation.rs\n M crates/ls-host/tests/exec.rs\n M crates/ls-host/tests/lifecycle.rs\n M dev/checklib.py\n M dev/runtime-workers.json\n?? crates/ls-host/src/bin/\n?? crates/ls-host/src/runtime/._manager.rs\n?? crates/ls-host/tests/._cancellation.rs\n?? crates/ls-host/tests/._exec.rs\n?? crates/ls-host/tests/._lifecycle.rs\n?? dev/runtime_cases.py\n?? dev/swebench_grade.py\n?? evidence/runtime/ws03/\n?? spike/uml/work",
+    "tracked_diff_sha256": "c9e8ff981f5e8480969434dd3fc7bb951597ef300bd201b671c28186b1fe5407"
+  },
+  "case_dir": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069",
+  "cleanup": "NATIVE_CLEANUP_RECEIPTS_PRESENT",
+  "commands": [
+    {
+      "argv": [
+        "unshare",
+        "--user",
+        "--map-root-user",
+        "--mount",
+        "--pid",
+        "--fork",
+        "--mount-proc",
+        "/data/lightsandbox-panxudong/bin/buildkitd",
+        "--addr",
+        "unix:///data/lightsandbox-panxudong/bk-69069.sock",
+        "--root",
+        "/data/lightsandbox-panxudong/buildkit-cache/swebench_full_astropy__astropy-11693/root",
+        "--oci-worker=true",
+        "--containerd-worker=false",
+        "--oci-worker-snapshotter=native"
+      ],
+      "cwd": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069",
+      "exit_code": null,
+      "log": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/buildkitd.log",
+      "log_sha256": "69eefa35c9010696621010931747cb694a05f5d9eaeea9bdeb826a3ffe25c551",
+      "socket_ready": true,
+      "started_at": "2026-09-29T02:40:35.247701+00:00"
+    },
+    {
+      "argv": [
+        "/data/lightsandbox-panxudong/bin/buildctl",
+        "--addr",
+        "unix:///data/lightsandbox-panxudong/bk-69069.sock",
+        "build",
+        "--frontend",
+        "dockerfile.v0",
+        "--local",
+        "context=/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/source-image/0",
+        "--local",
+        "dockerfile=/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/source-image/0",
+        "--output",
+        "type=oci,dest=/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/source-0.oci.tar"
+      ],
+      "cwd": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069",
+      "duration_ms": 11541,
+      "exit_code": 0,
+      "started_at": "2026-09-29T02:40:35.549207+00:00",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/build-source-0.stderr",
+      "stderr_sha256": "89ee2e5b197f006f718462a08fa82544b157b6f7d4518f95d49a784fd9e4e572",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/build-source-0.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "termination": "EXITED"
+    },
+    {
+      "argv": [
+        "/data/lightsandbox-panxudong/target/debug/ls-case-driver",
+        "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/gold.request.json",
+        "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/gold.native-receipt.json"
+      ],
+      "cwd": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069",
+      "duration_ms": 235581,
+      "exit_code": 0,
+      "started_at": "2026-09-29T02:40:48.312136+00:00",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold.stdout",
+      "stdout_sha256": "c6c6d43584dadf3583efe6f58c352f6cd6a59fb38022a141448322b7e47a35ee",
+      "termination": "EXITED"
+    },
+    {
+      "argv": [
+        "/data/lightsandbox-panxudong/target/debug/ls-case-driver",
+        "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/wrong.request.json",
+        "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/wrong.native-receipt.json"
+      ],
+      "cwd": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069",
+      "duration_ms": 222837,
+      "exit_code": 1,
+      "started_at": "2026-09-29T02:44:43.893984+00:00",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong.stdout",
+      "stdout_sha256": "50ab57243dca566064caf1496e588fde5c558bbf4aace6ae5becff827b858cfe",
+      "termination": "EXITED"
+    },
+    {
+      "argv": [
+        "/data/lightsandbox-panxudong/venv/swebench/bin/python",
+        "/data/lightsandbox-panxudong/repo/dev/swebench_grade.py",
+        "--upstream",
+        "/data/lightsandbox-panxudong/src/swebench",
+        "--row",
+        "/data/lightsandbox-panxudong/assets/swebench/full/astropy__astropy-11693.json",
+        "--log",
+        "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/5.stdout",
+        "--output",
+        "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/swebench-grade.json"
+      ],
+      "cwd": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069",
+      "duration_ms": 2483,
+      "exit_code": 0,
+      "started_at": "2026-09-29T02:48:26.731440+00:00",
+      "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/original-grader.stderr",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/original-grader.stdout",
+      "stdout_sha256": "f24d251371f54916330bc3e9ed2654d27e953438297c0bf00094e5ae854165f3",
+      "termination": "EXITED"
+    }
+  ],
+  "denominator": 3094,
+  "environment_execution": "COMMANDS_EXECUTED",
+  "exit_code": 0,
+  "finished_at": "2026-09-29T02:48:29.666942+00:00",
+  "hostreport_sha256": "a23e46f76aa5103585165b1575a525fd519e08994507aa1184dd74e974cca7d2",
+  "manifest_row_sha256": "4cbfa23cd340c1256fa3b9e868bd6cc2ae521c4ea2e740d95a7d7d83385552e8",
+  "manifest_sha256": "1519bd3b3d50eb072bfeb1cad81d298dfb9210674cf3fbe103b55d94cdd68d59",
+  "native": {
+    "gold": {
+      "cleanup": {
+        "all_ok": true,
+        "receipt": {
+          "cleanup_id": "cln-69196-7-18d9aa94dd4365ae",
+          "compaction_result": null,
+          "finished_unix_ms": 1790649883200,
+          "ops_terminated": null,
+          "reversible": false,
+          "scope": "sandbox",
+          "started_unix_ms": 1790649882307,
+          "steps": [
+            {
+              "name": "archive-init-receipt",
+              "note": "no init receipt existed (never fabricated)",
+              "ok": true,
+              "wall_ms": 0
+            },
+            {
+              "name": "backend-delete",
+              "ok": true,
+              "wall_ms": 123
+            },
+            {
+              "name": "backend-residue-sweep",
+              "ok": true,
+              "wall_ms": 0
+            },
+            {
+              "name": "lease-teardown",
+              "ok": true,
+              "wall_ms": 769
+            },
+            {
+              "name": "layout-view-remove",
+              "note": "view already gone",
+              "ok": true,
+              "wall_ms": 0
+            }
+          ],
+          "target_generation": 1,
+          "target_sandbox_id": "sbx-69196-0-18d9aa6dd101debb"
+        }
+      },
+      "complete": true,
+      "created_state": "running",
+      "generation": 1,
+      "image_digest": "sha256:6c7c53781de330e7000fbd2e4277ac144434cd79120e0c6ed6bb59aee12e979d",
+      "live_after": [],
+      "receipt_path": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/gold.native-receipt.json",
+      "receipt_sha256": "6e6683df89dbf22bfcb5972624d16581083735a592f0e8c0ef8e346f135a631b",
+      "sandbox_id": "sbx-69196-0-18d9aa6dd101debb",
+      "schema": "native-case-driver/1",
+      "step_error": null,
+      "steps": [
+        {
+          "argv": [
+            "/bin/bash",
+            "-lc",
+            "printf %s 'ZGlmZiAtLWdpdCBhL2FzdHJvcHkvd2NzL3djc2FwaS9maXRzd2NzLnB5IGIvYXN0cm9weS93Y3Mvd2NzYXBpL2ZpdHN3Y3MucHkKLS0tIGEvYXN0cm9weS93Y3Mvd2NzYXBpL2ZpdHN3Y3MucHkKKysrIGIvYXN0cm9weS93Y3Mvd2NzYXBpL2ZpdHN3Y3MucHkKQEAgLTMyMyw3ICszMjMsMTcgQEAgZGVmIHBpeGVsX3RvX3dvcmxkX3ZhbHVlcyhzZWxmLCAqcGl4ZWxfYXJyYXlzKToKICAgICAgICAgcmV0dXJuIHdvcmxkWzBdIGlmIHNlbGYud29ybGRfbl9kaW0gPT0gMSBlbHNlIHR1cGxlKHdvcmxkKQogCiAgICAgZGVmIHdvcmxkX3RvX3BpeGVsX3ZhbHVlcyhzZWxmLCAqd29ybGRfYXJyYXlzKToKLSAgICAgICAgcGl4ZWwgPSBzZWxmLmFsbF93b3JsZDJwaXgoKndvcmxkX2FycmF5cywgMCkKKyAgICAgICAgIyBhdm9pZCBjaXJjdWxhciBpbXBvcnQKKyAgICAgICAgZnJvbSBhc3Ryb3B5Lndjcy53Y3MgaW1wb3J0IE5vQ29udmVyZ2VuY2UKKyAgICAgICAgdHJ5OgorICAgICAgICAgICAgcGl4ZWwgPSBzZWxmLmFsbF93b3JsZDJwaXgoKndvcmxkX2FycmF5cywgMCkKKyAgICAgICAgZXhjZXB0IE5vQ29udmVyZ2VuY2UgYXMgZToKKyAgICAgICAgICAgIHdhcm5pbmdzLndhcm4oc3RyKGUpKQorICAgICAgICAgICAgIyB1c2UgYmVzdF9zb2x1dGlvbiBjb250YWluZWQgaW4gdGhlIGV4Y2VwdGlvbiBhbmQgZm9ybWF0IHRoZSBzYW1lCisgICAgICAgICAgICAjIHdheSBhcyBhbGxfd29ybGQycGl4IGRvZXMgKHVzaW5nIF9hcnJheV9jb252ZXJ0ZXIpCisgICAgICAgICAgICBwaXhlbCA9IHNlbGYuX2FycmF5X2NvbnZlcnRlcihsYW1iZGEgKmFyZ3M6IGUuYmVzdF9zb2x1dGlvbiwKKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgJ2lucHV0JywgKndvcmxkX2FycmF5cywgMCkKKwogICAgICAgICByZXR1cm4gcGl4ZWxbMF0gaWYgc2VsZi5waXhlbF9uX2RpbSA9PSAxIGVsc2UgdHVwbGUocGl4ZWwpCiAKICAgICBAcHJvcGVydHkK' | base64 -d > '/tmp/patch.diff'"
+          ],
+          "cwd": null,
+          "execution_id": "exec-69196-1-18d9aa9175c6f69a",
+          "exit_record": {
+            "exit_code": 0,
+            "kind": "EXITED"
+          },
+          "name": "upload-patch",
+          "state": "exited",
+          "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/0.stderr",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/0.stdout",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "truncated": false,
+          "wall_ms": 393
+        },
+        {
+          "argv": [
+            "sha256sum",
+            "/tmp/patch.diff"
+          ],
+          "cwd": null,
+          "execution_id": "exec-69196-2-18d9aa918df085e3",
+          "exit_record": {
+            "exit_code": 0,
+            "kind": "EXITED"
+          },
+          "name": "patch-digest",
+          "state": "exited",
+          "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/1.stderr",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/1.stdout",
+          "stdout_sha256": "c20c7ac1a026fb070a478d1b15ebd862dabc6f332be76adca9ba39cbf5c5b7a8",
+          "truncated": false,
+          "wall_ms": 21
+        },
+        {
+          "argv": [
+            "/bin/bash",
+            "-lc",
+            "set -x\nattempt=0\nfor command in 'git apply --verbose' 'git apply --verbose --3way' 'git apply --verbose --reject' 'patch --batch --forward --fuzz=5 -p1 -i'; do\n  if [ \"$attempt\" -ne 0 ]; then\n    git checkout -- . ; git clean -fd\n  fi\n  if $command /tmp/patch.diff; then\n    exit 0\n  fi\n  attempt=$((attempt + 1))\ndone\ngit apply --check --reverse /tmp/patch.diff\n"
+          ],
+          "cwd": "/testbed",
+          "execution_id": "exec-69196-3-18d9aa918fdce3ba",
+          "exit_record": {
+            "exit_code": 0,
+            "kind": "EXITED"
+          },
+          "name": "apply-patch",
+          "state": "exited",
+          "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/2.stderr",
+          "stderr_sha256": "a30257828c8c9f5c910b88a5e769442bc2ac618bbd3f5f1503a1aa406df45cd9",
+          "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/2.stdout",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "truncated": false,
+          "wall_ms": 91
+        },
+        {
+          "argv": [
+            "/bin/bash",
+            "-lc",
+            "printf %s 'IyEvYmluL2Jhc2gKc2V0IC11eG8gcGlwZWZhaWwKc291cmNlIC9vcHQvbWluaWNvbmRhMy9iaW4vYWN0aXZhdGUKY29uZGEgYWN0aXZhdGUgdGVzdGJlZApjZCAvdGVzdGJlZApnaXQgY29uZmlnIC0tZ2xvYmFsIC0tYWRkIHNhZmUuZGlyZWN0b3J5IC90ZXN0YmVkCmNkIC90ZXN0YmVkCmdpdCBzdGF0dXMKZ2l0IHNob3cKZ2l0IC1jIGNvcmUuZmlsZU1vZGU9ZmFsc2UgZGlmZiAzODMyMjEwNTgwZDUxNjM2NWRkYWUxYTYyMDcxMDAxZmFmOTRkNDE2CnNvdXJjZSAvb3B0L21pbmljb25kYTMvYmluL2FjdGl2YXRlCmNvbmRhIGFjdGl2YXRlIHRlc3RiZWQKcHl0aG9uIC1tIHBpcCBpbnN0YWxsIC1lIC5bdGVzdF0gLS12ZXJib3NlCmdpdCBjaGVja291dCAzODMyMjEwNTgwZDUxNjM2NWRkYWUxYTYyMDcxMDAxZmFmOTRkNDE2IGFzdHJvcHkvd2NzL3djc2FwaS90ZXN0cy90ZXN0X2ZpdHN3Y3MucHkKZ2l0IGFwcGx5IC12IC0gPDwnRU9GXzExNDMyOTMyNDkxMicKZGlmZiAtLWdpdCBhL2FzdHJvcHkvd2NzL3djc2FwaS90ZXN0cy90ZXN0X2ZpdHN3Y3MucHkgYi9hc3Ryb3B5L3djcy93Y3NhcGkvdGVzdHMvdGVzdF9maXRzd2NzLnB5Ci0tLSBhL2FzdHJvcHkvd2NzL3djc2FwaS90ZXN0cy90ZXN0X2ZpdHN3Y3MucHkKKysrIGIvYXN0cm9weS93Y3Mvd2NzYXBpL3Rlc3RzL3Rlc3RfZml0c3djcy5weQpAQCAtMTksNyArMTksNyBAQAogZnJvbSBhc3Ryb3B5LmlvLmZpdHMudmVyaWZ5IGltcG9ydCBWZXJpZnlXYXJuaW5nCiBmcm9tIGFzdHJvcHkudW5pdHMuY29yZSBpbXBvcnQgVW5pdHNXYXJuaW5nCiBmcm9tIGFzdHJvcHkudXRpbHMuZGF0YSBpbXBvcnQgZ2V0X3BrZ19kYXRhX2ZpbGVuYW1lCi1mcm9tIGFzdHJvcHkud2NzLndjcyBpbXBvcnQgV0NTLCBGSVRTRml4ZWRXYXJuaW5nCitmcm9tIGFzdHJvcHkud2NzLndjcyBpbXBvcnQgV0NTLCBGSVRTRml4ZWRXYXJuaW5nLCBTaXAsIE5vQ29udmVyZ2VuY2UKIGZyb20gYXN0cm9weS53Y3Mud2NzYXBpLmZpdHN3Y3MgaW1wb3J0IGN1c3RvbV9jdHlwZV90b191Y2RfbWFwcGluZywgVkVMT0NJVFlfRlJBTUVTCiBmcm9tIGFzdHJvcHkud2NzLl93Y3MgaW1wb3J0IF9fdmVyc2lvbl9fIGFzIHdjc3ZlcgogZnJvbSBhc3Ryb3B5LnV0aWxzIGltcG9ydCBpZXJzCkBAIC00MDEsNyArNDAxLDcgQEAgZGVmIHRlc3Rfc3BlY3RyYWxfY3ViZV9ub25hbGlnbmVkKCk6CiBDUlZBTDNBID0gMjQ0MC41MjUgLyBSZWxhdGl2ZSB0aW1lIG9mIGZpcnN0IGZyYW1lCiBDVU5JVDNBID0gJ3MnIC8gVGltZSB1bml0CiBDUlBJWDNBID0gMS4wIC8gUGl4ZWwgY29vcmRpbmF0ZSBhdCByZWYgcG9pbnQKLU9CU0dFTy1CPSAtMjQuNjE1NyAvIFtkZWddIFRlbCBnZW9kZXRpYyBsYXRpdHVkZSAoPU5vcnRoKSsKK09CU0dFTy1CPSAtMjQuNjE1NyAvIFtkZWddIFRlbCBnZW9kZXRpYyBsYXRpdHV0ZSAoPU5vcnRoKSsKIE9CU0dFTy1MPSAtNzAuMzk3NiAvIFtkZWddIFRlbCBnZW9kZXRpYyBsb25naXR1ZGUgKD1FYXN0KSsKIE9CU0dFTy1IPSAyNTMwLjAwMDAgLyBbbV0gVGVsIGhlaWdodCBhYm92ZSByZWZlcmVuY2UgZWxsaXBzb2lkCiBDUkRFUjMgID0gMC4wODE5IC8gcmFuZG9tIGVycm9yIGluIHRpbWluZ3MgZnJvbSBmaXQKQEAgLTEwNjcsMyArMTA2NywzMiBAQCBkZWYgdGVzdF9kaWZmZXJlbnRfY3R5cGVzKGhlYWRlcl9zcGVjdHJhbF9mcmFtZXMsIGN0eXBlMywgb2JzZXJ2ZXIpOgogICAgICAgICAgICAgcGl4ID0gd2NzLndvcmxkX3RvX3BpeGVsKHNreWNvb3JkLCBzcGVjdHJhbGNvb3JkKQogCiAgICAgYXNzZXJ0X2FsbGNsb3NlKHBpeCwgWzAsIDAsIDMxXSwgcnRvbD0xZS02KQorCisKK2RlZiB0ZXN0X25vbl9jb252ZXJnZW5jZV93YXJuaW5nKCk6CisgICAgIiIiVGVzdCBjYXNlIGZvciBpc3N1ZSAjMTE0NDYKKyAgICBTaW5jZSB3ZSBjYW4ndCBkZWZpbmUgYSB0YXJnZXQgYWNjdXJhY3kgd2hlbiBwbG90dGluZyBhIFdDUyBgYWxsX3dvcmxkMnBpeGAKKyAgICBzaG91bGQgbm90IGVycm9yIGJ1dCBvbmx5IHdhcm4gd2hlbiB0aGUgZGVmYXVsdCBhY2N1cmFjeSBjYW4ndCBiZSByZWFjaGVkLgorICAgICIiIgorICAgICMgZGVmaW5lIGEgbWluaW1hbCBXQ1Mgd2hlcmUgY29udmVyZ2VuY2UgZmFpbHMgZm9yIGNlcnRhaW4gaW1hZ2UgcG9zaXRpb25zCisgICAgd2NzID0gV0NTKG5heGlzPTIpCisgICAgY3JwaXggPSBbMCwgMF0KKyAgICBhID0gYiA9IGFwID0gYnAgPSBucC56ZXJvcygoNCwgNCkpCisgICAgYVszLCAwXSA9IC0xLjIwMTE2NzUzZS0wNworCisgICAgdGVzdF9wb3NfeCA9IFsxMDAwLCAxXQorICAgIHRlc3RfcG9zX3kgPSBbMCwgMl0KKworICAgIHdjcy5zaXAgPSBTaXAoYSwgYiwgYXAsIGJwLCBjcnBpeCkKKyAgICAjIGZpcnN0IG1ha2Ugc3VyZSB0aGUgV0NTIHdvcmtzIHdoZW4gdXNpbmcgYSBsb3cgYWNjdXJhY3kKKyAgICBleHBlY3RlZCA9IHdjcy5hbGxfd29ybGQycGl4KHRlc3RfcG9zX3gsIHRlc3RfcG9zX3ksIDAsIHRvbGVyYW5jZT0xZS0zKQorCisgICAgIyB0aGVuIGNoZWNrIHRoYXQgaXQgZmFpbHMgd2hlbiB1c2luZyB0aGUgZGVmYXVsdCBhY2N1cmFjeQorICAgIHdpdGggcHl0ZXN0LnJhaXNlcyhOb0NvbnZlcmdlbmNlKToKKyAgICAgICAgd2NzLmFsbF93b3JsZDJwaXgodGVzdF9wb3NfeCwgdGVzdF9wb3NfeSwgMCkKKworICAgICMgYXQgbGFzdCBjaGVjayB0aGF0IHdvcmxkX3RvX3BpeGVsX3ZhbHVlcyByYWlzZXMgYSB3YXJuaW5nIGJ1dCByZXR1cm5zCisgICAgIyB0aGUgc2FtZSAnbG93IGFjY3VyYXknIHJlc3VsdAorICAgIHdpdGggcHl0ZXN0Lndhcm5zKFVzZXJXYXJuaW5nKToKKyAgICAgICAgYXNzZXJ0X2FsbGNsb3NlKHdjcy53b3JsZF90b19waXhlbF92YWx1ZXModGVzdF9wb3NfeCwgdGVzdF9wb3NfeSksCisgICAgICAgICAgICAgICAgICAgICAgICBleHBlY3RlZCkKCkVPRl8xMTQzMjkzMjQ5MTIKOiAnPj4+Pj4gU3RhcnQgVGVzdCBPdXRwdXQnCnB5dGVzdCAtckEgYXN0cm9weS93Y3Mvd2NzYXBpL3Rlc3RzL3Rlc3RfZml0c3djcy5weQpTV0VCRU5DSF9URVNUX0VYSVRfQ09ERT0kPwo6ICc+Pj4+PiBFbmQgVGVzdCBPdXRwdXQnCmVjaG8gIj4+Pj4+IFRlc3QgRXhpdCBDb2RlOiAkU1dFQkVOQ0hfVEVTVF9FWElUX0NPREUiCmdpdCBjaGVja291dCAzODMyMjEwNTgwZDUxNjM2NWRkYWUxYTYyMDcxMDAxZmFmOTRkNDE2IGFzdHJvcHkvd2NzL3djc2FwaS90ZXN0cy90ZXN0X2ZpdHN3Y3MucHkK' | base64 -d > '/eval.sh'"
+          ],
+          "cwd": null,
+          "execution_id": "exec-69196-4-18d9aa9195fc74df",
+          "exit_record": {
+            "exit_code": 0,
+            "kind": "EXITED"
+          },
+          "name": "upload-eval-script",
+          "state": "exited",
+          "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/3.stderr",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/3.stdout",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "truncated": false,
+          "wall_ms": 101
+        },
+        {
+          "argv": [
+            "sha256sum",
+            "/eval.sh"
+          ],
+          "cwd": null,
+          "execution_id": "exec-69196-5-18d9aa919cb5e701",
+          "exit_record": {
+            "exit_code": 0,
+            "kind": "EXITED"
+          },
+          "name": "eval-script-digest",
+          "state": "exited",
+          "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/4.stderr",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/4.stdout",
+          "stdout_sha256": "96c39f7211fb3207e1834f69083d3868e569f047fbfbcfcba501f6e56717db64",
+          "truncated": false,
+          "wall_ms": 31
+        },
+        {
+          "argv": [
+            "/bin/bash",
+            "-lc",
+            "/bin/bash /eval.sh 2>&1"
+          ],
+          "cwd": null,
+          "execution_id": "exec-69196-6-18d9aa919f3ef82e",
+          "exit_record": {
+            "exit_code": 0,
+            "kind": "EXITED"
+          },
+          "name": "original-eval",
+          "state": "exited",
+          "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/5.stderr",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-gold/logs/5.stdout",
+          "stdout_sha256": "a1fabd2be798833bb742997bdb5fa370926e3e60713ea675a1d487c8904ebc1d",
+          "truncated": false,
+          "wall_ms": 13019
+        }
+      ]
+    },
+    "grading": {
+      "log_sha256": "a1fabd2be798833bb742997bdb5fa370926e3e60713ea675a1d487c8904ebc1d",
+      "parsed_test_count": 42,
+      "row_sha256": "4d045ba53703dde4c9decc3c3a3912de074f77ea63e7e7fc4d8724c035b7116a",
+      "schema": "swebench-candidate-grade/1",
+      "status_map": {
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_caching_components_and_classes": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_custom_ctype_to_ucd_mappings": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[BETA-False]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[BETA-True]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VELO-False]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VELO-True]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VOPT-False]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VOPT-True]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VRAD-False]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VRAD-True]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[ZOPT-False]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[ZOPT-True]": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_distortion_correlations": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_empty": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_non_convergence_warning": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_phys_type_polarization": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_simple_celestial": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_spectral_cube": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_spectral_cube_nonaligned": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_spectralcoord_frame": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_sub_wcsapi_attributes": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_high_precision": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geocenter": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geocentric": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geodetic": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_incomplete": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_missing": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_unsupported": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_unsupported_ctype": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[local]": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tai]": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tcb]": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tcg]": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tdb]": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tt]": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[ut1]": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[utc]": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_deprecated": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_gps": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_time": "PASSED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_cube": "FAILED",
+        "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_unrecognized_unit": "PASSED"
+      },
+      "test_output_found": true,
+      "upstream_grading_sha256": "a095273010175001a6779e365b3b77abb8657c7ac2e4f80b4bc360faa6f09483",
+      "upstream_report": {
+        "astropy__astropy-11693": {
+          "infra_failure": false,
+          "patch_exists": true,
+          "patch_is_None": false,
+          "patch_successfully_applied": true,
+          "resolved": true,
+          "tests_status": {
+            "FAIL_TO_FAIL": {
+              "failure": [],
+              "success": []
+            },
+            "FAIL_TO_PASS": {
+              "failure": [],
+              "success": [
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_non_convergence_warning"
+              ]
+            },
+            "PASS_TO_FAIL": {
+              "failure": [],
+              "success": []
+            },
+            "PASS_TO_PASS": {
+              "failure": [],
+              "success": [
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_empty",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_simple_celestial",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tai]",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tcb]",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tcg]",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tdb]",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tt]",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[ut1]",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[utc]",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[local]",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_gps",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_deprecated",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_time",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_high_precision",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geodetic",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geocentric",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geocenter",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_missing",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_incomplete",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_unsupported",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_unsupported_ctype",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_unrecognized_unit",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_distortion_correlations",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_custom_ctype_to_ucd_mappings",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_caching_components_and_classes",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_sub_wcsapi_attributes",
+                "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_phys_type_polarization"
+              ]
+            }
+          }
+        }
+      },
+      "upstream_revision": "02e7a74ffd0b707aab73d203fe87bdc7c76afc8e"
+    },
+    "grading_receipt_sha256": "6df3948ff89b499289ed04b644c75976784b69a125a7d53e19715f7d017aa339",
+    "wrong_patch": {
+      "cleanup": {
+        "all_ok": true,
+        "receipt": {
+          "cleanup_id": "cln-70077-4-18d9aac87d0eb379",
+          "compaction_result": null,
+          "finished_unix_ms": 1790650104924,
+          "ops_terminated": null,
+          "reversible": false,
+          "scope": "sandbox",
+          "started_unix_ms": 1790650104109,
+          "steps": [
+            {
+              "name": "archive-init-receipt",
+              "note": "no init receipt existed (never fabricated)",
+              "ok": true,
+              "wall_ms": 0
+            },
+            {
+              "name": "backend-delete",
+              "ok": true,
+              "wall_ms": 123
+            },
+            {
+              "name": "backend-residue-sweep",
+              "ok": true,
+              "wall_ms": 0
+            },
+            {
+              "name": "lease-teardown",
+              "ok": true,
+              "wall_ms": 691
+            },
+            {
+              "name": "layout-view-remove",
+              "note": "view already gone",
+              "ok": true,
+              "wall_ms": 0
+            }
+          ],
+          "target_generation": 1,
+          "target_sandbox_id": "sbx-70077-0-18d9aaa49b830bd6"
+        }
+      },
+      "complete": false,
+      "created_state": "running",
+      "generation": 1,
+      "image_digest": "sha256:6c7c53781de330e7000fbd2e4277ac144434cd79120e0c6ed6bb59aee12e979d",
+      "live_after": [],
+      "receipt_path": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/wrong.native-receipt.json",
+      "receipt_sha256": "25adac013509d32b40796d57260ebf5b48f2188ae02912e844bd43d07fe1ab6c",
+      "sandbox_id": "sbx-70077-0-18d9aaa49b830bd6",
+      "schema": "native-case-driver/1",
+      "step_error": "step apply-patch did not exit zero with an authoritative receipt",
+      "steps": [
+        {
+          "argv": [
+            "/bin/bash",
+            "-lc",
+            "printf %s 'ZGlmZiAtLWdpdCBhL25vdC1hLXJlYWwtZmlsZSBiL25vdC1hLXJlYWwtZmlsZQpAQCBtYWxmb3JtZWQgQEAK' | base64 -d > '/tmp/patch.diff'"
+          ],
+          "cwd": null,
+          "execution_id": "exec-70077-1-18d9aac81c15c492",
+          "exit_record": {
+            "exit_code": 0,
+            "kind": "EXITED"
+          },
+          "name": "upload-patch",
+          "state": "exited",
+          "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/0.stderr",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/0.stdout",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "truncated": false,
+          "wall_ms": 373
+        },
+        {
+          "argv": [
+            "sha256sum",
+            "/tmp/patch.diff"
+          ],
+          "cwd": null,
+          "execution_id": "exec-70077-2-18d9aac8330963f8",
+          "exit_record": {
+            "exit_code": 0,
+            "kind": "EXITED"
+          },
+          "name": "patch-digest",
+          "state": "exited",
+          "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/1.stderr",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/1.stdout",
+          "stdout_sha256": "a908830a114257c9709ffa6c5096273e0858571c8257cfbcd725cb3167f6fa64",
+          "truncated": false,
+          "wall_ms": 20
+        },
+        {
+          "argv": [
+            "/bin/bash",
+            "-lc",
+            "set -x\nattempt=0\nfor command in 'git apply --verbose' 'git apply --verbose --3way' 'git apply --verbose --reject' 'patch --batch --forward --fuzz=5 -p1 -i'; do\n  if [ \"$attempt\" -ne 0 ]; then\n    git checkout -- . ; git clean -fd\n  fi\n  if $command /tmp/patch.diff; then\n    exit 0\n  fi\n  attempt=$((attempt + 1))\ndone\ngit apply --check --reverse /tmp/patch.diff\n"
+          ],
+          "cwd": "/testbed",
+          "execution_id": "exec-70077-3-18d9aac834f48442",
+          "exit_record": {
+            "exit_code": 128,
+            "kind": "EXITED"
+          },
+          "name": "apply-patch",
+          "state": "exited",
+          "stderr": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/2.stderr",
+          "stderr_sha256": "f317817c1aa16d06755f5a1d390f261a73502adbb4c8cec80311c92c5020434f",
+          "stdout": "/data/lightsandbox-panxudong/evidence/cases/swebench_full_astropy__astropy-11693/20260929T024035Z-69069/native-wrong/logs/2.stdout",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "truncated": false,
+          "wall_ms": 393
+        }
+      ]
+    },
+    "wrong_patch_rejected": true
+  },
+  "positive_oracle": "CANDIDATE_ONLY_POSITIVE",
+  "preparation_proxy": "http://127.0.0.1:18765",
+  "reason": "candidate-only positive; reference not run",
+  "result_comparison": "REFERENCE_NOT_RUN",
+  "schema": "candidate-case/1",
+  "started_at": "2026-09-29T02:40:35.137355+00:00",
+  "tool_sha256": {
+    "buildctl": "974791d5b6c8561a0575d3fbf5bf68c6ddcd35495decbe24168d5336ab9cba59",
+    "buildkitd": "0cf800d0dd6abc2cebd62baeff046b0c025b51105ab3836742e9ecf76bc2c54f",
+    "runc": "ae645ea62ebfaa73b3a5d4c3980fadbcc3562c7477e676950468177f7cd44bf1",
+    "umoci": "28f894deca4a83e97c66715f87e9844239a045cfb9be56f98c9ff6b65f1772ac"
+  },
+  "uid": "swebench:full:astropy__astropy-11693",
+  "verification_run": "RAN",
+  "worker": "ws03",
+  "workspace_bytes_after": 37132910592,
+  "workspace_bytes_before": 22804209664
+}

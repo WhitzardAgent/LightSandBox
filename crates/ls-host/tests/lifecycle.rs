@@ -156,6 +156,7 @@ struct FakeKernel {
     started: Vec<String>,
     deleted: Vec<String>,
     exec_calls: usize,
+    created_argv: Vec<Vec<String>>,
     fail_create: bool,
     fail_start: bool,
     fail_delete: bool,
@@ -170,6 +171,7 @@ impl FakeKernel {
             started: Vec::new(),
             deleted: Vec::new(),
             exec_calls: 0,
+            created_argv: Vec::new(),
             fail_create: false,
             fail_start: false,
             fail_delete: false,
@@ -214,6 +216,7 @@ impl SandboxBackend for FakeBackend {
             spec.sandbox_id.as_str(),
             spec.generation,
         );
+        k.created_argv.push(spec.argv.clone());
         k.live.push(label.clone());
         Ok(BackendInstance { label })
     }
@@ -287,7 +290,10 @@ struct Rig {
 }
 
 fn umoci() -> PathBuf {
-    PathBuf::from("/opt/toolchains/lightsandbox/bin/umoci")
+    std::env::var_os("LSB_UMOCI_BIN")
+        .filter(|p| std::path::Path::new(p).is_absolute())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("/opt/toolchains/lightsandbox/bin/umoci"))
 }
 
 fn rig_with_layout(files: &[(&str, u32, Vec<u8>)], entrypoint: &[&str]) -> Rig {
@@ -339,6 +345,8 @@ impl Rig {
             image: self.image_hex.clone(),
             workdir: None,
             env: Vec::new(),
+            entrypoint_override: None,
+            command_override: None,
             requirements: Default::default(),
             preference: Default::default(),
         }
@@ -374,6 +382,25 @@ fn default_rig() -> Rig {
 }
 
 // ------------------------------------------------------- fake-backed tests
+
+#[test]
+fn create_applies_explicit_process_overrides_without_changing_image() {
+    use ls_host::images::process_config::ArgvOverride;
+    let rig = default_rig();
+    let kernel = Arc::new(Mutex::new(FakeKernel::new()));
+    let fake = FakeBackend { k: kernel.clone() };
+    let (mut mgr, _) = SandboxManager::open(rig.config(), fake).unwrap();
+    let mut input = rig.input();
+    input.entrypoint_override = Some(ArgvOverride::Clear);
+    input.command_override = Some(ArgvOverride::Replace(vec![
+        "/bin/sh".into(), "-c".into(), "tail -f /dev/null".into(),
+    ]));
+    let created = mgr.create(&input).unwrap();
+    assert_eq!(kernel.lock().unwrap().created_argv, vec![vec![
+        "/bin/sh", "-c", "tail -f /dev/null",
+    ]]);
+    assert!(mgr.delete(&created.sandbox_id, created.generation).unwrap().all_ok());
+}
 
 #[test]
 fn create_persists_record_with_legal_states() {
@@ -660,8 +687,11 @@ fn real_gate(tag: &str) -> Option<(PathBuf, PathBuf)> {
         eprintln!("SKIP {tag}: set LSB_T08_REAL=1 to run the real rootless-runc slice");
         return None;
     }
-    let runc = PathBuf::from("/opt/toolchains/lightsandbox/bin/runc");
-    let init = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/x86_64-unknown-linux-musl/debug/lsguest-init");
+    let runc = ls_host::runtime::native::runc::RuncRuntime::resolve_binary();
+    let target = std::env::var_os("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target"));
+    let init = target.join("x86_64-unknown-linux-musl/debug/lsguest-init");
     if !runc.is_file() || !init.is_file() {
         eprintln!(
             "SKIP {tag}: pinned runc ({}) or lsguest-init ({}) missing — build with \
@@ -669,7 +699,7 @@ fn real_gate(tag: &str) -> Option<(PathBuf, PathBuf)> {
             runc.display(),
             init.display()
         );
-        return None;
+        panic!("{tag}: requested real gate lacks pinned runc or guest init");
     }
     // Freshness/runtime guards: `cargo test -p ls-guest` does NOT refresh
     // the runtime bin artifact. The canonical witness target is
@@ -683,11 +713,11 @@ fn real_gate(tag: &str) -> Option<(PathBuf, PathBuf)> {
                  cargo build -p ls-guest --target x86_64-unknown-linux-musl",
                 init.display()
             );
-            return None;
+            panic!("{tag}: requested real gate has stale guest init");
         }
         (None, _) => {
             eprintln!("SKIP {tag}: cannot stat lsguest-init mtime ({})", init.display());
-            return None;
+            panic!("{tag}: requested real gate cannot stat guest init");
         }
         _ => {}
     }
@@ -697,7 +727,7 @@ fn real_gate(tag: &str) -> Option<(PathBuf, PathBuf)> {
              RUSTFLAGS=\"-C target-feature=+crt-static\" cargo build -p ls-guest",
             init.display()
         );
-        return None;
+        panic!("{tag}: requested real gate guest init is not static");
     }
     Some((runc, init))
 }
@@ -706,10 +736,16 @@ fn real_gate(tag: &str) -> Option<(PathBuf, PathBuf)> {
 /// lease, bundle, runc process, container uid 0 — runs as the real
 /// unprivileged user 65534. euid-0 takes runc's ROOTFUL cgroupfs path and
 /// dies on the read-only cgroupfs (measured on this host class).
-const NOBODY: (u32, u32) = (65534, 65534);
+fn runtime_identity() -> (u32, u32) {
+    if std::env::var("LSB_REAL_CURRENT_USER").ok().as_deref() == Some("1") {
+        unsafe extern "C" { fn geteuid() -> u32; fn getegid() -> u32; }
+        return unsafe { (geteuid(), getegid()) };
+    }
+    (65534, 65534)
+}
 
 fn nobody_cfg(cfg: &mut ManagerConfig) {
-    cfg.runtime_identity = Some(NOBODY);
+    cfg.runtime_identity = Some(runtime_identity());
 }
 
 fn real_manager(rig: &Rig, runc: &Path, init: &Path) -> SandboxManager<ls_host::runtime::native::NativeRuncBackend> {
@@ -717,12 +753,12 @@ fn real_manager(rig: &Rig, runc: &Path, init: &Path) -> SandboxManager<ls_host::
     use ls_host::runtime::native::{NativeBackendConfig, NativeRuncBackend};
     let state = tmpdir("runc-state");
     let home = tmpdir("runc-home");
-    let runtime = RuncRuntime::new(runc, &state, Some(NOBODY), &home);
+    let runtime = RuncRuntime::new(runc, &state, Some(runtime_identity()), &home);
     let backend = NativeRuncBackend::new(NativeBackendConfig {
         runc: runtime,
         guest_init: init.to_path_buf(),
         native_root: tmpdir("native"),
-        identity: NOBODY,
+        identity: runtime_identity(),
     })
     .expect("native backend open");
     let mut cfg = rig.config();
@@ -874,12 +910,12 @@ fn t08_c04_real_reopen_sees_kernel_not_db() {
     let open = || {
         use ls_host::runtime::native::runc::RuncRuntime;
         use ls_host::runtime::native::{NativeBackendConfig, NativeRuncBackend};
-        let runtime = RuncRuntime::new(&runc, runc_state.clone(), Some(NOBODY), runc_home.clone());
+        let runtime = RuncRuntime::new(&runc, runc_state.clone(), Some(runtime_identity()), runc_home.clone());
         let backend = NativeRuncBackend::new(NativeBackendConfig {
             runc: runtime,
             guest_init: init.clone(),
             native_root: native_root.clone(),
-            identity: NOBODY,
+            identity: runtime_identity(),
         })
         .unwrap();
         let mut cfg = rig.config();

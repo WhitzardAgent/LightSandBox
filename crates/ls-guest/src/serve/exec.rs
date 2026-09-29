@@ -262,12 +262,14 @@ mod tests {
     #[test]
     fn natural_exit_classifies_to_exit_code() {
         use std::process::Command;
+        let _g = crate::TEST_CHILD_REAP_LOCK.lock().unwrap();
         let status = Command::new("/bin/sh").args(["-c", "exit 7"]).status().unwrap();
         assert_eq!(classify(&status, Cause::Natural), Finished::Exited(7));
     }
 
     #[test]
     fn killed_child_classifies_by_cause() {
+        let _g = crate::TEST_CHILD_REAP_LOCK.lock().unwrap();
         for (cause, want) in [
             (Cause::Cancelled, Finished::Cancelled),
             (Cause::TimedOut, Finished::Timeout),

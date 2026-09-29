@@ -1,0 +1,110 @@
+{
+  "log_sha256": "a1fabd2be798833bb742997bdb5fa370926e3e60713ea675a1d487c8904ebc1d",
+  "parsed_test_count": 42,
+  "row_sha256": "4d045ba53703dde4c9decc3c3a3912de074f77ea63e7e7fc4d8724c035b7116a",
+  "schema": "swebench-candidate-grade/1",
+  "status_map": {
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_caching_components_and_classes": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_custom_ctype_to_ucd_mappings": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[BETA-False]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[BETA-True]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VELO-False]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VELO-True]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VOPT-False]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VOPT-True]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VRAD-False]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[VRAD-True]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[ZOPT-False]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_different_ctypes[ZOPT-True]": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_distortion_correlations": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_empty": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_non_convergence_warning": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_phys_type_polarization": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_simple_celestial": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_spectral_cube": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_spectral_cube_nonaligned": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_spectralcoord_frame": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_sub_wcsapi_attributes": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_high_precision": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geocenter": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geocentric": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geodetic": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_incomplete": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_missing": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_unsupported": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_unsupported_ctype": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[local]": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tai]": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tcb]": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tcg]": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tdb]": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tt]": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[ut1]": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[utc]": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_deprecated": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_gps": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_time": "PASSED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_cube": "FAILED",
+    "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_unrecognized_unit": "PASSED"
+  },
+  "test_output_found": true,
+  "upstream_grading_sha256": "a095273010175001a6779e365b3b77abb8657c7ac2e4f80b4bc360faa6f09483",
+  "upstream_report": {
+    "astropy__astropy-11693": {
+      "infra_failure": false,
+      "patch_exists": true,
+      "patch_is_None": false,
+      "patch_successfully_applied": true,
+      "resolved": true,
+      "tests_status": {
+        "FAIL_TO_FAIL": {
+          "failure": [],
+          "success": []
+        },
+        "FAIL_TO_PASS": {
+          "failure": [],
+          "success": [
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_non_convergence_warning"
+          ]
+        },
+        "PASS_TO_FAIL": {
+          "failure": [],
+          "success": []
+        },
+        "PASS_TO_PASS": {
+          "failure": [],
+          "success": [
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_empty",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_simple_celestial",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tai]",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tcb]",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tcg]",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tdb]",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[tt]",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[ut1]",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[utc]",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values[local]",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_gps",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_deprecated",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_values_time",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_high_precision",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geodetic",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geocentric",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_geocenter",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_missing",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_incomplete",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_location_unsupported",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_time_1d_unsupported_ctype",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_unrecognized_unit",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_distortion_correlations",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_custom_ctype_to_ucd_mappings",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_caching_components_and_classes",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_sub_wcsapi_attributes",
+            "astropy/wcs/wcsapi/tests/test_fitswcs.py::test_phys_type_polarization"
+          ]
+        }
+      }
+    }
+  },
+  "upstream_revision": "02e7a74ffd0b707aab73d203fe87bdc7c76afc8e"
+}

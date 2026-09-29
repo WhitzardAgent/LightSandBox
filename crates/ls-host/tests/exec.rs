@@ -157,7 +157,10 @@ struct Rig {
 }
 
 fn umoci() -> PathBuf {
-    PathBuf::from("/opt/toolchains/lightsandbox/bin/umoci")
+    std::env::var_os("LSB_UMOCI_BIN")
+        .filter(|p| std::path::Path::new(p).is_absolute())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("/opt/toolchains/lightsandbox/bin/umoci"))
 }
 
 fn rig_with_dash(entrypoint: &[&str]) -> Rig {
@@ -350,6 +353,8 @@ fn create_active(world: &mut RealWorld) -> (ActiveInstance, SandboxId) {
         image: world.rig.image_hex.clone(),
         workdir: None,
         env: Vec::new(),
+        entrypoint_override: None,
+        command_override: None,
         requirements: Default::default(),
         preference: Default::default(),
     };

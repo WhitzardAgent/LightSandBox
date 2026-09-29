@@ -1,0 +1,95 @@
+
+running 66 tests
+....................................................... 55/66
+serve::agent::tests::exec_streams_binary_output_intact --- FAILED
+serve::agent::tests::exec_reports_real_exit_code_and_stderr --- FAILED
+serve::agent::tests::exec_echo_streams_stdout_and_exit_zero --- FAILED
+serve::agent::tests::exec_spawn_failure_is_finished_kind_4_then_agent_keeps_serving --- FAILED
+serve::agent::tests::exec_respects_cwd --- FAILED
+serve::agent::tests::oversized_payload_drops_even_after_a_valid_session --- FAILED
+serve::agent::tests::cancel_kills_active_exec_and_agent_keeps_serving --- FAILED
+. 63/66
+serve::agent::tests::exec_large_output_survives_backpressure --- FAILED
+serve::agent::tests::timeout_kills_exec_within_grace --- FAILED
+.
+failures:
+
+---- serve::agent::tests::exec_streams_binary_output_intact stdout ----
+
+thread 'serve::agent::tests::exec_streams_binary_output_intact' (8176) panicked at crates/ls-guest/src/serve/agent.rs:816:9:
+assertion `left == right` failed
+  left: SpawnFailed("try_wait failed: No child processes (os error 10)")
+ right: Exited(0)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- serve::agent::tests::exec_reports_real_exit_code_and_stderr stdout ----
+
+thread 'serve::agent::tests::exec_reports_real_exit_code_and_stderr' (8173) panicked at crates/ls-guest/src/serve/agent.rs:801:9:
+assertion `left == right` failed
+  left: SpawnFailed("try_wait failed: No child processes (os error 10)")
+ right: Exited(7)
+
+---- serve::agent::tests::exec_echo_streams_stdout_and_exit_zero stdout ----
+
+thread 'serve::agent::tests::exec_echo_streams_stdout_and_exit_zero' (8170) panicked at crates/ls-guest/src/serve/agent.rs:793:9:
+assertion `left == right` failed
+  left: SpawnFailed("try_wait failed: No child processes (os error 10)")
+ right: Exited(0)
+
+---- serve::agent::tests::exec_spawn_failure_is_finished_kind_4_then_agent_keeps_serving stdout ----
+
+thread 'serve::agent::tests::exec_spawn_failure_is_finished_kind_4_then_agent_keeps_serving' (8175) panicked at crates/ls-guest/src/serve/agent.rs:860:9:
+assertion `left == right` failed
+  left: SpawnFailed("try_wait failed: No child processes (os error 10)")
+ right: Exited(0)
+
+---- serve::agent::tests::exec_respects_cwd stdout ----
+
+thread 'serve::agent::tests::exec_respects_cwd' (8174) panicked at crates/ls-guest/src/serve/agent.rs:842:9:
+assertion `left == right` failed
+  left: SpawnFailed("try_wait failed: No child processes (os error 10)")
+ right: Exited(0)
+
+---- serve::agent::tests::oversized_payload_drops_even_after_a_valid_session stdout ----
+
+thread 'serve::agent::tests::oversized_payload_drops_even_after_a_valid_session' (8221) panicked at crates/ls-guest/src/serve/agent.rs:1088:9:
+assertion `left == right` failed
+  left: SpawnFailed("try_wait failed: No child processes (os error 10)")
+ right: Exited(0)
+
+---- serve::agent::tests::cancel_kills_active_exec_and_agent_keeps_serving stdout ----
+
+thread 'serve::agent::tests::cancel_kills_active_exec_and_agent_keeps_serving' (8166) panicked at crates/ls-guest/src/serve/agent.rs:913:9:
+assertion `left == right` failed
+  left: SpawnFailed("try_wait failed: No child processes (os error 10)")
+ right: Exited(0)
+
+---- serve::agent::tests::exec_large_output_survives_backpressure stdout ----
+
+thread 'serve::agent::tests::exec_large_output_survives_backpressure' (8172) panicked at crates/ls-guest/src/serve/agent.rs:828:9:
+assertion `left == right` failed
+  left: SpawnFailed("try_wait failed: No child processes (os error 10)")
+ right: Exited(0)
+
+---- serve::agent::tests::timeout_kills_exec_within_grace stdout ----
+
+thread 'serve::agent::tests::timeout_kills_exec_within_grace' (8266) panicked at crates/ls-guest/src/serve/agent.rs:925:9:
+assertion `left == right` failed
+  left: (5001, Signaled(9))
+ right: (5001, Timeout)
+
+
+failures:
+    serve::agent::tests::cancel_kills_active_exec_and_agent_keeps_serving
+    serve::agent::tests::exec_echo_streams_stdout_and_exit_zero
+    serve::agent::tests::exec_large_output_survives_backpressure
+    serve::agent::tests::exec_reports_real_exit_code_and_stderr
+    serve::agent::tests::exec_respects_cwd
+    serve::agent::tests::exec_spawn_failure_is_finished_kind_4_then_agent_keeps_serving
+    serve::agent::tests::exec_streams_binary_output_intact
+    serve::agent::tests::oversized_payload_drops_even_after_a_valid_session
+    serve::agent::tests::timeout_kills_exec_within_grace
+
+test result: FAILED. 57 passed; 9 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `-p ls-guest --lib`
